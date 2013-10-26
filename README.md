@@ -16,15 +16,15 @@ TODO
 * Send out v0 to OSH Park/AC
 * Go over use scenarios with Nick F, Hilary M, David H, other cryptonerds
 * Look into OpenMoko USB identifiers (can we really use these?)
-** If not, how fucked up would it be to buy in to the USB association?
-*** Pretty fucked up, best not to support them
+  * If not, how fucked up would it be to buy in to the USB association?
+    * Pretty fucked up, best not to support them
 * Board layout for on-board USB edge connector
-** Check USB mechanical spec (and anecdotal measurements)
-** Check on board thicknesses available through OSH/AC
+  * Check USB mechanical spec (and anecdotal measurements)
+  * Check on board thicknesses available through OSH/AC
 * Marketing/Spreading the word
-** Bring in John D. to see if KS makes sense
-*** How do they handle sales tax? Do they handle sales tax?
-** Large scale: talk to Limor F, Phil T, Nathan S about excess capacity runs.
+  * Bring in John D. to see if KS makes sense
+    * How do they handle sales tax? Do they handle sales tax?
+  * Large scale: talk to Limor F, Phil T, Nathan S about excess capacity runs.
 * Identify a license. (Talk to Alicia S about this, maybe Dustyn R and Addie W)
 
 Scheduling
@@ -34,4 +34,20 @@ Scheduling
 * To Market by mid-December
 * (Early run for 3C30 in Hamburg? That's last week in December, and David H's experience with even simple goods in German customs was not encouraging)
 
+Rough dates
+===========
+* November 15: first assembled board
+* November 29: first working prototype
+* December 13: first rough batch?
+* December 20: announce and launch
+
+Does this schedule pass the smell test? Mmmmaybe. Board design should be fairly straightforward; the code is going to be the biggest issue. How do we get our test cycles down?
+
+Fast & rough design constraints:
+* early boards: test points for programming and debugging
+  * JTAG test points
+  * I/O and control lines for NAND
+  * VUSB to monitor power line noise
+    * We can use the actual edge pads for USB (or put test points under pins)
+  
 
