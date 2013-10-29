@@ -7824,6 +7824,12 @@ This library includes the former libraries ribcon.lbr and ribcon4.lbr.&lt;p&gt;
 <sheets>
 <sheet>
 <plain>
+<text x="17.78" y="99.06" size="1.4224" layer="91">RNG</text>
+<text x="17.78" y="96.52" size="1.4224" layer="91">RNG</text>
+<text x="17.78" y="106.68" size="1.4224" layer="91">RNG</text>
+<text x="17.78" y="104.14" size="1.4224" layer="91">RNG</text>
+<text x="17.78" y="116.84" size="1.4224" layer="91">RNG</text>
+<text x="17.78" y="114.3" size="1.4224" layer="91">RNG</text>
 </plain>
 <instances>
 <instance part="IC1" gate="G$1" x="210.82" y="88.9"/>
@@ -7857,6 +7863,17 @@ This library includes the former libraries ribcon.lbr and ribcon4.lbr.&lt;p&gt;
 <instance part="JTAG_A" gate="G$1" x="96.52" y="43.18"/>
 </instances>
 <busses>
+<bus name="NANDIO_A[0..7]">
+<segment>
+<wire x1="231.14" y1="116.84" x2="231.14" y2="81.28" width="0.762" layer="92"/>
+<label x="233.68" y="101.6" size="1.4224" layer="95" rot="R90"/>
+</segment>
+<segment>
+<wire x1="12.7" y1="66.04" x2="12.7" y2="129.54" width="0.762" layer="92"/>
+<wire x1="12.7" y1="129.54" x2="12.7" y2="134.62" width="0.762" layer="92"/>
+<label x="15.24" y="121.92" size="1.4224" layer="95" rot="R90"/>
+</segment>
+</bus>
 </busses>
 <nets>
 <net name="GND" class="0">
@@ -8112,12 +8129,22 @@ This library includes the former libraries ribcon.lbr and ribcon4.lbr.&lt;p&gt;
 <wire x1="104.14" y1="35.56" x2="109.22" y2="35.56" width="0.1524" layer="91"/>
 <label x="106.68" y="35.56" size="1.4224" layer="95"/>
 </segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="23"/>
+<wire x1="22.86" y1="60.96" x2="15.24" y2="60.96" width="0.1524" layer="91"/>
+<label x="15.24" y="60.96" size="1.4224" layer="95"/>
+</segment>
 </net>
 <net name="TDI_A" class="0">
 <segment>
 <pinref part="JTAG_A" gate="G$1" pin="3"/>
 <wire x1="104.14" y1="38.1" x2="109.22" y2="38.1" width="0.1524" layer="91"/>
 <label x="106.68" y="38.1" size="1.4224" layer="95"/>
+</segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="24"/>
+<wire x1="22.86" y1="58.42" x2="15.24" y2="58.42" width="0.1524" layer="91"/>
+<label x="15.24" y="58.42" size="1.4224" layer="95"/>
 </segment>
 </net>
 <net name="TMS_A" class="0">
@@ -8126,12 +8153,22 @@ This library includes the former libraries ribcon.lbr and ribcon4.lbr.&lt;p&gt;
 <wire x1="104.14" y1="40.64" x2="109.22" y2="40.64" width="0.1524" layer="91"/>
 <label x="106.68" y="40.64" size="1.4224" layer="95"/>
 </segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="25"/>
+<wire x1="73.66" y1="58.42" x2="81.28" y2="58.42" width="0.1524" layer="91"/>
+<label x="76.2" y="58.42" size="1.4224" layer="95"/>
+</segment>
 </net>
 <net name="TCK_A" class="0">
 <segment>
 <pinref part="JTAG_A" gate="G$1" pin="7"/>
 <wire x1="104.14" y1="43.18" x2="109.22" y2="43.18" width="0.1524" layer="91"/>
 <label x="106.68" y="43.18" size="1.4224" layer="95"/>
+</segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="26"/>
+<wire x1="73.66" y1="60.96" x2="81.28" y2="60.96" width="0.1524" layer="91"/>
+<label x="76.2" y="60.96" size="1.4224" layer="95"/>
 </segment>
 </net>
 <net name="!RST_A!" class="0">
@@ -8140,12 +8177,200 @@ This library includes the former libraries ribcon.lbr and ribcon4.lbr.&lt;p&gt;
 <wire x1="104.14" y1="48.26" x2="109.22" y2="48.26" width="0.1524" layer="91"/>
 <label x="106.68" y="48.26" size="1.4224" layer="95"/>
 </segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="48"/>
+<wire x1="73.66" y1="116.84" x2="81.28" y2="116.84" width="0.1524" layer="91"/>
+<label x="76.2" y="116.84" size="1.4224" layer="95"/>
+</segment>
 </net>
 <net name="TST_A" class="0">
 <segment>
 <pinref part="JTAG_A" gate="G$1" pin="8"/>
 <wire x1="88.9" y1="43.18" x2="83.82" y2="43.18" width="0.1524" layer="91"/>
 <label x="83.82" y="43.18" size="1.4224" layer="95"/>
+</segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="47"/>
+<wire x1="73.66" y1="114.3" x2="81.28" y2="114.3" width="0.1524" layer="91"/>
+<label x="76.2" y="114.3" size="1.4224" layer="95"/>
+</segment>
+</net>
+<net name="NANDIO_A0" class="0">
+<segment>
+<pinref part="IC1" gate="G$1" pin="I/O0"/>
+<wire x1="231.14" y1="99.06" x2="226.06" y2="99.06" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="14"/>
+<wire x1="12.7" y1="83.82" x2="22.86" y2="83.82" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="NANDIO_A1" class="0">
+<segment>
+<pinref part="IC1" gate="G$1" pin="I/O1"/>
+<wire x1="231.14" y1="96.52" x2="226.06" y2="96.52" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="15"/>
+<wire x1="12.7" y1="81.28" x2="22.86" y2="81.28" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="NANDIO_A2" class="0">
+<segment>
+<pinref part="IC1" gate="G$1" pin="I/O2"/>
+<wire x1="231.14" y1="93.98" x2="226.06" y2="93.98" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="16"/>
+<wire x1="12.7" y1="78.74" x2="22.86" y2="78.74" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="NANDIO_A3" class="0">
+<segment>
+<pinref part="IC1" gate="G$1" pin="I/O3"/>
+<wire x1="231.14" y1="91.44" x2="226.06" y2="91.44" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="17"/>
+<wire x1="12.7" y1="76.2" x2="22.86" y2="76.2" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="NANDIO_A4" class="0">
+<segment>
+<pinref part="IC1" gate="G$1" pin="I/O4"/>
+<wire x1="231.14" y1="88.9" x2="226.06" y2="88.9" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="18"/>
+<wire x1="12.7" y1="73.66" x2="22.86" y2="73.66" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="NANDIO_A5" class="0">
+<segment>
+<pinref part="IC1" gate="G$1" pin="I/O5"/>
+<wire x1="231.14" y1="86.36" x2="226.06" y2="86.36" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="19"/>
+<wire x1="12.7" y1="71.12" x2="22.86" y2="71.12" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="NANDIO_A6" class="0">
+<segment>
+<pinref part="IC1" gate="G$1" pin="I/O6"/>
+<wire x1="231.14" y1="83.82" x2="226.06" y2="83.82" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="20"/>
+<wire x1="12.7" y1="68.58" x2="22.86" y2="68.58" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="NANDIO_A7" class="0">
+<segment>
+<pinref part="IC1" gate="G$1" pin="I/O7"/>
+<wire x1="231.14" y1="81.28" x2="226.06" y2="81.28" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="IC2" gate="G$1" pin="21"/>
+<wire x1="12.7" y1="66.04" x2="22.86" y2="66.04" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="INTER_RXA_TXB" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="34"/>
+<wire x1="73.66" y1="81.28" x2="81.28" y2="81.28" width="0.1524" layer="91"/>
+<label x="76.2" y="81.28" size="1.4224" layer="95"/>
+</segment>
+</net>
+<net name="INTER_RXB_TXA" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="33"/>
+<wire x1="73.66" y1="78.74" x2="81.28" y2="78.74" width="0.1524" layer="91"/>
+<label x="76.2" y="78.74" size="1.4224" layer="95"/>
+</segment>
+</net>
+<net name="R/B_A" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="36"/>
+<wire x1="73.66" y1="86.36" x2="81.28" y2="86.36" width="0.1524" layer="91"/>
+<label x="76.2" y="86.36" size="1.4224" layer="95"/>
+</segment>
+<segment>
+<pinref part="IC1" gate="G$1" pin="R/!B"/>
+<wire x1="195.58" y1="101.6" x2="187.96" y2="101.6" width="0.1524" layer="91"/>
+<label x="187.96" y="101.6" size="1.4224" layer="95"/>
+</segment>
+</net>
+<net name="!RE!_A" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="35"/>
+<wire x1="73.66" y1="83.82" x2="81.28" y2="83.82" width="0.1524" layer="91"/>
+<label x="76.2" y="83.82" size="1.4224" layer="95"/>
+</segment>
+<segment>
+<pinref part="IC1" gate="G$1" pin="!RE"/>
+<wire x1="195.58" y1="99.06" x2="187.96" y2="99.06" width="0.1524" layer="91"/>
+<label x="187.96" y="99.06" size="1.4224" layer="95"/>
+</segment>
+</net>
+<net name="!CE!_A" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="32"/>
+<wire x1="73.66" y1="76.2" x2="81.28" y2="76.2" width="0.1524" layer="91"/>
+<label x="76.2" y="76.2" size="1.4224" layer="95"/>
+</segment>
+<segment>
+<pinref part="IC1" gate="G$1" pin="!CE"/>
+<wire x1="195.58" y1="96.52" x2="187.96" y2="96.52" width="0.1524" layer="91"/>
+<label x="187.96" y="96.52" size="1.4224" layer="95"/>
+</segment>
+</net>
+<net name="!WE!_A" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="31"/>
+<wire x1="73.66" y1="73.66" x2="81.28" y2="73.66" width="0.1524" layer="91"/>
+<label x="76.2" y="73.66" size="1.4224" layer="95"/>
+</segment>
+<segment>
+<pinref part="IC1" gate="G$1" pin="!WE"/>
+<wire x1="195.58" y1="91.44" x2="187.96" y2="91.44" width="0.1524" layer="91"/>
+<label x="187.96" y="91.44" size="1.4224" layer="95"/>
+</segment>
+</net>
+<net name="!WP!_A" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="30"/>
+<wire x1="73.66" y1="71.12" x2="81.28" y2="71.12" width="0.1524" layer="91"/>
+<label x="76.2" y="71.12" size="1.4224" layer="95"/>
+</segment>
+<segment>
+<pinref part="IC1" gate="G$1" pin="!WP"/>
+<wire x1="195.58" y1="88.9" x2="187.96" y2="88.9" width="0.1524" layer="91"/>
+<label x="187.96" y="88.9" size="1.4224" layer="95"/>
+</segment>
+</net>
+<net name="CLE_A" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="29"/>
+<wire x1="73.66" y1="68.58" x2="81.28" y2="68.58" width="0.1524" layer="91"/>
+<label x="76.2" y="68.58" size="1.4224" layer="95"/>
+</segment>
+<segment>
+<pinref part="IC1" gate="G$1" pin="CLE"/>
+<wire x1="195.58" y1="83.82" x2="187.96" y2="83.82" width="0.1524" layer="91"/>
+<label x="187.96" y="83.82" size="1.4224" layer="95"/>
+</segment>
+</net>
+<net name="ALE_A" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="22"/>
+<wire x1="22.86" y1="63.5" x2="15.24" y2="63.5" width="0.1524" layer="91"/>
+<label x="15.24" y="63.5" size="1.4224" layer="95"/>
+</segment>
+<segment>
+<pinref part="IC1" gate="G$1" pin="ALE"/>
+<wire x1="195.58" y1="81.28" x2="187.96" y2="81.28" width="0.1524" layer="91"/>
+<label x="187.96" y="81.28" size="1.4224" layer="95"/>
 </segment>
 </net>
 </nets>
