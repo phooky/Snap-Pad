@@ -5,9 +5,9 @@ Perhaps it will also provide a solution to brain rot due to excessive datasheet 
 TODO
 ----
 
-* <st>Identify 48-pin MSP430F5xx series chip w/ USB module</st> Using MSP430F5508
-* <st>Make library part, layout</st> Using TI's library
-* <st>Find lib for USB serial HID profile</st> TI has BSD-licensed code
+* ~~Identify 48-pin MSP430F5xx series chip w/ USB module~~ Using MSP430F5508
+* ~~Make library part, layout~~ Using TI's library
+* ~~Find lib for USB serial HID profile~~ TI has BSD-licensed code
 * Find lib for NAND bad block management
 * Finalize LED and switch count, color, placement
 * Initial board layout
@@ -18,8 +18,8 @@ TODO
 * Look into OpenMoko USB identifiers (can we really use these?)
   * If not, how fucked up would it be to buy in to the USB association?
     * Pretty fucked up, best not to support them
-* <st>Board layout for on-board USB edge connector</st> Using sparkfun lib
-  * <st>Check USB mechanical spec (and anecdotal measurements)</st>
+* ~~Board layout for on-board USB edge connector~~ Using sparkfun lib
+  * ~~Check USB mechanical spec (and anecdotal measurements)~~
   * Check on board thicknesses available through OSH/AC
 * Marketing/Spreading the word
   * Bring in John D. to see if KS makes sense
@@ -29,11 +29,11 @@ TODO
 
 Random Number Generation
 ------------------------
-* Avalanche (two transistors base-to-base)
+* ~~Avalanche (two transistors base-to-base)~~
 * Sample an unstable oscillator (w/ LED and thermo to add noise)
-** Like this option a lot
-* Zener breakdown
-* Low-order ADC (slow)
+  * Ring oscillators are the way to go>
+* ~~Zener breakdown~~
+* ~~Low-order ADC (slow)~~
 * Internal clock
 
 Scheduling
