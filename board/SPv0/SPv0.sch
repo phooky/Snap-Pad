@@ -12979,28 +12979,28 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="JTAG_A" library="con-harting" deviceset="CON14" device=""/>
 <part name="T1" library="transistor" deviceset="*-NPN-" device="SOT23-BEC" technology="MMBT3904LT1" value="n3904"/>
 <part name="T2" library="transistor" deviceset="*-NPN-" device="SOT23-BEC" technology="MMBT3904LT1" value="n3904"/>
-<part name="R6" library="rcl" deviceset="R-US_" device="R0805" value="150K"/>
-<part name="R7" library="rcl" deviceset="R-US_" device="R0805" value="1M"/>
+<part name="R6" library="rcl" deviceset="R-US_" device="R0603" value="150K"/>
+<part name="R7" library="rcl" deviceset="R-US_" device="R0603" value="1M"/>
 <part name="SUPPLY11" library="supply2" deviceset="GND" device=""/>
 <part name="IC3" library="linear" deviceset="LM339" device="D"/>
 <part name="C8" library="rcl" deviceset="C-EU" device="C0805" value="0.47u"/>
 <part name="C9" library="rcl" deviceset="C-EU" device="C0805" value="0.47u"/>
-<part name="R8" library="rcl" deviceset="R-US_" device="R0805" value="12K"/>
-<part name="R9" library="rcl" deviceset="R-US_" device="R0805" value="47K"/>
-<part name="R10" library="rcl" deviceset="R-US_" device="R0805" value="1M"/>
+<part name="R8" library="rcl" deviceset="R-US_" device="R0603" value="12K"/>
+<part name="R9" library="rcl" deviceset="R-US_" device="R0603" value="47K"/>
+<part name="R10" library="rcl" deviceset="R-US_" device="R0603" value="1M"/>
 <part name="SUPPLY12" library="supply2" deviceset="GND" device=""/>
 <part name="SUPPLY13" library="supply2" deviceset="GND" device=""/>
 <part name="C10" library="rcl" deviceset="C-EU" device="C0805" value="4.7u"/>
-<part name="R11" library="rcl" deviceset="R-US_" device="R0805" value="100K"/>
-<part name="R12" library="rcl" deviceset="R-US_" device="R0805" value="100K"/>
+<part name="R11" library="rcl" deviceset="R-US_" device="R0603" value="100K"/>
+<part name="R12" library="rcl" deviceset="R-US_" device="R0603" value="100K"/>
 <part name="T3" library="transistor" deviceset="*-PNP-" device="SOT23-BEC" technology="MMBT3906LT1" value="n3906"/>
 <part name="T4" library="transistor" deviceset="*-PNP-" device="SOT23-BEC" technology="MMBT3906LT1" value="n3906"/>
 <part name="T5" library="transistor" deviceset="*-PNP-" device="SOT23-BEC" technology="MMBT3906LT1" value="n3906"/>
-<part name="R13" library="rcl" deviceset="R-US_" device="R0805" value="1.2K"/>
-<part name="R14" library="rcl" deviceset="R-US_" device="R0805" value="10K"/>
-<part name="R15" library="rcl" deviceset="R-US_" device="R0805" value="10K"/>
-<part name="R16" library="rcl" deviceset="R-US_" device="R0805" value="5K"/>
-<part name="R17" library="rcl" deviceset="R-US_" device="R0805" value="5K"/>
+<part name="R13" library="rcl" deviceset="R-US_" device="R0603" value="1.2K"/>
+<part name="R14" library="rcl" deviceset="R-US_" device="R0603" value="10K"/>
+<part name="R15" library="rcl" deviceset="R-US_" device="R0603" value="10K"/>
+<part name="R16" library="rcl" deviceset="R-US_" device="R0603" value="5K"/>
+<part name="R17" library="rcl" deviceset="R-US_" device="R0603" value="5K"/>
 <part name="D2" library="zetex" deviceset="D" device="SOD323"/>
 <part name="D3" library="zetex" deviceset="D" device="SOD323"/>
 <part name="SUPPLY14" library="supply2" deviceset="GND" device=""/>
@@ -13036,8 +13036,6 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <text x="17.78" y="96.52" size="1.4224" layer="91">RNG</text>
 <text x="17.78" y="106.68" size="1.4224" layer="91">RNG</text>
 <text x="17.78" y="104.14" size="1.4224" layer="91">RNG</text>
-<text x="17.78" y="116.84" size="1.4224" layer="91">RNG</text>
-<text x="17.78" y="114.3" size="1.4224" layer="91">RNG</text>
 </plain>
 <instances>
 <instance part="IC1" gate="G$1" x="210.82" y="88.9"/>
@@ -13615,6 +13613,20 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <wire x1="7.62" y1="86.36" x2="22.86" y2="86.36" width="0.1524" layer="91"/>
 </segment>
 </net>
+<net name="DOUT" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="1"/>
+<wire x1="22.86" y1="116.84" x2="15.24" y2="116.84" width="0.1524" layer="91"/>
+<label x="15.24" y="116.84" size="1.4224" layer="95"/>
+</segment>
+</net>
+<net name="!VDD_SHDN!" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="2"/>
+<wire x1="22.86" y1="114.3" x2="15.24" y2="114.3" width="0.1524" layer="91"/>
+<label x="15.24" y="114.3" size="1.4224" layer="95"/>
+</segment>
+</net>
 </nets>
 </sheet>
 <sheet>
@@ -13902,7 +13914,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <wire x1="25.4" y1="-12.7" x2="25.4" y2="-5.08" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="DOUT_1" class="0">
+<net name="DOUT" class="0">
 <segment>
 <pinref part="R17" gate="G$1" pin="2"/>
 <pinref part="R16" gate="G$1" pin="1"/>
@@ -13975,11 +13987,6 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <wire x1="17.78" y1="35.56" x2="22.86" y2="35.56" width="0.1524" layer="91"/>
 <wire x1="15.24" y1="35.56" x2="15.24" y2="25.4" width="0.1524" layer="91"/>
 <junction x="15.24" y="35.56"/>
-<pinref part="R18" gate="G$1" pin="1"/>
-<wire x1="22.86" y1="17.78" x2="22.86" y2="15.24" width="0.1524" layer="91"/>
-<wire x1="22.86" y1="15.24" x2="17.78" y2="15.24" width="0.1524" layer="91"/>
-<wire x1="17.78" y1="15.24" x2="17.78" y2="35.56" width="0.1524" layer="91"/>
-<junction x="17.78" y="35.56"/>
 <pinref part="U$3" gate="G$1" pin="P$1"/>
 <wire x1="22.86" y1="53.34" x2="22.86" y2="35.56" width="0.1524" layer="91"/>
 <junction x="22.86" y="35.56"/>
@@ -13991,7 +13998,8 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <pinref part="R20" gate="G$1" pin="2"/>
 <wire x1="10.16" y1="10.16" x2="15.24" y2="10.16" width="0.1524" layer="91"/>
 <pinref part="C12" gate="G$1" pin="2"/>
-<wire x1="15.24" y1="10.16" x2="38.1" y2="10.16" width="0.1524" layer="91"/>
+<wire x1="15.24" y1="10.16" x2="22.86" y2="10.16" width="0.1524" layer="91"/>
+<wire x1="22.86" y1="10.16" x2="38.1" y2="10.16" width="0.1524" layer="91"/>
 <wire x1="38.1" y1="10.16" x2="58.42" y2="10.16" width="0.1524" layer="91"/>
 <wire x1="58.42" y1="10.16" x2="76.2" y2="10.16" width="0.1524" layer="91"/>
 <junction x="58.42" y="10.16"/>
@@ -14001,13 +14009,19 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <pinref part="C13" gate="G$1" pin="1"/>
 <wire x1="15.24" y1="17.78" x2="15.24" y2="10.16" width="0.1524" layer="91"/>
 <junction x="15.24" y="10.16"/>
+<pinref part="R18" gate="G$1" pin="1"/>
+<wire x1="22.86" y1="17.78" x2="22.86" y2="10.16" width="0.1524" layer="91"/>
+<junction x="22.86" y="10.16"/>
 </segment>
 </net>
-<net name="N$19" class="0">
+<net name="!VDD_SHDN!" class="0">
 <segment>
 <pinref part="U$2" gate="G$1" pin="!SHDN!"/>
 <pinref part="R18" gate="G$1" pin="2"/>
 <wire x1="22.86" y1="30.48" x2="22.86" y2="27.94" width="0.1524" layer="91"/>
+<wire x1="22.86" y1="30.48" x2="7.62" y2="30.48" width="0.1524" layer="91"/>
+<junction x="22.86" y="30.48"/>
+<label x="7.62" y="30.48" size="1.4224" layer="95" rot="R180" xref="yes"/>
 </segment>
 </net>
 <net name="VDD" class="0">
