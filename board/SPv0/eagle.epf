@@ -317,10 +317,11 @@ UsedLibrary="Flash.lbr"
 UsedLibrary="TI_MSP430_v16.lbr"
 UsedLibrary="/home/phooky/Repos/SparkFun-Eagle-Libraries/SparkFun-Connectors.lbr"
 UsedLibrary="Passives.lbr"
+UsedLibrary="rng.lbr"
 
 [Win_1]
 Type="Control Panel"
-Loc="647 241 1908 964"
+Loc="627 150 1886 873"
 State=2
 Number=0
 
