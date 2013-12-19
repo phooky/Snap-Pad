@@ -40,16 +40,16 @@
 #include "USB_API/USB_Common/device.h"
 #include "USB_API/USB_Common/types.h"
 #include "USB_API/USB_Common/usb.h"
-#include "USB_API/USB_MSC_API/UsbMscScsi.h"
-#include "USB_API/USB_MSC_API/UsbMsc.h"
-#include "USB_API/USB_MSC_API/UsbMscStateMachine.h"
-#include "USB_API/USB_HID_API/UsbHid.h"
+#include "USB_API/USB_CDC_API/UsbCdc.h"
+#include "USB_app/usbConstructs.h"
 
 /*
  * NOTE: Modify hal.h to select a specific evaluation board and customize for
  * your own board.
  */
 #include "hal.h"
+
+void run_snap_pad();
 
 void main (void)
 {
@@ -83,7 +83,8 @@ void main (void)
             // LPM3/4/5 in this mode; the MCU must be active or LPM0 during USB
             // communication.
             case ST_ENUM_ACTIVE:
-
+            	run_snap_pad();
+            	break;
             // These cases are executed while your device is:
             case ST_USB_DISCONNECTED: // physically disconnected from the host
             case ST_ENUM_SUSPENDED:   // connected/enumerated, but suspended
@@ -107,6 +108,10 @@ void main (void)
     }  //while(1)
 } //main()
 
+
+void run_snap_pad() {
+	USBCDC_sendData((BYTE*)"FUUUUUUUUU---\n",	14, CDC0_INTFNUM);
+}
 
 /*  
  * ======== UNMI_ISR ========

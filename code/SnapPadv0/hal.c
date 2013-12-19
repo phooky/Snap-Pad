@@ -60,52 +60,52 @@ void initPorts(void)
 {
 #ifdef __MSP430_HAS_PORT1_R__
     GPIO_setOutputLowOnPin(GPIO_PORT_P1, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_P1, GPIO_ALL);
+    GPIO_setAsInputPin(GPIO_PORT_P1, GPIO_ALL);
 #endif
 
 #ifdef __MSP430_HAS_PORT2_R__
     GPIO_setOutputLowOnPin(GPIO_PORT_P2, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_P2, GPIO_ALL);
+    GPIO_setAsInputPin(GPIO_PORT_P2, GPIO_ALL);
 #endif
 
 #ifdef __MSP430_HAS_PORT3_R__
     GPIO_setOutputLowOnPin(GPIO_PORT_P3, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_P3, GPIO_ALL);
+    GPIO_setAsInputPin(GPIO_PORT_P3, GPIO_ALL);
 #endif
 
 #ifdef __MSP430_HAS_PORT4_R__
     GPIO_setOutputLowOnPin(GPIO_PORT_P4, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_P4, GPIO_ALL);
+    GPIO_setAsInputPin(GPIO_PORT_P4, GPIO_ALL);
 #endif
 
 #ifdef __MSP430_HAS_PORT5_R__
     GPIO_setOutputLowOnPin(GPIO_PORT_P5, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_P5, GPIO_ALL);
+    GPIO_setAsInputPin(GPIO_PORT_P5, GPIO_ALL);
 #endif
 
 #ifdef __MSP430_HAS_PORT6_R__
     GPIO_setOutputLowOnPin(GPIO_PORT_P6, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_P6, GPIO_ALL);
+    GPIO_setAsInputPin(GPIO_PORT_P6, GPIO_ALL);
 #endif
 
 #ifdef __MSP430_HAS_PORT7_R__
     GPIO_setOutputLowOnPin(GPIO_PORT_P7, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_P7, GPIO_ALL);
+    GPIO_setAsInputPin(GPIO_PORT_P7, GPIO_ALL);
 #endif
 
 #ifdef __MSP430_HAS_PORT8_R__
     GPIO_setOutputLowOnPin(GPIO_PORT_P8, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_P8, GPIO_ALL);
+    GPIO_setAsInputPin(GPIO_PORT_P8, GPIO_ALL);
 #endif
 
 #ifdef __MSP430_HAS_PORT9_R__
     GPIO_setOutputLowOnPin(GPIO_PORT_P9, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_P9, GPIO_ALL);
+    GPIO_setAsInputPin(GPIO_PORT_P9, GPIO_ALL);
 #endif
 
 #ifdef __MSP430_HAS_PORTJ_R__
     GPIO_setOutputLowOnPin(GPIO_PORT_PJ, GPIO_ALL);
-    GPIO_setAsOutputPin(GPIO_PORT_PJ, GPIO_ALL);
+    GPIO_setAsInputPin(GPIO_PORT_PJ, GPIO_ALL);
 #endif
 }
 
