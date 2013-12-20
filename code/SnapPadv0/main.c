@@ -48,8 +48,16 @@
  * your own board.
  */
 #include "hal.h"
+#include "nand.h"
 
 void run_snap_pad();
+
+char hex(uint8_t v) {
+	v &= 0x0f;
+	if (v < 10) return '0'+v;
+	return 'a'+(v-10);
+}
+char buf[10];
 
 void main (void)
 {
@@ -64,11 +72,18 @@ void main (void)
     PMM_setVCore(PMM_BASE, PMM_CORE_LEVEL_2);
     
     initPorts();             // Configure all GPIOs
+    nand_init();
     initClocks(8000000);     // Configure clocks
     USB_setup(TRUE,TRUE);    // Init USB & events; if a host is present, connect
 
     __enable_interrupt();    // Enable interrupts globally
 
+    IdInfo id = nand_read_id();
+    buf[1] = hex(id.manufacturer_code); buf[0] = hex(id.manufacturer_code >> 4);
+    buf[3] = hex(id.device_id); buf[2] = hex(id.device_id >> 4);
+    buf[5] = hex(id.details1); buf[4] = hex(id.details1 >> 4);
+    buf[7] = hex(id.details2); buf[6] = hex(id.details2 >> 4);
+    buf[9] = hex(id.ecc_info); buf[8] = hex(id.ecc_info >> 4);
     while (1)
     {
         // This switch() creates separate main loops, depending on whether USB 
@@ -110,7 +125,7 @@ void main (void)
 
 
 void run_snap_pad() {
-	USBCDC_sendData((BYTE*)"FUUUUUUUUU---\n",	14, CDC0_INTFNUM);
+	USBCDC_sendData((BYTE*)buf,	10, CDC0_INTFNUM);
 }
 
 /*  

@@ -8,26 +8,32 @@ CMD_SRCS += \
 
 C_SRCS += \
 ../hal.c \
-../main.c 
+../main.c \
+../nand.c 
 
 OBJS += \
 ./hal.obj \
-./main.obj 
+./main.obj \
+./nand.obj 
 
 C_DEPS += \
 ./hal.pp \
-./main.pp 
+./main.pp \
+./nand.pp 
 
 C_DEPS__QUOTED += \
 "hal.pp" \
-"main.pp" 
+"main.pp" \
+"nand.pp" 
 
 OBJS__QUOTED += \
 "hal.obj" \
-"main.obj" 
+"main.obj" \
+"nand.obj" 
 
 C_SRCS__QUOTED += \
 "../hal.c" \
-"../main.c" 
+"../main.c" \
+"../nand.c" 
 
 
