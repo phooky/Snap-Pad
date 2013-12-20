@@ -52,7 +52,7 @@ inline void nand_set_mode(bool cle, bool ale, bool ceP, bool weP, bool reP, bool
 				(ceP?CEP_BIT:0) |
 				(reP?REP_BIT:0) |
 				(weP?WEP_BIT:0) |
-				(ceP?CEP_BIT:0);
+				(wpP?WPP_BIT:0);
 	P2OUT = (P2OUT & ~BIT0) | p2;
 	P4OUT = (P4OUT & ~P4BITS) | p4;
 }
@@ -73,13 +73,13 @@ inline void nand_set_reP(bool v) {
 	}
 }
 void nand_send_command(uint8_t cmd) {
-	nand_set_mode(true,false,false,false,true,false);
+	nand_set_mode(true,false,false,false,true,true);
 	nand_iodir(true,cmd);
 	nand_set_weP(true);
 }
 
 void nand_send_address(uint32_t addr) {
-	nand_set_mode(false,true,false,false,true,false);
+	nand_set_mode(false,true,false,false,true,true);
 	P1OUT = addr & 0xff;
 	nand_set_weP(true);
 
@@ -110,6 +110,16 @@ void nand_recv_data(uint8_t* buffer, uint16_t count) {
 	}
 }
 
+void nand_send_data(uint8_t* buffer, uint16_t count) {
+	nand_set_mode(false,false,false,false,true,true);
+	nand_iodir(true,0);
+	while (count--) {
+		nand_set_weP(false);
+		P1OUT = *(buffer++);
+		nand_set_weP(true);
+	}
+}
+
 IdInfo nand_read_id() {
 	nand_send_command(0x90);
 	nand_send_address(0x00);
@@ -128,3 +138,18 @@ bool nand_check_ONFI() {
 			(onfi[2] == 'F') &&
 			(onfi[3] == 'I');
 }
+
+void nand_read_raw_page(uint32_t address, uint8_t* buffer, uint16_t count) {
+	nand_send_command(0x00);
+	nand_send_command(0x30);
+	nand_send_address(address);
+	nand_recv_data(buffer,count);
+}
+
+void nand_program_raw_page(uint32_t address, uint8_t* buffer, uint16_t count) {
+	nand_send_command(0x80);
+	nand_send_command(0x10);
+	nand_send_address(address);
+	nand_send_data(buffer,count);
+}
+
