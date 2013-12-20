@@ -118,3 +118,13 @@ IdInfo nand_read_id() {
 	return info;
 }
 
+bool nand_check_ONFI() {
+	nand_send_command(0x90);
+	nand_send_address(0x20);
+	uint8_t onfi[4];
+	nand_recv_data((uint8_t*)onfi,4);
+	return (onfi[0] == 'O') &&
+			(onfi[1] == 'N') &&
+			(onfi[2] == 'F') &&
+			(onfi[3] == 'I');
+}

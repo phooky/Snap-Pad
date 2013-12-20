@@ -57,7 +57,7 @@ char hex(uint8_t v) {
 	if (v < 10) return '0'+v;
 	return 'a'+(v-10);
 }
-char buf[10];
+char buf[12];
 
 void main (void)
 {
@@ -84,6 +84,12 @@ void main (void)
     buf[5] = hex(id.details1); buf[4] = hex(id.details1 >> 4);
     buf[7] = hex(id.details2); buf[6] = hex(id.details2 >> 4);
     buf[9] = hex(id.ecc_info); buf[8] = hex(id.ecc_info >> 4);
+    if (nand_check_ONFI()) {
+    	buf[10] = 'Y';
+    } else {
+    	buf[10] = 'N';
+    }
+    buf[11] = '\n';
     while (1)
     {
         // This switch() creates separate main loops, depending on whether USB 
@@ -125,7 +131,7 @@ void main (void)
 
 
 void run_snap_pad() {
-	USBCDC_sendData((BYTE*)buf,	10, CDC0_INTFNUM);
+	USBCDC_sendData((BYTE*)buf,	12, CDC0_INTFNUM);
 }
 
 /*  

@@ -8,6 +8,7 @@
 #ifndef NAND_H_
 #define NAND_H_
 #include <stdint.h>
+#include <stdbool.h>
 
 void nand_init();
 
@@ -24,5 +25,6 @@ typedef struct {
 } IdInfo;
 
 IdInfo nand_read_id();
+bool nand_check_ONFI();
 
 #endif /* NAND_H_ */
