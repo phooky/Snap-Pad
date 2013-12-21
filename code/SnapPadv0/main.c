@@ -57,7 +57,10 @@ char hex(uint8_t v) {
 	if (v < 10) return '0'+v;
 	return 'a'+(v-10);
 }
-char buf[12];
+char idbuf[12];
+#define CMDBUFSZ 128
+char cmdbuf[CMDBUFSZ];
+uint16_t cmdidx;
 
 void main (void)
 {
@@ -79,17 +82,20 @@ void main (void)
     __enable_interrupt();    // Enable interrupts globally
 
     IdInfo id = nand_read_id();
-    buf[1] = hex(id.manufacturer_code); buf[0] = hex(id.manufacturer_code >> 4);
-    buf[3] = hex(id.device_id); buf[2] = hex(id.device_id >> 4);
-    buf[5] = hex(id.details1); buf[4] = hex(id.details1 >> 4);
-    buf[7] = hex(id.details2); buf[6] = hex(id.details2 >> 4);
-    buf[9] = hex(id.ecc_info); buf[8] = hex(id.ecc_info >> 4);
+    idbuf[1] = hex(id.manufacturer_code); idbuf[0] = hex(id.manufacturer_code >> 4);
+    idbuf[3] = hex(id.device_id); idbuf[2] = hex(id.device_id >> 4);
+    idbuf[5] = hex(id.details1); idbuf[4] = hex(id.details1 >> 4);
+    idbuf[7] = hex(id.details2); idbuf[6] = hex(id.details2 >> 4);
+    idbuf[9] = hex(id.ecc_info); idbuf[8] = hex(id.ecc_info >> 4);
     if (nand_check_ONFI()) {
-    	buf[10] = 'Y';
+    	idbuf[10] = 'Y';
     } else {
-    	buf[10] = 'N';
+    	idbuf[10] = 'N';
     }
-    buf[11] = '\n';
+    idbuf[11] = '\n';
+
+    cmdidx = 0;
+
     while (1)
     {
         // This switch() creates separate main loops, depending on whether USB 
@@ -129,9 +135,33 @@ void main (void)
     }  //while(1)
 } //main()
 
+void do_command(uint16_t len) {
+	if (cmdbuf[0] == 'I') {
+		USBCDC_sendData((BYTE*)idbuf,	12, CDC0_INTFNUM);
+	}
+}
 
 void run_snap_pad() {
-	USBCDC_sendData((BYTE*)buf,	12, CDC0_INTFNUM);
+	uint16_t delta = cdcReceiveDataInBuffer((BYTE*)(cmdbuf + cmdidx), CMDBUFSZ-cmdidx, CDC0_INTFNUM);
+	uint16_t c;
+	for (c = cmdidx; c < cmdidx+delta; c++) {
+		char ch = cmdbuf[c];
+		if (ch == '\r' || ch == '\n') {
+			do_command(c);
+			c++;
+			uint16_t i;
+			for (i = 0; c < cmdidx+delta; c++, i++) {
+				cmdbuf[i] = cmdbuf[c];
+			}
+			cmdidx = i;
+			delta = 0;
+			break;
+		}
+	}
+	cmdidx += delta;
+	if (cmdidx == CMDBUFSZ) { cmdidx = 0; }
+	char l = '0'+cmdidx;
+	//USBCDC_sendData((BYTE*)&l,	1, CDC0_INTFNUM);
 }
 
 /*  
