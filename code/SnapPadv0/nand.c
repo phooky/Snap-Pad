@@ -83,6 +83,10 @@ inline bool nand_check_rb() {
 	return (P4IN & RB_BIT) != 0;
 }
 
+inline void nand_wait_for_ready() {
+	while (!nand_check_rb()) ;
+}
+
 void nand_send_command(uint8_t cmd) {
 	nand_set_mode(true,false,false,false,true,true);
 	nand_iodir(true,cmd);
@@ -161,6 +165,7 @@ void nand_read_raw_page(uint32_t address, uint8_t* buffer, uint16_t count) {
 	nand_send_command(0x00);
 	nand_send_address(address);
 	nand_send_command(0x30);
+	nand_wait_for_ready();
 	nand_recv_data(buffer,count);
 }
 
