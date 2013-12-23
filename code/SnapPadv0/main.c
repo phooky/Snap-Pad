@@ -169,7 +169,7 @@ void do_command(uint16_t len) {
 		read_info();
 	} else if (cmdbuf[0] == 'S') {
 			read_status();
-	} else if (cmdbuf[0] == 'R' || cmdbuf[0] == 'W') {
+	} else if (cmdbuf[0] == 'R' || cmdbuf[0] == 'W' || cmdbuf[0] == 'E') {
 		if (cmdbuf[1] != ':') { error(); return; }
 		uint32_t addr = 0;
 		uint8_t idx = 2;
@@ -200,6 +200,10 @@ void do_command(uint16_t len) {
 			cdcSendDataWaitTilDone((BYTE*)cmdbuf, rlen, CDC0_INTFNUM, 100);
 			rsp = "]\r\n";
 			cdcSendDataWaitTilDone((BYTE*)rsp, 3, CDC0_INTFNUM, 100);
+		} else if (cmdbuf[0] == 'E') {
+			char* rsp = "OK\r\n";
+			nand_block_erase(addr);
+			cdcSendDataWaitTilDone((BYTE*)rsp, 4, CDC0_INTFNUM, 100);
 		} else {
 			char* rsp = "OK\r\n";
 			char b[8];

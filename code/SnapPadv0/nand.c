@@ -115,6 +115,20 @@ void nand_send_address(uint32_t addr) {
 	nand_set_weP(true);
 }
 
+void nand_send_row_address(uint32_t addr) {
+	nand_set_mode(false,true,false,false,true,true);
+	P1OUT = (addr >> 12) & 0xff;
+	nand_set_weP(true);
+
+	nand_set_weP(false);
+	P1OUT = (addr >> 20) & 0xff;
+	nand_set_weP(true);
+
+	nand_set_weP(false);
+	P1OUT = (addr >> 28) & 0x0f;
+	nand_set_weP(true);
+}
+
 void nand_recv_data(uint8_t* buffer, uint16_t count) {
 	nand_set_mode(false,false,false,true,true,false);
 	nand_iodir(false,0);
@@ -159,6 +173,13 @@ uint8_t nand_read_status_reg() {
 	uint8_t buf;
 	nand_recv_data(&buf,1);
 	return buf;
+}
+
+void nand_block_erase(uint32_t address) {
+	nand_send_command(0x60);
+	nand_send_row_address(address);
+	nand_send_command(0xd0);
+	nand_wait_for_ready();
 }
 
 void nand_read_raw_page(uint32_t address, uint8_t* buffer, uint16_t count) {
