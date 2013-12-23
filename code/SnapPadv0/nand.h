@@ -29,6 +29,7 @@ typedef struct {
 IdInfo nand_read_id();
 bool nand_check_ONFI();
 
+uint8_t nand_read_status_reg();
 void nand_read_raw_page(uint32_t address, uint8_t* buffer, uint16_t count);
 void nand_program_raw_page(uint32_t address, uint8_t* buffer, uint16_t count);
 

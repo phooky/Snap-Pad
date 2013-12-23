@@ -20,6 +20,7 @@
 #define WEP_BIT BIT2
 #define REP_BIT BIT6
 #define WPP_BIT BIT1
+#define RB_BIT BIT7
 
 inline void nand_iodir(bool out,uint8_t value) {
 	if (out) {
@@ -40,6 +41,11 @@ void nand_init() {
 	P2OUT &= ~ALE_BIT;
 	P4DIR |= CLE_BIT | WEP_BIT | REP_BIT | WPP_BIT;
 	P4OUT &= ~(CLE_BIT | WEP_BIT | REP_BIT | WPP_BIT);
+
+	// Set R/B as input
+	P4DIR &= ~RB_BIT;
+	P4OUT |= RB_BIT; // pullup
+	P4REN |= RB_BIT; // enable pullup/down
 
 	nand_iodir(false,0);
 }
@@ -72,6 +78,11 @@ inline void nand_set_reP(bool v) {
 		P4OUT &= ~REP_BIT;
 	}
 }
+
+inline bool nand_check_rb() {
+	return (P4IN & RB_BIT) != 0;
+}
+
 void nand_send_command(uint8_t cmd) {
 	nand_set_mode(true,false,false,false,true,true);
 	nand_iodir(true,cmd);
@@ -139,17 +150,24 @@ bool nand_check_ONFI() {
 			(onfi[3] == 'I');
 }
 
+uint8_t nand_read_status_reg() {
+	nand_send_command(0x70);
+	uint8_t buf;
+	nand_recv_data(&buf,1);
+	return buf;
+}
+
 void nand_read_raw_page(uint32_t address, uint8_t* buffer, uint16_t count) {
 	nand_send_command(0x00);
-	nand_send_command(0x30);
 	nand_send_address(address);
+	nand_send_command(0x30);
 	nand_recv_data(buffer,count);
 }
 
 void nand_program_raw_page(uint32_t address, uint8_t* buffer, uint16_t count) {
 	nand_send_command(0x80);
-	nand_send_command(0x10);
 	nand_send_address(address);
 	nand_send_data(buffer,count);
+	nand_send_command(0x10);
 }
 
