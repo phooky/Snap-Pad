@@ -10,14 +10,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+/**
+ * Initialize pins and default state for NAND flash chip.
+ */
 void nand_init();
 
-void nand_send_command(uint8_t cmd);
-void nand_send_address(uint32_t addr);
-
-void nand_recv_data(uint8_t* buffer, uint16_t count);
-void nand_send_data(uint8_t* buffer, uint16_t count);
-
+/**
+ * Structure of the information returned by a read_id check.
+ */
 typedef struct {
 	uint8_t manufacturer_code;
 	uint8_t device_id;
@@ -26,12 +26,30 @@ typedef struct {
 	uint8_t ecc_info;
 } IdInfo;
 
+/**
+ * Read the ID of this NAND chip.
+ */
 IdInfo nand_read_id();
+/**
+ * Ensure that the chip supports the ONFI check.
+ */
 bool nand_check_ONFI();
 
+/**
+ * Get the value of the NAND's status register.
+ */
 uint8_t nand_read_status_reg();
+/**
+ * Erase an entire 2KB block in NAND (resetting it to 0xff)
+ */
 void nand_block_erase(uint32_t address);
+/**
+ * Read data from NAND
+ */
 void nand_read_raw_page(uint32_t address, uint8_t* buffer, uint16_t count);
+/**
+ * Write data to NAND
+ */
 void nand_program_raw_page(uint32_t address, uint8_t* buffer, uint16_t count);
 
 #endif /* NAND_H_ */
