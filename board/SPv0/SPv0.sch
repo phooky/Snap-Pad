@@ -9600,6 +9600,18 @@ Source: http://www.diodes.com/datasheets/ds23001.pdf</description>
 <text x="-1.4" y="0.7" size="0.6096" layer="25">&gt;NAME</text>
 <text x="-1.6" y="-0.7" size="0.6096" layer="27" align="top-left">&gt;VALUE</text>
 </package>
+<package name="LED0805">
+<smd name="CATHODE" x="1.1" y="0" dx="1" dy="1.2" layer="1"/>
+<smd name="ANODE" x="-1.1" y="0" dx="1" dy="1.2" layer="1"/>
+<rectangle x1="-1.6" y1="-0.7" x2="1.6" y2="0.7" layer="39"/>
+<text x="-1.4" y="0.7" size="0.6096" layer="25">&gt;NAME</text>
+<text x="-1.6" y="-0.7" size="0.6096" layer="27" align="top-left">&gt;VALUE</text>
+<polygon width="0.127" layer="21">
+<vertex x="-0.4" y="0.6"/>
+<vertex x="-0.4" y="-0.6"/>
+<vertex x="0.5" y="0"/>
+</polygon>
+</package>
 </packages>
 <symbols>
 <symbol name="Q">
@@ -9664,6 +9676,22 @@ Source: http://www.diodes.com/datasheets/ds23001.pdf</description>
 <wire x1="0" y1="1.5875" x2="0" y2="2.54" width="0.127" layer="94"/>
 <text x="0.3175" y="1.905" size="1.27" layer="95">&gt;NAME</text>
 <text x="0.3175" y="-0.635" size="1.27" layer="96">&gt;VALUE</text>
+</symbol>
+<symbol name="LED">
+<pin name="ANODE" x="-5.08" y="0" visible="off" length="short" direction="pas"/>
+<pin name="CATHODE" x="2.54" y="0" visible="off" length="short" direction="pas" rot="R180"/>
+<polygon width="0.127" layer="94">
+<vertex x="-2.54" y="1.27"/>
+<vertex x="0" y="0"/>
+<vertex x="-2.54" y="-1.27"/>
+</polygon>
+<wire x1="0" y1="1.27" x2="0" y2="-1.27" width="0.127" layer="94"/>
+<wire x1="-1.905" y1="1.42875" x2="-1.11125" y2="2.2225" width="0.127" layer="94"/>
+<wire x1="-1.11125" y1="2.2225" x2="-1.11125" y2="1.905" width="0.127" layer="94"/>
+<wire x1="-1.11125" y1="2.2225" x2="-1.42875" y2="2.2225" width="0.127" layer="94"/>
+<wire x1="-1.11125" y1="0.9525" x2="-0.3175" y2="1.74625" width="0.127" layer="94"/>
+<wire x1="-0.3175" y1="1.74625" x2="-0.635" y2="1.74625" width="0.127" layer="94"/>
+<wire x1="-0.3175" y1="1.74625" x2="-0.3175" y2="1.42875" width="0.127" layer="94"/>
 </symbol>
 </symbols>
 <devicesets>
@@ -9763,6 +9791,22 @@ Source: http://www.diodes.com/datasheets/ds23001.pdf</description>
 <connects>
 <connect gate="G$1" pin="1" pad="P$1"/>
 <connect gate="G$1" pin="2" pad="P$2"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="LED">
+<gates>
+<gate name="G$1" symbol="LED" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="LED0805">
+<connects>
+<connect gate="G$1" pin="ANODE" pad="ANODE"/>
+<connect gate="G$1" pin="CATHODE" pad="CATHODE"/>
 </connects>
 <technologies>
 <technology name=""/>
@@ -11921,13 +11965,13 @@ Operational amplifiers,  comparators, voltage regulators, ADCs, DACs, etc.&lt;p&
 </package>
 </packages>
 <symbols>
-<symbol name="PWR+G">
+<symbol name="PWR+-">
 <text x="1.27" y="3.175" size="0.8128" layer="93" rot="R90">V+</text>
-<text x="1.27" y="-5.08" size="0.8128" layer="93" rot="R90">GND</text>
+<text x="1.27" y="-4.445" size="0.8128" layer="93" rot="R90">V-</text>
 <pin name="V+" x="0" y="7.62" visible="pad" length="middle" direction="pwr" rot="R270"/>
-<pin name="GND" x="0" y="-7.62" visible="pad" length="middle" direction="pwr" rot="R90"/>
+<pin name="V-" x="0" y="-7.62" visible="pad" length="middle" direction="pwr" rot="R90"/>
 </symbol>
-<symbol name="COMPARATOR-OC">
+<symbol name="OPAMP">
 <wire x1="-5.08" y1="5.08" x2="-5.08" y2="-5.08" width="0.4064" layer="94"/>
 <wire x1="-5.08" y1="-5.08" x2="5.08" y2="0" width="0.4064" layer="94"/>
 <wire x1="5.08" y1="0" x2="-5.08" y2="5.08" width="0.4064" layer="94"/>
@@ -11938,37 +11982,36 @@ Operational amplifiers,  comparators, voltage regulators, ADCs, DACs, etc.&lt;p&
 <text x="2.54" y="-5.08" size="1.778" layer="96">&gt;VALUE</text>
 <pin name="-IN" x="-7.62" y="-2.54" visible="pad" length="short" direction="in"/>
 <pin name="+IN" x="-7.62" y="2.54" visible="pad" length="short" direction="in"/>
-<pin name="OUT" x="7.62" y="0" visible="pad" length="short" direction="oc" rot="R180"/>
+<pin name="OUT" x="7.62" y="0" visible="pad" length="short" direction="out" rot="R180"/>
 </symbol>
 </symbols>
 <devicesets>
-<deviceset name="LM339" prefix="IC">
-<description>&lt;b&gt;Low Power Low Offset Voltage Quad Comparators&lt;/b&gt;&lt;p&gt;
-with open collector; LM139/LM239/LM339/LM2901/LM3302&lt;br&gt;</description>
+<deviceset name="TL084" prefix="IC">
+<description>&lt;b&gt;OP AMP&lt;/b&gt;</description>
 <gates>
-<gate name="P" symbol="PWR+G" x="20.32" y="12.7" addlevel="request"/>
-<gate name="A" symbol="COMPARATOR-OC" x="20.32" y="12.7"/>
-<gate name="B" symbol="COMPARATOR-OC" x="43.18" y="12.7"/>
-<gate name="C" symbol="COMPARATOR-OC" x="17.78" y="-10.16"/>
-<gate name="D" symbol="COMPARATOR-OC" x="43.18" y="-10.16"/>
+<gate name="A" symbol="OPAMP" x="15.24" y="10.16" swaplevel="1"/>
+<gate name="B" symbol="OPAMP" x="50.8" y="10.16" swaplevel="1"/>
+<gate name="C" symbol="OPAMP" x="15.24" y="-10.16" swaplevel="1"/>
+<gate name="D" symbol="OPAMP" x="50.8" y="-10.16" swaplevel="1"/>
+<gate name="P" symbol="PWR+-" x="15.24" y="10.16" addlevel="request"/>
 </gates>
 <devices>
-<device name="N" package="DIL14">
+<device name="P" package="DIL14">
 <connects>
-<connect gate="A" pin="+IN" pad="5"/>
-<connect gate="A" pin="-IN" pad="4"/>
-<connect gate="A" pin="OUT" pad="2"/>
-<connect gate="B" pin="+IN" pad="7"/>
+<connect gate="A" pin="+IN" pad="3"/>
+<connect gate="A" pin="-IN" pad="2"/>
+<connect gate="A" pin="OUT" pad="1"/>
+<connect gate="B" pin="+IN" pad="5"/>
 <connect gate="B" pin="-IN" pad="6"/>
-<connect gate="B" pin="OUT" pad="1"/>
-<connect gate="C" pin="+IN" pad="9"/>
-<connect gate="C" pin="-IN" pad="8"/>
-<connect gate="C" pin="OUT" pad="14"/>
-<connect gate="D" pin="+IN" pad="11"/>
-<connect gate="D" pin="-IN" pad="10"/>
-<connect gate="D" pin="OUT" pad="13"/>
-<connect gate="P" pin="GND" pad="12"/>
-<connect gate="P" pin="V+" pad="3"/>
+<connect gate="B" pin="OUT" pad="7"/>
+<connect gate="C" pin="+IN" pad="10"/>
+<connect gate="C" pin="-IN" pad="9"/>
+<connect gate="C" pin="OUT" pad="8"/>
+<connect gate="D" pin="+IN" pad="12"/>
+<connect gate="D" pin="-IN" pad="13"/>
+<connect gate="D" pin="OUT" pad="14"/>
+<connect gate="P" pin="V+" pad="4"/>
+<connect gate="P" pin="V-" pad="11"/>
 </connects>
 <technologies>
 <technology name=""/>
@@ -11976,20 +12019,20 @@ with open collector; LM139/LM239/LM339/LM2901/LM3302&lt;br&gt;</description>
 </device>
 <device name="D" package="SO14">
 <connects>
-<connect gate="A" pin="+IN" pad="5"/>
-<connect gate="A" pin="-IN" pad="4"/>
-<connect gate="A" pin="OUT" pad="2"/>
-<connect gate="B" pin="+IN" pad="7"/>
+<connect gate="A" pin="+IN" pad="3"/>
+<connect gate="A" pin="-IN" pad="2"/>
+<connect gate="A" pin="OUT" pad="1"/>
+<connect gate="B" pin="+IN" pad="5"/>
 <connect gate="B" pin="-IN" pad="6"/>
-<connect gate="B" pin="OUT" pad="1"/>
-<connect gate="C" pin="+IN" pad="9"/>
-<connect gate="C" pin="-IN" pad="8"/>
-<connect gate="C" pin="OUT" pad="14"/>
-<connect gate="D" pin="+IN" pad="11"/>
-<connect gate="D" pin="-IN" pad="10"/>
-<connect gate="D" pin="OUT" pad="13"/>
-<connect gate="P" pin="GND" pad="12"/>
-<connect gate="P" pin="V+" pad="3"/>
+<connect gate="B" pin="OUT" pad="7"/>
+<connect gate="C" pin="+IN" pad="10"/>
+<connect gate="C" pin="-IN" pad="9"/>
+<connect gate="C" pin="OUT" pad="8"/>
+<connect gate="D" pin="+IN" pad="12"/>
+<connect gate="D" pin="-IN" pad="13"/>
+<connect gate="D" pin="OUT" pad="14"/>
+<connect gate="P" pin="V+" pad="4"/>
+<connect gate="P" pin="V-" pad="11"/>
 </connects>
 <technologies>
 <technology name=""/>
@@ -13325,7 +13368,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="R6" library="rcl" deviceset="R-US_" device="R0603" value="150K"/>
 <part name="R7" library="rcl" deviceset="R-US_" device="R0603" value="1M"/>
 <part name="SUPPLY11" library="supply2" deviceset="GND" device=""/>
-<part name="IC3" library="linear" deviceset="LM339" device="D"/>
+<part name="IC3" library="linear" deviceset="TL084" device="D"/>
 <part name="C8" library="rcl" deviceset="C-EU" device="C0805" value="0.47u"/>
 <part name="C9" library="rcl" deviceset="C-EU" device="C0805" value="0.47u"/>
 <part name="R8" library="rcl" deviceset="R-US_" device="R0603" value="12K"/>
@@ -13344,8 +13387,8 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="R15" library="rcl" deviceset="R-US_" device="R0603" value="10K"/>
 <part name="R16" library="rcl" deviceset="R-US_" device="R0603" value="5K"/>
 <part name="R17" library="rcl" deviceset="R-US_" device="R0603" value="5K"/>
-<part name="D2" library="zetex" deviceset="D" device="SOD323"/>
-<part name="D3" library="zetex" deviceset="D" device="SOD323"/>
+<part name="D2" library="zetex" deviceset="D" device="SOD323" value="1n4148"/>
+<part name="D3" library="zetex" deviceset="D" device="SOD323" value="1n4148"/>
 <part name="SUPPLY14" library="supply2" deviceset="GND" device=""/>
 <part name="SUPPLY15" library="supply2" deviceset="GND" device=""/>
 <part name="SUPPLY16" library="supply2" deviceset="GND" device=""/>
@@ -13380,6 +13423,14 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="TP8" library="testpad" deviceset="TP" device="TP08SQ"/>
 <part name="TP9" library="testpad" deviceset="TP" device="TP08SQ"/>
 <part name="R21" library="Passives" deviceset="R" device="0805" value="1M"/>
+<part name="U$5" library="Passives" deviceset="LED" device=""/>
+<part name="U$6" library="Passives" deviceset="LED" device=""/>
+<part name="U$7" library="Passives" deviceset="LED" device=""/>
+<part name="U$8" library="Passives" deviceset="LED" device=""/>
+<part name="U$4" library="Passives" deviceset="R" device="0805"/>
+<part name="U$9" library="Passives" deviceset="R" device="0805"/>
+<part name="U$10" library="Passives" deviceset="R" device="0805"/>
+<part name="U$11" library="Passives" deviceset="R" device="0805"/>
 </parts>
 <sheets>
 <sheet>
@@ -13430,6 +13481,14 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <instance part="TP8" gate="G$1" x="99.06" y="38.1" rot="R90"/>
 <instance part="TP9" gate="G$1" x="99.06" y="33.02" rot="R90"/>
 <instance part="R21" gate="G$1" x="86.36" y="121.92" rot="R90"/>
+<instance part="U$5" gate="G$1" x="-12.7" y="116.84"/>
+<instance part="U$6" gate="G$1" x="-12.7" y="111.76"/>
+<instance part="U$7" gate="G$1" x="-12.7" y="106.68"/>
+<instance part="U$8" gate="G$1" x="-12.7" y="101.6"/>
+<instance part="U$4" gate="G$1" x="-2.54" y="116.84"/>
+<instance part="U$9" gate="G$1" x="-2.54" y="111.76"/>
+<instance part="U$10" gate="G$1" x="-2.54" y="106.68"/>
+<instance part="U$11" gate="G$1" x="-2.54" y="101.6"/>
 </instances>
 <busses>
 <bus name="NANDIO_A[0..7]">
@@ -13576,6 +13635,24 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <pinref part="R21" gate="G$1" pin="2"/>
 <wire x1="86.36" y1="127" x2="86.36" y2="132.08" width="0.1524" layer="91"/>
 <label x="86.36" y="127" size="1.778" layer="95" rot="R90"/>
+</segment>
+<segment>
+<pinref part="U$8" gate="G$1" pin="ANODE"/>
+<wire x1="-17.78" y1="101.6" x2="-20.32" y2="101.6" width="0.1524" layer="91"/>
+<wire x1="-20.32" y1="101.6" x2="-20.32" y2="106.68" width="0.1524" layer="91"/>
+<pinref part="U$5" gate="G$1" pin="ANODE"/>
+<wire x1="-20.32" y1="106.68" x2="-20.32" y2="111.76" width="0.1524" layer="91"/>
+<wire x1="-20.32" y1="111.76" x2="-20.32" y2="116.84" width="0.1524" layer="91"/>
+<wire x1="-20.32" y1="116.84" x2="-20.32" y2="127" width="0.1524" layer="91"/>
+<wire x1="-17.78" y1="116.84" x2="-20.32" y2="116.84" width="0.1524" layer="91"/>
+<junction x="-20.32" y="116.84"/>
+<pinref part="U$6" gate="G$1" pin="ANODE"/>
+<wire x1="-17.78" y1="111.76" x2="-20.32" y2="111.76" width="0.1524" layer="91"/>
+<junction x="-20.32" y="111.76"/>
+<pinref part="U$7" gate="G$1" pin="ANODE"/>
+<wire x1="-17.78" y1="106.68" x2="-20.32" y2="106.68" width="0.1524" layer="91"/>
+<junction x="-20.32" y="106.68"/>
+<label x="-20.32" y="121.92" size="1.778" layer="95" rot="R90"/>
 </segment>
 </net>
 <net name="VBUS" class="0">
@@ -13991,6 +14068,69 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <label x="15.24" y="114.3" size="1.4224" layer="95"/>
 </segment>
 </net>
+<net name="N$22" class="0">
+<segment>
+<pinref part="U$7" gate="G$1" pin="CATHODE"/>
+<pinref part="U$10" gate="G$1" pin="1"/>
+<wire x1="-10.16" y1="106.68" x2="-7.62" y2="106.68" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$23" class="0">
+<segment>
+<pinref part="U$6" gate="G$1" pin="CATHODE"/>
+<pinref part="U$9" gate="G$1" pin="1"/>
+<wire x1="-10.16" y1="111.76" x2="-7.62" y2="111.76" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$24" class="0">
+<segment>
+<pinref part="U$5" gate="G$1" pin="CATHODE"/>
+<pinref part="U$4" gate="G$1" pin="1"/>
+<wire x1="-10.16" y1="116.84" x2="-7.62" y2="116.84" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$25" class="0">
+<segment>
+<pinref part="U$8" gate="G$1" pin="CATHODE"/>
+<pinref part="U$11" gate="G$1" pin="1"/>
+<wire x1="-10.16" y1="101.6" x2="-7.62" y2="101.6" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$19" class="0">
+<segment>
+<pinref part="U$11" gate="G$1" pin="2"/>
+<wire x1="2.54" y1="101.6" x2="2.54" y2="96.52" width="0.1524" layer="91"/>
+<pinref part="IC2" gate="G$1" pin="9"/>
+<wire x1="2.54" y1="96.52" x2="22.86" y2="96.52" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$26" class="0">
+<segment>
+<pinref part="IC2" gate="G$1" pin="8"/>
+<wire x1="22.86" y1="99.06" x2="5.08" y2="99.06" width="0.1524" layer="91"/>
+<wire x1="5.08" y1="99.06" x2="5.08" y2="106.68" width="0.1524" layer="91"/>
+<pinref part="U$10" gate="G$1" pin="2"/>
+<wire x1="5.08" y1="106.68" x2="2.54" y2="106.68" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$27" class="0">
+<segment>
+<pinref part="U$9" gate="G$1" pin="2"/>
+<wire x1="2.54" y1="111.76" x2="7.62" y2="111.76" width="0.1524" layer="91"/>
+<wire x1="7.62" y1="111.76" x2="7.62" y2="104.14" width="0.1524" layer="91"/>
+<pinref part="IC2" gate="G$1" pin="6"/>
+<wire x1="7.62" y1="104.14" x2="22.86" y2="104.14" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="N$28" class="0">
+<segment>
+<pinref part="U$4" gate="G$1" pin="2"/>
+<wire x1="2.54" y1="116.84" x2="10.16" y2="116.84" width="0.1524" layer="91"/>
+<wire x1="10.16" y1="116.84" x2="10.16" y2="106.68" width="0.1524" layer="91"/>
+<pinref part="IC2" gate="G$1" pin="5"/>
+<wire x1="10.16" y1="106.68" x2="22.86" y2="106.68" width="0.1524" layer="91"/>
+</segment>
+</net>
 </nets>
 </sheet>
 <sheet>
@@ -14073,7 +14213,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <wire x1="-7.62" y1="-12.7" x2="-5.08" y2="-12.7" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="IC3" gate="P" pin="GND"/>
+<pinref part="IC3" gate="P" pin="V-"/>
 <wire x1="172.72" y1="22.86" x2="172.72" y2="20.32" width="0.1524" layer="91"/>
 <pinref part="SUPPLY17" gate="GND" pin="GND"/>
 <wire x1="172.72" y1="20.32" x2="172.72" y2="17.78" width="0.1524" layer="91"/>

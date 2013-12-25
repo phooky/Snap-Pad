@@ -49,6 +49,7 @@
  */
 #include "hal.h"
 #include "nand.h"
+#include "hwrng.h"
 
 void run_snap_pad();
 
@@ -76,6 +77,7 @@ void main (void)
     
     initPorts();             // Configure all GPIOs
     nand_init();
+    hwrng_init();
     initClocks(8000000);     // Configure clocks
     USB_setup(TRUE,TRUE);    // Init USB & events; if a host is present, connect
 
@@ -168,7 +170,15 @@ void do_command(uint16_t len) {
 	if (cmdbuf[0] == 'I') {
 		read_info();
 	} else if (cmdbuf[0] == 'S') {
-			read_status();
+		read_status();
+	} else if (cmdbuf[0] == '+') {
+		hwrng_power(true);
+		char* rsp = "OK\r\n";
+		cdcSendDataWaitTilDone((BYTE*)rsp, 4, CDC0_INTFNUM, 100);
+	} else if (cmdbuf[0] == '-') {
+		hwrng_power(false);
+		char* rsp = "OK\r\n";
+		cdcSendDataWaitTilDone((BYTE*)rsp, 4, CDC0_INTFNUM, 100);
 	} else if (cmdbuf[0] == 'R' || cmdbuf[0] == 'W' || cmdbuf[0] == 'E') {
 		if (cmdbuf[1] != ':') { error(); return; }
 		uint32_t addr = 0;
