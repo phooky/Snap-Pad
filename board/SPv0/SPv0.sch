@@ -13427,10 +13427,10 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="U$6" library="Passives" deviceset="LED" device=""/>
 <part name="U$7" library="Passives" deviceset="LED" device=""/>
 <part name="U$8" library="Passives" deviceset="LED" device=""/>
-<part name="U$4" library="Passives" deviceset="R" device="0805"/>
-<part name="U$9" library="Passives" deviceset="R" device="0805"/>
-<part name="U$10" library="Passives" deviceset="R" device="0805"/>
-<part name="U$11" library="Passives" deviceset="R" device="0805"/>
+<part name="U$4" library="Passives" deviceset="R" device="0805" value="130"/>
+<part name="U$9" library="Passives" deviceset="R" device="0805" value="130"/>
+<part name="U$10" library="Passives" deviceset="R" device="0805" value="130"/>
+<part name="U$11" library="Passives" deviceset="R" device="0805" value="130"/>
 </parts>
 <sheets>
 <sheet>
