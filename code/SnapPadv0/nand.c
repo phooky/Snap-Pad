@@ -14,6 +14,11 @@
  * WP# - P4.1
  *
  */
+
+#define REV_0
+
+#ifdef REV_0
+
 #define CLE_BIT BIT0
 #define ALE_BIT BIT0
 #define CEP_BIT BIT3
@@ -21,6 +26,19 @@
 #define REP_BIT BIT6
 #define WPP_BIT BIT1
 #define RB_BIT BIT7
+
+#endif
+
+#ifdef REV_1
+#define CLE_BIT BIT2
+#define ALE_BIT BIT0
+#define CEP_BIT BIT3
+#define WEP_BIT BIT1
+#define REP_BIT BIT6
+#define WPP_BIT BIT0
+#define RB_BIT BIT7
+
+#endif
 
 inline void nand_iodir(bool out,uint8_t value) {
 	if (out) {
