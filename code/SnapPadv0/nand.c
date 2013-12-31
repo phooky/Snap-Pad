@@ -215,3 +215,10 @@ void nand_program_raw_page(uint32_t address, uint8_t* buffer, uint16_t count) {
 	nand_send_command(0x10);
 }
 
+void nand_read_parameter_page(uint8_t* buffer, uint16_t count, bool start) {
+	if (start) {
+		nand_send_command(0xec);
+		nand_send_address(0x00);
+	}
+	nand_recv_data(buffer, count);
+}
