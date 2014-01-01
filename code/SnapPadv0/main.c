@@ -166,11 +166,19 @@ void read_status() {
 	cdcSendDataWaitTilDone((BYTE*)rsp, 6, CDC0_INTFNUM, 100);
 }
 
+void read_parameter_pages() {
+	uint8_t sbuf[256];
+	nand_read_parameter_page(sbuf, 256);
+	cdcSendDataWaitTilDone((BYTE*)sbuf, 256, CDC0_INTFNUM, 100);
+}
+
 void do_command(uint16_t len) {
 	if (cmdbuf[0] == 'I') {
 		read_info();
 	} else if (cmdbuf[0] == 'S') {
 		read_status();
+	} else if (cmdbuf[0] == 'P') {
+		read_parameter_pages();
 	} else if (cmdbuf[0] == '+') {
 		hwrng_power(true);
 		char* rsp = "OK\r\n";

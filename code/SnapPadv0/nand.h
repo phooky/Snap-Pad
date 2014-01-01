@@ -55,6 +55,6 @@ void nand_program_raw_page(uint32_t address, uint8_t* buffer, uint16_t count);
 /**
  * Read parameter page data
  */
-void nand_read_parameter_page(uint8_t* buffer, uint16_t count, bool start);
+void nand_read_parameter_page(uint8_t* buffer, uint16_t count);
 
 #endif /* NAND_H_ */
