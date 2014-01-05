@@ -172,24 +172,40 @@ void read_parameter_pages() {
 	cdcSendDataWaitTilDone((BYTE*)sbuf, 256, CDC0_INTFNUM, 100);
 }
 
+void read_hack(uint8_t* buffer){
+	uint8_t val = (dehex(buffer[1]) << 4) | dehex(buffer[2]);
+	char cmd = (char)buffer[0];
+	if (cmd == 'C') {
+		nand_send_command(val);
+	} else if (cmd == 'A') {
+		nand_send_address(val);
+	} else if (cmd == 'R') {
+		uint8_t readbuf[256];
+		nand_recv_data(readbuf, val);
+		cdcSendDataWaitTilDone((BYTE*)readbuf, val, CDC0_INTFNUM, 100);
+	}
+}
+
 void soft_boot() {
 	// msp430 reboot-- can we drop back to the BSL?
 }
 
 void do_command(uint16_t len) {
-	if (cmdbuf[0] == 'I') {
+	if (cmdbuf[0] == 'I') { // reading chip info structure
 		read_info();
-	} else if (cmdbuf[0] == 'S') {
+	} else if (cmdbuf[0] == 'S') { // nand status
 		read_status();
-	} else if (cmdbuf[0] == 'B') {
+	} else if (cmdbuf[0] == 'H') { // start hack mode
+		read_hack((uint8_t*)cmdbuf+1);
+	} else if (cmdbuf[0] == 'B') { // reboot msp430
 		soft_boot();
-	} else if (cmdbuf[0] == 'P') {
+	} else if (cmdbuf[0] == 'P') { // read and dump parameter pages
 		read_parameter_pages();
-	} else if (cmdbuf[0] == '+') {
+	} else if (cmdbuf[0] == '+') { // turn on hardware trng power
 		hwrng_power(true);
 		char* rsp = "OK\r\n";
 		cdcSendDataWaitTilDone((BYTE*)rsp, 4, CDC0_INTFNUM, 100);
-	} else if (cmdbuf[0] == '-') {
+	} else if (cmdbuf[0] == '-') { // turn off hardware trng power
 		hwrng_power(false);
 		char* rsp = "OK\r\n";
 		cdcSendDataWaitTilDone((BYTE*)rsp, 4, CDC0_INTFNUM, 100);
