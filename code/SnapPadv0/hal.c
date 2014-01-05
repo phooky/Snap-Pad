@@ -111,7 +111,8 @@ void initPorts(void)
 
 /* Configures the system clocks:
 * MCLK = SMCLK = DCO/FLL = mclkFreq (expected to be expressed in Hz)
-* ACLK = FLLref = REFO=32kHz
+* FLLref = REFO=32kHz
+* ACLK = XT2CLK
 *
 * XT2 is not configured here.  Instead, the USB API automatically starts XT2
 * when beginning USB communication, and optionally disables it during USB
@@ -131,7 +132,7 @@ void initClocks(DWORD mclkFreq)
 	UCS_clockSignalInit(
 	   UCS_BASE,
 	   UCS_ACLK,
-	   UCS_REFOCLK_SELECT,
+	   UCS_XT2CLK_SELECT,
 	   UCS_CLOCK_DIVIDER_1);
 
     UCS_initFLLSettle(
