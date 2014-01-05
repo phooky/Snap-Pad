@@ -27,6 +27,13 @@ typedef struct {
 } IdInfo;
 
 /**
+ * Receive raw data from the NAND flash; only useful at chip boot or
+ * after a command has been issued (and for reading past the end
+ * of 'useful' buffers)
+ */
+void nand_recv_data(uint8_t* buffer, uint16_t count);
+
+/**
  * Read the ID of this NAND chip.
  */
 IdInfo nand_read_id();

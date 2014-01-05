@@ -172,11 +172,17 @@ void read_parameter_pages() {
 	cdcSendDataWaitTilDone((BYTE*)sbuf, 256, CDC0_INTFNUM, 100);
 }
 
+void soft_boot() {
+	// msp430 reboot-- can we drop back to the BSL?
+}
+
 void do_command(uint16_t len) {
 	if (cmdbuf[0] == 'I') {
 		read_info();
 	} else if (cmdbuf[0] == 'S') {
 		read_status();
+	} else if (cmdbuf[0] == 'B') {
+		soft_boot();
 	} else if (cmdbuf[0] == 'P') {
 		read_parameter_pages();
 	} else if (cmdbuf[0] == '+') {
