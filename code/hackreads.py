@@ -3,7 +3,6 @@ import serial
 import sys
 
 p = serial.Serial('/dev/ttyACM0',115200)
-p.open()
 
 def cmd(val):
     c = 'HC{0:02X}'.format(val)
