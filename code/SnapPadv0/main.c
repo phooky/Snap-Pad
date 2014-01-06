@@ -186,6 +186,13 @@ void read_hack(uint8_t* buffer){
 	}
 }
 
+void read_rng() {
+	hwrng_start();
+	while (!hwrng_done());
+	volatile uint32_t* bits = hwrng_bits();
+	cdcSendDataWaitTilDone((BYTE*)bits, 16*4, CDC0_INTFNUM, 100);
+}
+
 void soft_boot() {
 	// msp430 reboot-- can we drop back to the BSL?
 }
@@ -195,6 +202,8 @@ void do_command(uint16_t len) {
 		read_info();
 	} else if (cmdbuf[0] == 'S') { // nand status
 		read_status();
+	} else if (cmdbuf[0] == '#') {
+		read_rng();
 	} else if (cmdbuf[0] == 'H') { // start hack mode
 		read_hack((uint8_t*)cmdbuf+1);
 	} else if (cmdbuf[0] == 'B') { // reboot msp430

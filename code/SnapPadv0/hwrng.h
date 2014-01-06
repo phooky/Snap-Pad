@@ -9,6 +9,11 @@
 #define HWRNG_H_
 
 #include <stdbool.h>
+#include <stdint.h>
+
+void hwrng_start();
+bool hwrng_done();
+volatile uint32_t* hwrng_bits();
 
 void hwrng_init();
 void hwrng_power(bool on);
