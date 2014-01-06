@@ -21,8 +21,8 @@ void hwrng_init() {
 	hwrng_power(false);
 	P6DIR |= SHDWN_P_PIN;
 	P6SEL &= ~SHDWN_P_PIN;
-        P1DIR |= ACLK_PIN;
-        P1SEL |= ACLK_PIN;
+    //P1DIR |= ACLK_PIN;
+    //P1SEL |= ACLK_PIN;
 }
 
 void hwrng_power(bool on) {
