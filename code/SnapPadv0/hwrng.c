@@ -59,12 +59,14 @@ volatile uint32_t* hwrng_bits() {
 #pragma vector=ADC10_VECTOR
 __interrupt void ADC10_ISR(void)
 {
-	bits[0] = ADC10MEM0;
+	uint32_t s = ADC10MEM0;
 	if (idx >= 256) {
 		ADC10CTL0 &= ~0x0003;
 	} else {
-		bits[idx>>4] <<= 2;
-		bits[idx>>4] ^= ADC10MEM0;
+		uint32_t v = bits[idx>>4];
+		v = v<<2 | v>>30;
+		v ^= s;
+		bits[idx>>4] = v;
 		idx++;
 	}
 }
