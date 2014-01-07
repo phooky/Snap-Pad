@@ -321,8 +321,8 @@ UsedLibrary="rng.lbr"
 
 [Win_1]
 Type="Board Editor"
-Loc="0 0 599 399"
-State=0
+Loc="363 336 962 735"
+State=2
 Number=2
 File="SPv0.brd"
 View="-2.45116 4.30911 98.5932 32.4175"

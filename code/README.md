@@ -29,6 +29,10 @@ GCC usage:
 Burn:
     sudo msp430-tool bsl5.hid -S --password=password.txt -i elf -v -P ~/Repos/Snap-Pad/code/SnapPadv0/Debug/SnapPadv0.out
 
+Test RNG:
+rngtest <noise2.dump
+dieharder -g 201 -f noise2.dump -a
+
 TODO:
 -----
 Expose ACLK at pin, set to XT2 input (12MHz) (in initclocks?)
