@@ -230,8 +230,8 @@ In x8 I/O mode</description>
 <connect gate="G$1" pin="I/O6" pad="43"/>
 <connect gate="G$1" pin="I/O7" pad="44"/>
 <connect gate="G$1" pin="R/!B" pad="7"/>
-<connect gate="G$1" pin="VCC" pad="12 34 37 39" route="any"/>
-<connect gate="G$1" pin="VSS" pad="13 25 36 48" route="any"/>
+<connect gate="G$1" pin="VCC" pad="12 34 37 39"/>
+<connect gate="G$1" pin="VSS" pad="13 25 36 48"/>
 </connects>
 <technologies>
 <technology name=""/>
