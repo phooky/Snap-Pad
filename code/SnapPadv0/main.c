@@ -178,11 +178,11 @@ void read_hack(uint8_t* buffer){
 	if (cmd == 'C') {
 		nand_send_command(val);
 	} else if (cmd == 'A') {
-		nand_send_address(val);
+		nand_send_byte_address(val);
 	} else if (cmd == 'R') {
-		uint8_t readbuf[256];
+		uint8_t readbuf[64];
 		nand_recv_data(readbuf, val);
-		cdcSendDataWaitTilDone((BYTE*)readbuf, val, CDC0_INTFNUM, 100);
+		cdcSendDataWaitTilDone((BYTE*)readbuf, val, CDC0_INTFNUM, 1000);
 	}
 }
 
@@ -237,18 +237,12 @@ void do_command(uint16_t len) {
 
 			nand_read_raw_page(addr, (uint8_t*)cmdbuf, rlen);
 
-			char b[8];
-			int8_t bi;
-			for (bi = 0; bi < 8; bi++) {
-				b[bi] = hex(cmdbuf[bi]);
-			}
-			cdcSendDataWaitTilDone((BYTE*)b, 8, CDC0_INTFNUM, 100);
-			char* rsp = "[";
-			cdcSendDataWaitTilDone((BYTE*)rsp, 1, CDC0_INTFNUM, 100);
+			//char* rsp = "[";
+			//cdcSendDataWaitTilDone((BYTE*)rsp, 1, CDC0_INTFNUM, 100);
 
 			cdcSendDataWaitTilDone((BYTE*)cmdbuf, rlen, CDC0_INTFNUM, 100);
-			rsp = "]\r\n";
-			cdcSendDataWaitTilDone((BYTE*)rsp, 3, CDC0_INTFNUM, 100);
+			//rsp = "]\r\n";
+			//cdcSendDataWaitTilDone((BYTE*)rsp, 3, CDC0_INTFNUM, 100);
 		} else if (cmdbuf[0] == 'E') {
 			char* rsp = "OK\r\n";
 			nand_block_erase(addr);
@@ -271,17 +265,25 @@ void do_command(uint16_t len) {
 
 void run_snap_pad() {
 	uint16_t delta = cdcReceiveDataInBuffer((BYTE*)(cmdbuf + cmdidx), CMDBUFSZ-cmdidx, CDC0_INTFNUM);
-	uint16_t c;
-	for (c = cmdidx; c < cmdidx+delta; c++) {
+	uint16_t c = 0;
+	cmdidx += delta;
+	while (c < cmdidx) {
 		char ch = cmdbuf[c];
 		if (ch == '\r' || ch == '\n') {
+			uint16_t cb = 0;
 			do_command(c);
-			cmdidx = 0;
+			// copy-back
+			c++;
+			while (c < cmdidx) {
+				cmdbuf[cb++] = cmdbuf[c++];
+			}
+			cmdidx = cb;
 			return;
+		} else {
+			c++;
 		}
 	}
-	cmdidx += delta;
-	if (cmdidx == CMDBUFSZ) { cmdidx = 0; }
+	if (cmdidx == CMDBUFSZ) { cmdidx--; }
 	//USBCDC_sendData((BYTE*)&l,	1, CDC0_INTFNUM);
 }
 

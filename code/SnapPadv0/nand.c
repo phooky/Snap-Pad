@@ -147,6 +147,12 @@ void nand_send_row_address(uint32_t addr) {
 	nand_set_weP(true);
 }
 
+void nand_send_byte_address(uint8_t baddr) {
+	nand_set_mode(false,true,false,false,true,true);
+	P1OUT = baddr;
+	nand_set_weP(true);
+}
+
 void nand_recv_data(uint8_t* buffer, uint16_t count) {
 	nand_set_mode(false,false,false,true,true,false);
 	nand_iodir(false,0);

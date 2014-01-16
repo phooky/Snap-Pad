@@ -36,7 +36,7 @@ void nand_recv_data(uint8_t* buffer, uint16_t count);
 // for hax.
 void nand_send_command(uint8_t cmd);
 void nand_send_address(uint32_t addr);
-
+void nand_send_byte_address(uint8_t baddr);
 /**
  * Read the ID of this NAND chip.
  */
