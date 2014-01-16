@@ -1,5 +1,4 @@
 #!/usr/bin/python
-import serial
 import sys
 import nandlib
 import time
@@ -14,10 +13,10 @@ def h_id(length=-1):
 def h_id2(length=-1):
     n.cmd(0x30)
     n.cmd(0x65)
+    n.cmd(0x00)
     n.addr(0x00)
     n.addr(0x02)
     n.addr(0x02)
-    n.addr(0x00)
     n.addr(0x00)
     n.addr(0x00)
     n.cmd(0x30)
@@ -28,6 +27,12 @@ def h_onfi(length=-1):
     n.addr(0x20)
     n.dump(length)
 
+
+def h_uniq(length=-1):
+    n.cmd(0xee)
+    n.addr(0x00)
+    n.dump(length)
+
 if __name__ == '__main__':
     if len(sys.argv) < 2:
         h_id(2048)
@@ -35,6 +40,8 @@ if __name__ == '__main__':
         h_onfi(2048)
     elif sys.argv[1] == 'ID':
         h_id()
+    elif sys.argv[1] == 'UNIQ':
+        h_uniq()
     elif sys.argv[1] == 'READ':
         sys.stdout.write(n.nandRead(int(sys.argv[2]),int(sys.argv[3])))
     elif sys.argv[1] == 'OTP':
@@ -66,7 +73,7 @@ if __name__ == '__main__':
             sys.stdout.write('\n@{0:04X} '.format(addr))
             n.dump(80)
     elif sys.argv[1] == 'ID2':
-        h_id2()
+        h_id2(0,2,2,0,0,32)
     elif sys.argv[1] == 'ONFI':
         h_onfi()
 
