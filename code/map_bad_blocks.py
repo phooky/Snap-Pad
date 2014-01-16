@@ -21,7 +21,7 @@ def check_bad(plane,block):
         a = make_addr(plane,block,page,spare_start)
         b = ord(n.nandRead(a,1)[0])
         if b != 0xff:
-            print 'Bad block: {0}:{1} read: {2:02X}'.format(plane,block,b)
+            print 'Bad block: {0}:{1:04X} read: {2:02X}'.format(plane,block,b)
             return True
     return False
 
