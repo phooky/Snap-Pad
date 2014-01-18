@@ -51,17 +51,11 @@
 #include "nand.h"
 #include "hwrng.h"
 
-void run_snap_pad();
-
-char hex(uint8_t v) {
-	v &= 0x0f;
-	if (v < 10) return '0'+v;
-	return 'a'+(v-10);
-}
-
 #define CMDBUFSZ 128
 char cmdbuf[CMDBUFSZ];
 uint16_t cmdidx;
+
+void run_snap_pad();
 
 void main (void)
 {
@@ -76,8 +70,8 @@ void main (void)
     PMM_setVCore(PMM_BASE, PMM_CORE_LEVEL_2);
     
     initPorts();             // Configure all GPIOs
-    nand_init();
-    hwrng_init();
+    nand_init();             // Set up NAND pins
+    hwrng_init();            // Initialize HW RNG
     initClocks(8000000);     // Configure clocks
     USB_setup(TRUE,TRUE);    // Init USB & events; if a host is present, connect
 
@@ -85,27 +79,16 @@ void main (void)
 
     cmdidx = 0;
 
-    while (1)
+    while (1)  // main loop
     {
-        // This switch() creates separate main loops, depending on whether USB 
-        // is enumerated and active on the host, or disconnected/suspended.  If
-        // you prefer, you can eliminate the switch, and just call
-        // USB_connectionState() prior to sending data (to ensure the state is
-        // ST_ENUM_ACTIVE). 
         switch(USB_connectionState())
         {
-            // This case is executed while your device is connected to the USB
-            // host, enumerated, and communication is active.  Never enter 
-            // LPM3/4/5 in this mode; the MCU must be active or LPM0 during USB
-            // communication.
             case ST_ENUM_ACTIVE:
             	run_snap_pad();
             	break;
-            // These cases are executed while your device is:
             case ST_USB_DISCONNECTED: // physically disconnected from the host
             case ST_ENUM_SUSPENDED:   // connected/enumerated, but suspended
             case ST_NOENUM_SUSPENDED: // connected, enum started, but the host is unresponsive
-            
                 // In this example, for all of these states we enter LPM3.  If 
                 // the host performs a "USB resume" from suspend, the CPU will
                 // automatically wake.  Other events can also wake the
@@ -121,8 +104,14 @@ void main (void)
             case ST_ENUM_IN_PROGRESS:
             default:;
         }
-    }  //while(1)
-} //main()
+    }
+}
+
+char hex(uint8_t v) {
+	v &= 0x0f;
+	if (v < 10) return '0'+v;
+	return 'a'+(v-10);
+}
 
 uint8_t dehex(char c) {
 	if (c >= '0' && c <= '9') return c - '0';
@@ -150,8 +139,8 @@ void read_info() {
 		idbuf[10] = 'N';
 	}
 	cdcSendDataWaitTilDone((BYTE*)idbuf, 12, CDC0_INTFNUM, 100);
-	char* rsp = "\r\nOK\r\n";
-	cdcSendDataWaitTilDone((BYTE*)rsp, 6, CDC0_INTFNUM, 100);
+	char* rsp = "\r\n";
+	cdcSendDataWaitTilDone((BYTE*)rsp, 2, CDC0_INTFNUM, 100);
 }
 
 void read_status() {

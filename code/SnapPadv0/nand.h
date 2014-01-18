@@ -27,11 +27,21 @@ typedef struct {
 } IdInfo;
 
 /**
+ * Generate an address in NAND from a plane index, a block index, and
+ * a column.
+ */
+uint32_t nand_make_addr(const uint32_t plane,const uint32_t block,const uint32_t page,const uint32_t column) {
+	uint32_t addr = (column << 0) | (page << 12) | (plane << 18) | (block << 19);
+	return addr;
+}
+
+/**
  * Receive raw data from the NAND flash; only useful at chip boot or
  * after a command has been issued (and for reading past the end
  * of 'useful' buffers)
  */
 void nand_recv_data(uint8_t* buffer, uint16_t count);
+
 
 // for hax.
 void nand_send_command(uint8_t cmd);
@@ -61,7 +71,7 @@ void nand_read_raw_page(uint32_t address, uint8_t* buffer, uint16_t count);
 /**
  * Write data to NAND
  */
-void nand_program_raw_page(uint32_t address, uint8_t* buffer, uint16_t count);
+bool nand_program_raw_page(const uint32_t address, const uint8_t* buffer, const uint16_t count);
 
 /**
  * Read parameter page data

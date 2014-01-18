@@ -163,7 +163,7 @@ void nand_recv_data(uint8_t* buffer, uint16_t count) {
 	}
 }
 
-void nand_send_data(uint8_t* buffer, uint16_t count) {
+void nand_send_data(const uint8_t* buffer, uint16_t count) {
 	nand_set_mode(false,false,false,false,true,true);
 	nand_iodir(true,0);
 	while (count--) {
@@ -214,11 +214,12 @@ void nand_read_raw_page(uint32_t address, uint8_t* buffer, uint16_t count) {
 	nand_recv_data(buffer,count);
 }
 
-void nand_program_raw_page(uint32_t address, uint8_t* buffer, uint16_t count) {
+bool nand_program_raw_page(const uint32_t address, const uint8_t* buffer, const uint16_t count) {
 	nand_send_command(0x80);
 	nand_send_address(address);
 	nand_send_data(buffer,count);
 	nand_send_command(0x10);
+	return true;
 }
 
 void nand_read_parameter_page(uint8_t* buffer, uint16_t count) {
