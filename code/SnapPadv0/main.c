@@ -50,6 +50,7 @@
 #include "hal.h"
 #include "nand.h"
 #include "hwrng.h"
+#include "onetimepad.h"
 
 #define CMDBUFSZ 128
 char cmdbuf[CMDBUFSZ];
@@ -175,6 +176,28 @@ void read_hack(uint8_t* buffer){
 	}
 }
 
+void scan_bb() {
+	uint16_t bbl[10];
+	otp_scan_bad_blocks(bbl, 10);
+	uint8_t bbl_idx;
+	for (bbl_idx = 0; bbl_idx < 10; bbl_idx++) {
+		uint8_t buf[10];
+		char* tmpl = "BB:      \n";
+		uint8_t bufidx = 0;
+		if (bbl[bbl_idx] == 0xffff) { break; }
+		for (bufidx = 0; bufidx < 10; bufidx++) {
+			buf[bufidx] = (uint8_t)tmpl[bufidx];
+		}
+		uint16_t n = bbl[bbl_idx];
+		bufidx = 8;
+		while (n != 0) {
+			buf[bufidx--] = hex(n&0x0f);
+			n >>= 4;
+		}
+		cdcSendDataWaitTilDone((BYTE*)buf, 10, CDC0_INTFNUM, 100);
+	}
+}
+
 void read_rng() {
 	hwrng_start();
 	while (!hwrng_done());
@@ -193,6 +216,8 @@ void do_command(uint16_t len) {
 		read_status();
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
+	} else if (cmdbuf[0] == 'C') {
+		scan_bb();
 	} else if (cmdbuf[0] == 'H') { // start hack mode
 		read_hack((uint8_t*)cmdbuf+1);
 	} else if (cmdbuf[0] == 'B') { // reboot msp430

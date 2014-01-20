@@ -10,6 +10,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define PLANE_COUNT 2
+#define BLOCK_COUNT 1024
+#define PAGE_COUNT 64
+#define SPARE_START 2048
+
 /**
  * Initialize pins and default state for NAND flash chip.
  */
@@ -30,7 +35,7 @@ typedef struct {
  * Generate an address in NAND from a plane index, a block index, and
  * a column.
  */
-uint32_t nand_make_addr(const uint32_t plane,const uint32_t block,const uint32_t page,const uint32_t column) {
+inline uint32_t nand_make_addr(const uint32_t plane,const uint32_t block,const uint32_t page,const uint32_t column) {
 	uint32_t addr = (column << 0) | (page << 12) | (plane << 18) | (block << 19);
 	return addr;
 }
@@ -47,6 +52,7 @@ void nand_recv_data(uint8_t* buffer, uint16_t count);
 void nand_send_command(uint8_t cmd);
 void nand_send_address(uint32_t addr);
 void nand_send_byte_address(uint8_t baddr);
+
 /**
  * Read the ID of this NAND chip.
  */
@@ -61,7 +67,7 @@ bool nand_check_ONFI();
  */
 uint8_t nand_read_status_reg();
 /**
- * Erase an entire 2KB block in NAND (resetting it to 0xff)
+ * Erase an entire 128KB block in NAND (resetting it to 0xff)
  */
 void nand_block_erase(uint32_t address);
 /**
