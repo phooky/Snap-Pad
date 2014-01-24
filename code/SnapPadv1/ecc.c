@@ -75,7 +75,7 @@ uint32_t ecc_generate(uint8_t* buffer) {
  * corrected, it will be fixed in the passed buffer.
  * @param buffer the 512B buffer to verify
  * @param code the ECC code to verify with
- * @return true if no error or the error was corrected; false if the buffer cannot be fixed.
+ * @return true if no error or the error was corrected; false if the buffer has multi-bit errors.
  */
 bool ecc_verify(uint8_t* buffer, uint32_t code) {
 	uint32_t ecc_comp = ecc_generate(buffer) ^ code;
@@ -91,12 +91,12 @@ bool ecc_verify(uint8_t* buffer, uint32_t code) {
 	}
 	if (bits == 12) {
 		// Do correction
-          if ((ecc_comp & (uint32_t)1<<24) == 0) return false; // Check extended DED bit
-          uint8_t bit = ((ecc_comp & (uint32_t)1<<23)?4:0) |
-            ((ecc_comp & (uint32_t)1<<21)?2:0) |
-            ((ecc_comp & (uint32_t)1<<19)?1:0);
-          uint16_t idx = ((ecc_comp & (uint32_t)1 << 17)?0x100:0) | (ecc_comp&0xff);
-          buffer[idx] ^= 1 << bit;
+		if ((ecc_comp & (uint32_t)1<<24) == 0) return false; // Check extended DED bit
+		uint8_t bit = ((ecc_comp & (uint32_t)1<<23)?4:0) |
+				((ecc_comp & (uint32_t)1<<21)?2:0) |
+				((ecc_comp & (uint32_t)1<<19)?1:0);
+		uint16_t idx = ((ecc_comp & (uint32_t)1 << 17)?0x100:0) | (ecc_comp&0xff);
+		buffer[idx] ^= 1 << bit;
 		return true;
 	}
 	return false;
