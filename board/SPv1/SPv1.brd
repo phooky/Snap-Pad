@@ -142,7 +142,7 @@
 <wire x1="104.394" y1="26.67" x2="113.538" y2="26.67" width="0" layer="20"/>
 <wire x1="113.538" y1="26.67" x2="113.538" y2="14.478" width="0" layer="20"/>
 <wire x1="113.538" y1="14.478" x2="104.648" y2="14.478" width="0" layer="20"/>
-<text x="42.2275" y="32.0675" size="1.27" layer="51">CONFIRM</text>
+<text x="42.2275" y="32.0675" size="1.27" layer="25">CONFIRM</text>
 <wire x1="55.88" y1="24.765" x2="57.15" y2="24.765" width="0" layer="20"/>
 <wire x1="55.88" y1="14.9225" x2="57.15" y2="14.9225" width="0" layer="20"/>
 <hole x="56.515" y="23.8125" drill="0.6"/>
@@ -156,6 +156,10 @@
 <text x="72.0725" y="31.115" size="1.778" layer="25">B</text>
 <text x="28.8925" y="9.8425" size="1.778" layer="25">SNAP-PAD</text>
 <text x="58.42" y="31.115" size="1.778" layer="25">SNAP-PAD</text>
+<text x="39.6875" y="24.4475" size="1.016" layer="25">Licensed under
+CERN OHL v.1.2</text>
+<text x="68.8975" y="16.51" size="1.016" layer="25" rot="SR180">Licensed under
+CERN OHL v.1.2</text>
 </plain>
 <libraries>
 <library name="Flash">
@@ -2264,4 +2268,10 @@ Please make sure your boards conform to these design rules.</description>
 </errors>
 </board>
 </drawing>
+<compatibility>
+<note version="6.3" minversion="6.2.2" severity="warning">
+Since Version 6.2.2 text objects can contain more than one line,
+which will not be processed correctly with this version.
+</note>
+</compatibility>
 </eagle>
