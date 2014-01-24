@@ -825,15 +825,16 @@ We've spent an enormous amount of time creating and checking these footprints an
 
 For boards designed to be plugged directly into a USB slot. If possible, ensure that your PCB is about 2.4mm thick to fit snugly.</description>
 <wire x1="-5" y1="6" x2="3.7" y2="6" width="0.127" layer="51"/>
-<wire x1="3.7" y1="6" x2="3.7" y2="-6" width="0.127" layer="51"/>
+<wire x1="3.7" y1="6" x2="3.7" y2="-6" width="0.127" layer="51" style="shortdash"/>
 <wire x1="3.7" y1="-6" x2="-5" y2="-6" width="0.127" layer="51"/>
 <wire x1="-5" y1="-6" x2="-5" y2="6" width="0.127" layer="51"/>
-<smd name="GND" x="-0.2" y="-3.5" dx="7.5" dy="1.5" layer="1"/>
+<smd name="5V" x="-0.2" y="-3.5" dx="7.5" dy="1.5" layer="1"/>
 <smd name="USB_M" x="0.3" y="-1" dx="6.5" dy="1" layer="1"/>
 <smd name="USB_P" x="0.3" y="1" dx="6.5" dy="1" layer="1"/>
-<smd name="5V" x="-0.2" y="3.5" dx="7.5" dy="1.5" layer="1"/>
+<smd name="GND" x="-0.2" y="3.5" dx="7.5" dy="1.5" layer="1"/>
 <text x="-1.27" y="5.08" size="0.4064" layer="25">&gt;Name</text>
 <text x="-1.27" y="-5.08" size="0.4064" layer="27">&gt;Value</text>
+<text x="-6.35" y="-3.81" size="1.016" layer="48" rot="R90">Card edge</text>
 </package>
 <package name="USB-B-PTH-VERTICAL">
 <description>&lt;b&gt;USB Series B Hole Mounted&lt;/b&gt;</description>
@@ -2932,11 +2933,6 @@ Based on the following sources:
 <wire x1="132.08" y1="55.88" x2="132.08" y2="60.96" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="JP1" gate="G$1" pin="GND"/>
-<pinref part="SUPPLY5" gate="GND" pin="GND"/>
-<wire x1="129.54" y1="104.14" x2="129.54" y2="129.54" width="0.1524" layer="91"/>
-</segment>
-<segment>
 <pinref part="C6" gate="G$1" pin="1"/>
 <pinref part="SUPPLY6" gate="GND" pin="GND"/>
 </segment>
@@ -2983,6 +2979,11 @@ Based on the following sources:
 <pinref part="SUPPLY14" gate="GND" pin="GND"/>
 <pinref part="U$1" gate="G$1" pin="A1"/>
 <wire x1="17.78" y1="33.02" x2="22.86" y2="33.02" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="JP1" gate="G$1" pin="GND"/>
+<pinref part="SUPPLY5" gate="GND" pin="GND"/>
+<wire x1="129.54" y1="129.54" x2="129.54" y2="104.14" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="+3V3_A" class="0">
@@ -3164,6 +3165,15 @@ Based on the following sources:
 <pinref part="IC2" gate="G$1" pin="39"/>
 <wire x1="73.66" y1="93.98" x2="81.28" y2="93.98" width="0.1524" layer="91"/>
 <label x="76.2" y="93.98" size="1.4224" layer="95"/>
+</segment>
+<segment>
+<pinref part="SJ1" gate="1" pin="1"/>
+<pinref part="R4" gate="G$1" pin="2"/>
+<wire x1="144.78" y1="93.98" x2="142.24" y2="93.98" width="0.1524" layer="91"/>
+<wire x1="142.24" y1="93.98" x2="137.16" y2="93.98" width="0.1524" layer="91"/>
+<wire x1="142.24" y1="93.98" x2="142.24" y2="83.82" width="0.1524" layer="91"/>
+<junction x="142.24" y="93.98"/>
+<label x="142.24" y="83.82" size="1.778" layer="95" rot="R90"/>
 </segment>
 </net>
 <net name="TDO_A" class="0">
@@ -3502,13 +3512,6 @@ Based on the following sources:
 <wire x1="157.48" y1="93.98" x2="154.94" y2="93.98" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$11" class="0">
-<segment>
-<pinref part="SJ1" gate="1" pin="1"/>
-<pinref part="R4" gate="G$1" pin="2"/>
-<wire x1="144.78" y1="93.98" x2="137.16" y2="93.98" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="SW_A" class="0">
 <segment>
 <pinref part="U$1" gate="G$1" pin="B"/>
@@ -3523,10 +3526,10 @@ Based on the following sources:
 </net>
 <net name="N$33" class="0">
 <segment>
-<pinref part="JP1" gate="G$1" pin="VBUS"/>
-<wire x1="127" y1="129.54" x2="127" y2="124.46" width="0.1524" layer="91"/>
 <pinref part="D1" gate="G$1" pin="ANODE"/>
+<pinref part="JP1" gate="G$1" pin="VBUS"/>
 <wire x1="132.08" y1="124.46" x2="127" y2="124.46" width="0.1524" layer="91"/>
+<wire x1="127" y1="124.46" x2="127" y2="129.54" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
@@ -3729,11 +3732,6 @@ Based on the following sources:
 <wire x1="114.3" y1="20.32" x2="114.3" y2="25.4" width="0.1524" layer="91"/>
 </segment>
 <segment>
-<pinref part="JP2" gate="G$1" pin="GND"/>
-<pinref part="SUPPLY20" gate="GND" pin="GND"/>
-<wire x1="111.76" y1="68.58" x2="111.76" y2="93.98" width="0.1524" layer="91"/>
-</segment>
-<segment>
 <pinref part="C13" gate="G$1" pin="1"/>
 <pinref part="SUPPLY21" gate="GND" pin="GND"/>
 </segment>
@@ -3775,6 +3773,11 @@ Based on the following sources:
 <pinref part="SUPPLY29" gate="GND" pin="GND"/>
 <pinref part="U$2" gate="G$1" pin="A1"/>
 <wire x1="0" y1="-2.54" x2="5.08" y2="-2.54" width="0.1524" layer="91"/>
+</segment>
+<segment>
+<pinref part="JP2" gate="G$1" pin="GND"/>
+<pinref part="SUPPLY20" gate="GND" pin="GND"/>
+<wire x1="111.76" y1="93.98" x2="111.76" y2="68.58" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="VBUS" class="0">
@@ -3964,13 +3967,6 @@ Based on the following sources:
 <wire x1="139.7" y1="58.42" x2="137.16" y2="58.42" width="0.1524" layer="91"/>
 </segment>
 </net>
-<net name="N$32" class="0">
-<segment>
-<pinref part="SJ2" gate="1" pin="1"/>
-<pinref part="R11" gate="G$1" pin="2"/>
-<wire x1="127" y1="58.42" x2="119.38" y2="58.42" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="DOUT_B" class="0">
 <segment>
 <pinref part="IC5" gate="G$1" pin="1"/>
@@ -4156,6 +4152,15 @@ Based on the following sources:
 <wire x1="55.88" y1="58.42" x2="63.5" y2="58.42" width="0.1524" layer="91"/>
 <label x="58.42" y="58.42" size="1.4224" layer="95"/>
 </segment>
+<segment>
+<pinref part="SJ2" gate="1" pin="1"/>
+<pinref part="R11" gate="G$1" pin="2"/>
+<wire x1="127" y1="58.42" x2="124.46" y2="58.42" width="0.1524" layer="91"/>
+<wire x1="124.46" y1="58.42" x2="119.38" y2="58.42" width="0.1524" layer="91"/>
+<wire x1="124.46" y1="58.42" x2="124.46" y2="48.26" width="0.1524" layer="91"/>
+<junction x="124.46" y="58.42"/>
+<label x="124.46" y="48.26" size="1.778" layer="95" rot="R90"/>
+</segment>
 </net>
 <net name="D+_B" class="0">
 <segment>
@@ -4264,14 +4269,6 @@ Based on the following sources:
 <label x="58.42" y="22.86" size="1.4224" layer="95"/>
 </segment>
 </net>
-<net name="N$40" class="0">
-<segment>
-<pinref part="JP2" gate="G$1" pin="VBUS"/>
-<wire x1="109.22" y1="93.98" x2="109.22" y2="88.9" width="0.1524" layer="91"/>
-<pinref part="D2" gate="G$1" pin="ANODE"/>
-<wire x1="114.3" y1="88.9" x2="109.22" y2="88.9" width="0.1524" layer="91"/>
-</segment>
-</net>
 <net name="INTER_RXB_TXA" class="0">
 <segment>
 <pinref part="IC5" gate="G$1" pin="34"/>
@@ -4284,6 +4281,14 @@ Based on the following sources:
 <pinref part="IC5" gate="G$1" pin="33"/>
 <wire x1="55.88" y1="43.18" x2="71.12" y2="43.18" width="0.1524" layer="91"/>
 <label x="66.04" y="43.18" size="1.778" layer="95"/>
+</segment>
+</net>
+<net name="N$40" class="0">
+<segment>
+<pinref part="D2" gate="G$1" pin="ANODE"/>
+<pinref part="JP2" gate="G$1" pin="VBUS"/>
+<wire x1="114.3" y1="88.9" x2="109.22" y2="88.9" width="0.1524" layer="91"/>
+<wire x1="109.22" y1="88.9" x2="109.22" y2="93.98" width="0.1524" layer="91"/>
 </segment>
 </net>
 </nets>
