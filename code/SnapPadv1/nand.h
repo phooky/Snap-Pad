@@ -129,4 +129,9 @@ bool nand_zero_page(uint32_t address);
  */
 void nand_read_parameter_page(uint8_t* buffer, uint16_t count);
 
+/**
+ * Wait for nand to finish any previous operations.
+ */
+void nand_wait_for_ready();
+
 #endif /* NAND_H_ */

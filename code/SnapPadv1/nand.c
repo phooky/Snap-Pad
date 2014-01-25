@@ -87,7 +87,7 @@ inline bool nand_check_rb() {
 	return (P4IN & RB_BIT) != 0;
 }
 
-inline void nand_wait_for_ready() {
+void nand_wait_for_ready() {
 	while (!nand_check_rb()) ;
 }
 
