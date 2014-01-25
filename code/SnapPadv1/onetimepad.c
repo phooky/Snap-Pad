@@ -1,0 +1,191 @@
+#include "onetimepad.h"
+#include "nand.h"
+#include "config.h"
+
+#define MAGIC_LEN 8
+const uint8_t MAGIC[MAGIC_LEN] = { 'S','N','A','P','-','P','A','D' };
+
+#define HEADER_PAGE 0
+#define MAPPING_PAGE_START 2
+#define USAGE_PAGE 4
+#define FLAGS_PAGE 5
+
+typedef struct {
+	uint8_t magic[MAGIC_LEN];
+	uint8_t major_version;
+	uint8_t minor_version;
+	uint8_t is_A;
+} OTPHeader;
+
+typedef struct {
+	uint8_t header_written : 2;
+	uint8_t block_map_written : 2;
+	uint8_t random_data_written : 2;
+	uint8_t reserved : 2;
+} OTPFlags;
+
+#define BBL_START 0x10
+
+/** Check if a given block is marked as bad.
+ * @param plane the plane the block is in (0-1)
+ * @param block the block number (0-1023)
+ * @return true if the block is marked bad; false otherwise
+ */
+bool check_bad_block(uint32_t plane, uint32_t block) {
+	uint32_t addr;
+	uint8_t check;
+	addr = nand_make_addr(plane,block,0,SPARE_START);
+	nand_read_raw_page(addr,&check,1);
+	if (check != 0xff) return true;
+	addr = nand_make_addr(plane,block,1,SPARE_START);
+	nand_read_raw_page(addr,&check,1);
+	if (check != 0xff) return true;
+	addr = nand_make_addr(plane,block,PAGE_COUNT-1,SPARE_START);
+	nand_read_raw_page(addr,&check,1);
+	if (check != 0xff) return true;
+	return false;
+}
+
+/** Mark a block as bad (for future scans). Presumes the block has been erased. */
+void mark_bad_block(uint32_t plane, uint32_t block) {
+	uint32_t addr;
+	uint8_t check = 0;
+	addr = nand_make_addr(plane,block,0,SPARE_START);
+	nand_program_raw_page(addr,&check,1);
+	nand_wait_for_ready();
+	addr = nand_make_addr(plane,block,1,SPARE_START);
+	nand_program_raw_page(addr,&check,1);
+	nand_wait_for_ready();
+	addr = nand_make_addr(plane,block,PAGE_COUNT-1,SPARE_START);
+	nand_program_raw_page(addr,&check,1);
+}
+
+/**
+ * Scan the raw NAND to detect bad blocks. Populate the passed bad block buffer.
+ * @param bad_block_list buffer to populate with bad block ids. If the
+ * list of scanned blocks is smaller than the given buffer length, the list will
+ * be terminated with the value 0xFFFF
+ * @param block_list_sz size of the bad block list buffer
+ * @return the number of bad blocks found
+ */
+uint8_t otp_scan_bad_blocks(uint16_t* bad_block_list, uint8_t block_list_len) {
+	uint32_t plane, block;
+	uint8_t bbl_idx = 0;
+	for (plane = 0; plane < PLANE_COUNT; plane++) {
+		for (block = 0; block < BLOCK_COUNT; block++) {
+			if (check_bad_block(plane,block)) {
+				bad_block_list[bbl_idx++] = (plane << 10) | block;
+				if (bbl_idx >= block_list_len) return bbl_idx;
+			}
+		}
+	}
+	bad_block_list[bbl_idx] = 0xFFFF;
+	return bbl_idx;
+}
+
+/**
+ * Retrieve the bad block list stored on the NAND.
+ * @param bad_block_list buffer to populate with bad block ids
+ * @param block_list_sz size of the bad block list buffer
+ * @return the number of bad blocks loaded
+ */
+uint8_t otp_fetch_bad_blocks(uint16_t* bad_block_list, uint8_t block_list_len) {
+	uint32_t addr = nand_make_addr(0,0,0,BBL_START);
+	nand_read_raw_page(addr,(uint8_t*)bad_block_list,block_list_len*2);
+	uint8_t i;
+	for (i = 0; i < block_list_len; i++) {
+		if (bad_block_list[i] == 0xFFFF) { return i; }
+	}
+	return i;
+}
+
+/**
+ * Store the bad block list to the NAND.
+ * @param bad_block_list list of bad block ids
+ * @param block_list_count number of bad blocks
+ * @return true if list successfully written
+ */
+bool otp_write_bad_blocks(uint16_t* bad_block_list, uint8_t bad_block_count) {
+	uint32_t addr = nand_make_addr(0,0,0,BBL_START);
+	nand_program_raw_page(addr,(uint8_t*)bad_block_list,bad_block_count*2);
+	// if count is less than max, white 0xFF to end
+	if (bad_block_count < BBL_MAX_ENTRIES) {
+		nand_wait_for_ready();
+		uint16_t entry = 0xff;
+		nand_program_raw_page(addr + (bad_block_count*2), (uint8_t*)&entry, 2);
+	}
+	return true;
+}
+
+/** Header layout
+ *  0x00: "SNAP-PAD" (8B)
+ *  0x08: major version (1B)
+ *  0x09: minor version (1B)
+ *  0x0A: reserved (6B)
+ *  0x10: bad block list (32B, 16 16-bit entries, terminated by 0xff)
+ *
+ * flags_A (1B)
+ *  Flags: each flag has two bits assigned to it.
+ *  flags_A:
+ *  -------------------------------------------------
+ *  |  7  |  6  |  5  |  4  |  3  |  2  |  1  |  0  |
+ *  -------------------------------------------------
+ *  |   BBL_W   |    BT_W   |  RDM_W    |  MASTER   |
+ *  -------------------------------------------------
+ *  BBL_W: 0x00 if bad block list has been written
+ *  BT_W:  0x00 if block table has been written
+ *  RDM_W: 0x00 if all random blocks have been initialized
+ *  MASTER: 0x00 if this side of the snap-pad is the "master" for writing
+ */
+
+OTPConfig otp_read_header() {
+	OTPConfig config;
+	config.has_header = false;
+	OTPHeader* header;
+	uint8_t i;
+	nand_load_page(0);
+	header = (OTPHeader*)nand_page_buffer();
+	for (i = 0; i < MAGIC_LEN; i++) {
+		if (header->magic[i] != MAGIC[i]) return config; // no header found
+	}
+	config.has_header = true;
+	config.major_version = header->major_version;
+	config.minor_version = header->minor_version;
+	config.is_A = header->is_A == 0xff;
+
+	OTPFlags flags;
+	nand_read_raw_page(nand_make_addr(0,0,FLAGS_PAGE,0),(uint8_t*)&flags,sizeof(flags));
+	config.block_map_written = flags.block_map_written != 0x03;
+	config.random_data_written = flags.random_data_written != 0x03;
+	return config;
+}
+
+/** Initialize the header block. If there's already one, erase block zero and recreate the
+ * header block from scratch. Be careful! This method:
+ * * Checks for and reads the bad block list
+ *   * Generates a bad block list by scanning if none exists
+ * * Erases block 0
+ *   * Set-once flags and usage map are implicitly created by erasure (all 0xff)
+ * * Creates and writes the header, version, and BBL
+ *   * Marks header as written
+ * * Creates the block mapping table
+ *   * Marks non-present blocks in usage map as used
+ *   * Marks block mapping table as created
+ * @return true if successful
+ */
+bool otp_initialize_header() {
+	OTPHeader* header;
+	uint8_t i;
+	// Check for existing header with BBL
+	OTPConfig config = otp_read_header();
+
+	nand_initialize_page_buffer();
+	header = (OTPHeader*)nand_page_buffer();
+	for (i = 0; i < MAGIC_LEN; i++) {
+		header->magic[i] = MAGIC[i];
+	}
+	header->major_version = MAJOR_VERSION;
+	header->minor_version = MINOR_VERSION;
+	header->is_A = IS_A;
+	return nand_save_page(0);
+}

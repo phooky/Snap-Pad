@@ -88,6 +88,11 @@ void nand_read_raw_page(uint32_t address, uint8_t* buffer, uint16_t count);
 bool nand_program_raw_page(const uint32_t address, const uint8_t* buffer, const uint16_t count);
 
 /**
+ * Initialize the page buffer with unprogrammed (0xff) values.
+ */
+void nand_initialize_page_buffer();
+
+/**
  * Load an entire page into the page buffer. Uses a Huffman code for SEC-DED on each 512B paragraph.
  * @param the address of the page start.
  * @return true if the read was successful; false if there was a multibit error.
