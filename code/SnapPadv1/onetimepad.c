@@ -14,6 +14,7 @@ typedef struct {
 	uint8_t magic[MAGIC_LEN];
 	uint8_t major_version;
 	uint8_t minor_version;
+	uint16_t block_count;
 	uint8_t is_A;
 } OTPHeader;
 
@@ -121,21 +122,9 @@ bool otp_write_bad_blocks(uint16_t* bad_block_list, uint8_t bad_block_count) {
  *  0x00: "SNAP-PAD" (8B)
  *  0x08: major version (1B)
  *  0x09: minor version (1B)
- *  0x0A: reserved (6B)
+ *  0x10: block count (2B)
+ *  0x0C: reserved (4B)
  *  0x10: bad block list (32B, 16 16-bit entries, terminated by 0xff)
- *
- * flags_A (1B)
- *  Flags: each flag has two bits assigned to it.
- *  flags_A:
- *  -------------------------------------------------
- *  |  7  |  6  |  5  |  4  |  3  |  2  |  1  |  0  |
- *  -------------------------------------------------
- *  |   BBL_W   |    BT_W   |  RDM_W    |  MASTER   |
- *  -------------------------------------------------
- *  BBL_W: 0x00 if bad block list has been written
- *  BT_W:  0x00 if block table has been written
- *  RDM_W: 0x00 if all random blocks have been initialized
- *  MASTER: 0x00 if this side of the snap-pad is the "master" for writing
  */
 
 OTPConfig otp_read_header() {
@@ -152,12 +141,27 @@ OTPConfig otp_read_header() {
 	config.major_version = header->major_version;
 	config.minor_version = header->minor_version;
 	config.is_A = header->is_A == 0xff;
+	config.block_count = header->block_count;
 
 	OTPFlags flags;
 	nand_read_raw_page(nand_make_addr(0,0,FLAGS_PAGE,0),(uint8_t*)&flags,sizeof(flags));
 	config.block_map_written = flags.block_map_written != 0x03;
 	config.random_data_written = flags.random_data_written != 0x03;
 	return config;
+}
+
+inline uint16_t next_good(uint16_t last, uint16_t* bbl, uint8_t bbcount) {
+	uint8_t next = last;
+	uint8_t i;
+	bool okay = false;
+	while (!okay) {
+		next++;
+		okay = true;
+		for (i = 0; i < bbcount; i++) {
+			if (bbl[i] == next) okay = false;
+		}
+	}
+	return next;
 }
 
 /** Initialize the header block. If there's already one, erase block zero and recreate the
@@ -176,9 +180,18 @@ OTPConfig otp_read_header() {
 bool otp_initialize_header() {
 	OTPHeader* header;
 	uint8_t i;
+	uint16_t bbl[BBL_MAX_ENTRIES];
+	uint8_t bbcount;
 	// Check for existing header with BBL
 	OTPConfig config = otp_read_header();
-
+	if (config.has_header) {
+		bbcount = otp_fetch_bad_blocks(bbl, BBL_MAX_ENTRIES);
+	} else {
+		bbcount = otp_scan_bad_blocks(bbl, BBL_MAX_ENTRIES);
+	}
+	// Erase block 0
+	nand_block_erase(nand_make_addr(0,0,0,0));
+	// Create and write header, version, bbl
 	nand_initialize_page_buffer();
 	header = (OTPHeader*)nand_page_buffer();
 	for (i = 0; i < MAGIC_LEN; i++) {
@@ -187,5 +200,48 @@ bool otp_initialize_header() {
 	header->major_version = MAJOR_VERSION;
 	header->minor_version = MINOR_VERSION;
 	header->is_A = IS_A;
+	header->block_count = 2048 - (1 + bbcount);
+	uint16_t* bbl_target = (uint16_t*)(nand_page_buffer() + BBL_START);
+	for (i = 0; i < bbcount; i++) {
+		*(bbl_target++) = bbl[i];
+	}
+	// write header page
+	bool write_succ = nand_save_page(0);
+	nand_wait_for_ready();
+
+	if (!write_succ) return false;
+
+	// write header confirmation bits
+	OTPFlags flags;
+	uint32_t flagaddr = nand_make_addr(0,0,FLAGS_PAGE,0);
+	nand_read_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
+	nand_wait_for_ready();
+	flags.header_written = 0x00;
+	nand_program_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
+	nand_wait_for_ready();
+
+	// create block mapping table
+	nand_initialize_page_buffer();
+	uint16_t idx = 0;
+	uint16_t* map = (uint16_t*)nand_page_buffer();
+	uint16_t next_free = next_good(0, bbl, bbcount);
+	while (next_free < 2048) {
+		map[idx] = next_free;
+		idx++;
+		if (idx == 1024) {
+			nand_save_page(2);
+			nand_wait_for_ready();
+			nand_initialize_page_buffer();
+			idx = 0;
+		}
+		next_free = next_good(next_free, bbl, bbcount);
+	}
+	nand_save_page(3);
+
+	// mark block mapping table written
+	flags.block_map_written = 0x00;
+	nand_program_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
+	nand_wait_for_ready();
+
 	return nand_save_page(0);
 }

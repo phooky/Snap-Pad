@@ -39,6 +39,7 @@ typedef struct {
 	bool is_A;
 	uint8_t major_version;
 	uint8_t minor_version;
+	uint16_t block_count;
 } OTPConfig;
 
 /**
