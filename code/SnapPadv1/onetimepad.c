@@ -192,8 +192,8 @@ bool otp_initialize_header() {
 	// Erase block 0
 	nand_block_erase(nand_make_addr(0,0,0,0));
 	// Create and write header, version, bbl
-	nand_initialize_page_buffer();
-	header = (OTPHeader*)nand_page_buffer();
+	nand_initialize_para_buffer();
+	header = (OTPHeader*)nand_para_buffer();
 	for (i = 0; i < MAGIC_LEN; i++) {
 		header->magic[i] = MAGIC[i];
 	}
@@ -201,12 +201,12 @@ bool otp_initialize_header() {
 	header->minor_version = MINOR_VERSION;
 	header->is_A = IS_A;
 	header->block_count = 2048 - (1 + bbcount);
-	uint16_t* bbl_target = (uint16_t*)(nand_page_buffer() + BBL_START);
+	uint16_t* bbl_target = (uint16_t*)(nand_para_buffer() + BBL_START);
 	for (i = 0; i < bbcount; i++) {
 		*(bbl_target++) = bbl[i];
 	}
 	// write header page
-	bool write_succ = nand_save_page(0);
+	bool write_succ = nand_save_para(0,0,0);
 	nand_wait_for_ready();
 
 	if (!write_succ) return false;
@@ -221,17 +221,19 @@ bool otp_initialize_header() {
 	nand_wait_for_ready();
 
 	// create block mapping table
-	nand_initialize_page_buffer();
+	nand_initialize_para_buffer();
 	uint16_t idx = 0;
+	uint16_t para = 0;
 	uint16_t* map = (uint16_t*)nand_page_buffer();
 	uint16_t next_free = next_good(0, bbl, bbcount);
 	while (next_free < 2048) {
 		map[idx] = next_free;
 		idx++;
-		if (idx == 1024) {
-			nand_save_page(2);
+		if (idx == PARA_SIZE) {
+			nand_save_page(0,2+(para/4),para%4);
 			nand_wait_for_ready();
-			nand_initialize_page_buffer();
+			nand_initialize_para_buffer();
+			para++;
 			idx = 0;
 		}
 		next_free = next_good(next_free, bbl, bbcount);

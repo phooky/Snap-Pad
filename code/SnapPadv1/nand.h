@@ -14,6 +14,8 @@
 #define BLOCK_COUNT 1024
 #define PAGE_COUNT 64
 #define SPARE_START 2048
+#define PARA_SIZE 512
+#define PARA_SPARE_SIZE 16
 
 /**
  * Initialize pins and default state for NAND flash chip.
@@ -37,6 +39,14 @@ typedef struct {
  */
 inline uint32_t nand_make_addr(const uint32_t plane,const uint32_t block,const uint32_t page,const uint32_t column) {
 	uint32_t addr = (column << 0) | (page << 12) | (plane << 18) | (block << 19);
+	return addr;
+}
+
+/**
+ * Generate an address in NAND from a block index (implies plane), a page number, and a paragraph number.
+ */
+inline uint32_t nand_make_para_addr(const uint16_t block,const uint8_t page,const uint8_t para) {
+	uint32_t addr = ((PARA_SIZE+PARA_SPARE_SIZE)*para) | ((uint32_t)page << 12) | (((block & 0x400) == 0)?0:((uint32_t)1 << 18)) | ((uint32_t)(block & 0x3ff) << 19);
 	return addr;
 }
 
@@ -90,37 +100,42 @@ bool nand_program_raw_page(const uint32_t address, const uint8_t* buffer, const 
 /**
  * Initialize the page buffer with unprogrammed (0xff) values.
  */
-void nand_initialize_page_buffer();
+void nand_initialize_para_buffer();
 
 /**
- * Load an entire page into the page buffer. Uses a Huffman code for SEC-DED on each 512B paragraph.
- * @param the address of the page start.
+ * Load an entire paragraph into the paragraph buffer. Uses a Huffman code for SEC-DED on each 512B paragraph.
+ * @param block the block number (>1024 indicates plane 1)
+ * @param page the page number
+ * @param paragraph the paragraph within the page to zero (0-3).
  * @return true if the read was successful; false if there was a multibit error.
  */
-bool nand_load_page(uint32_t address);
+bool nand_load_para(uint16_t block, uint8_t page, uint8_t paragraph);
 
 /**
  * Write an entire page from the page buffer into NAND with SEC-DED error correction.
  * At present, blocks until entire page write is complete.
- * @param the address of the page start.
+ * @param block the block number (>1024 indicates plane 1)
+ * @param page the page number
+ * @param paragraph the paragraph within the page to zero (0-3).
  * @return true if the write was successful; false if there was a write error.
  */
-bool nand_save_page(uint32_t address);
+bool nand_save_para(uint16_t block, uint8_t page, uint8_t paragraph);
 
 /**
  * Retrieve a pointer to the 2112B page buffer. The area from 2048-2011 is the spare
  * data area; this data should rarely be directly manipulated by the client.
  */
-uint8_t* nand_page_buffer();
+uint8_t* nand_para_buffer();
 
 /**
  * Zero a 512B paragraph and its associated spare area. This should be done immediately
  * after using a paragraph.
- * @param address the address of the page start
- * @param paragraph the paragraph within the page to erase (0-3).
+ * @param block the block number (>1024 indicates plane 1)
+ * @param page the page number
+ * @param paragraph the paragraph within the page to zero (0-3).
  * @return true if the zero was successful
  */
-bool nand_zero_paragraph(uint32_t address, uint8_t paragraph);
+bool nand_zero_paragraph(uint16_t block, uint8_t page, uint8_t paragraph);
 
 /**
  * Zero an entire page and its spare area.

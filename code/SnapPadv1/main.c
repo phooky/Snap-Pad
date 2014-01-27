@@ -124,24 +124,6 @@ void error() {
 	cdcSendDataWaitTilDone((BYTE*)rsp, 5, CDC0_INTFNUM, 100);
 }
 
-void read_info() {
-	char idbuf[11];
-	IdInfo id = nand_read_id();
-	idbuf[1] = hex(id.manufacturer_code); idbuf[0] = hex(id.manufacturer_code >> 4);
-	idbuf[3] = hex(id.device_id); idbuf[2] = hex(id.device_id >> 4);
-	idbuf[5] = hex(id.details1); idbuf[4] = hex(id.details1 >> 4);
-	idbuf[7] = hex(id.details2); idbuf[6] = hex(id.details2 >> 4);
-	idbuf[9] = hex(id.ecc_info); idbuf[8] = hex(id.ecc_info >> 4);
-	if (nand_check_ONFI()) {
-		idbuf[10] = 'Y';
-	} else {
-		idbuf[10] = 'N';
-	}
-	cdcSendDataWaitTilDone((BYTE*)idbuf, 12, CDC0_INTFNUM, 100);
-	char* rsp = "\r\n";
-	cdcSendDataWaitTilDone((BYTE*)rsp, 2, CDC0_INTFNUM, 100);
-}
-
 void read_status() {
 	char sbuf[8];
 	uint8_t status = nand_read_status_reg();
@@ -184,9 +166,12 @@ void read_rng() {
 }
 
 void do_command(uint8_t* cmdbuf, uint16_t len) {
-	if (cmdbuf[0] == 'I') { // reading chip info structure
-		read_info();
-	} else if (cmdbuf[0] == 'L') { // set LEDs
+	if (cmdbuf[0] == '\n' || cmdbuf[0] == '\r') {
+		// skip
+	} else if (cmdbuf[0] == 'I') {
+		// Initialize nand
+		otp_initialize_header();
+	} else if (cmdbuf[0] == 'l') { // set LEDs
 		leds_set(dehex(cmdbuf[1]));
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
@@ -234,7 +219,10 @@ void do_command(uint8_t* cmdbuf, uint16_t len) {
 			nand_program_raw_page(addr, (uint8_t*)(cmdbuf + idx), len - idx);
 			cdcSendDataWaitTilDone((BYTE*)rsp, 4, CDC0_INTFNUM, 100);
 		}
-	} else { error(); return; }
+	} else {
+		cdcSendDataWaitTilDone((BYTE*)cmdbuf, 1, CDC0_INTFNUM, 100);
+		error(); return;
+	}
 }
 
 #define CMDBUFSZ 128

@@ -238,72 +238,67 @@ void nand_read_parameter_page(uint8_t* buffer, uint16_t count) {
  * 2080-2095  spare 2
  * 2096-2111  spare 3
  */
-uint8_t page_buffer[2112];
+static uint8_t para_buffer[PARA_SIZE+PARA_SPARE_SIZE];
 
 /**
  * Initialize the page buffer with unprogrammed (0xff) values.
  */
-void nand_initialize_page_buffer() {
+void nand_initialize_para_buffer() {
 	uint16_t idx;
-	for (idx = 0; idx < 2112; idx++) page_buffer[idx] = 0xff;
+	for (idx = 0; idx < PARA_SIZE; idx++) para_buffer[idx] = 0xff;
 }
 
 /**
- * Load an entire page into the page buffer. Uses a Huffman code for SEC-DED on each 512B paragraph.
- * @param the address of the page start.
+ * Load an entire paragraph into the paragraph buffer. Uses a Huffman code for SEC-DED on each 512B paragraph.
+ * @param block the block number (>1024 indicates plane 1)
+ * @param page the page number
+ * @param paragraph the paragraph within the page to zero (0-3).
  * @return true if the read was successful; false if there was a multibit error.
  */
-bool nand_load_page(uint32_t address) {
-	nand_read_raw_page(address, page_buffer, 2112);
-	uint8_t para;
-	for (para = 0; para < 4; para++) {
-		uint32_t ecc = *(uint32_t*)(page_buffer + SPARE_START + (16*para));
-		if (!ecc_verify(page_buffer + (512*para),ecc)) return false;
-	}
+bool nand_load_para(uint16_t block, uint8_t page, uint8_t paragraph) {
+	uint32_t address = nand_make_para_addr(block,page,paragraph);
+	nand_read_raw_page(address, para_buffer, PARA_SIZE+PARA_SPARE_SIZE);
+	uint32_t ecc = *(uint32_t*)(para_buffer + PARA_SIZE);
+	if (!ecc_verify(para_buffer,ecc)) return false;
 	return true;
 }
 
 /**
  * Write an entire page from the page buffer into NAND with SEC-DED error correction.
  * At present, blocks until entire page write is complete.
- * @param the address of the page start.
+ * @param block the block number (>1024 indicates plane 1)
+ * @param page the page number
+ * @param paragraph the paragraph within the page to zero (0-3).
  * @return true if the write was successful; false if there was a write error.
  */
-bool nand_save_page(uint32_t address) {
-	uint8_t para;
-	for (para = 0; para < 4; para++) {
-		uint32_t ecc = ecc_generate(page_buffer + (512*para));
-		*(uint32_t*)(page_buffer + SPARE_START + (16*para)) = ecc;
-	}
-	return nand_program_raw_page(address,page_buffer,2112);
+bool nand_save_para(uint16_t block, uint8_t page, uint8_t paragraph) {
+	uint32_t address = nand_make_para_addr(block,page,paragraph);
+	uint32_t ecc = ecc_generate(para_buffer);
+	*(uint32_t*)(para_buffer + PARA_SIZE) = ecc;
+	return nand_program_raw_page(address,para_buffer,PARA_SIZE+PARA_SPARE_SIZE);
 }
 
 /**
  * Retrieve a pointer to the 2112B page buffer. The area from 2048-2011 is the spare
  * data area; this data should rarely be directly manipulated by the client.
  */
-uint8_t* nand_page_buffer() {
-	return page_buffer;
+uint8_t* nand_para_buffer() {
+	return para_buffer;
 }
 
 /**
  * Zero a 512B paragraph and its associated spare area. This should be done immediately
  * after using a paragraph.
- * @param address the address of the page start
- * @param paragraph the paragraph within the page to erase (0-3).
+ * @param block the block number (>1024 indicates plane 1)
+ * @param page the page number
+ * @param paragraph the paragraph within the page to zero (0-3).
  * @return true if the zero was successful
  */
-bool nand_zero_paragraph(uint32_t address, uint8_t paragraph) {
+bool nand_zero_paragraph(uint16_t block, uint8_t page, uint8_t paragraph) {
+	uint32_t address = nand_make_para_address(block,page,paragraph);
 	nand_send_command(0x80);
-	nand_send_address(address+(paragraph*512));
-	nand_send_zeros(512);
-	nand_send_command(0x10);
-
-	nand_wait_for_ready();
-
-	nand_send_command(0x80);
-	nand_send_address(address+ SPARE_START + (paragraph*16));
-	nand_send_zeros(16);
+	nand_send_address(address);
+	nand_send_zeros(PARA_SIZE+PARA_SPARE_SIZE);
 	nand_send_command(0x10);
 
 	nand_wait_for_ready();
