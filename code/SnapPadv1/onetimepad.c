@@ -1,6 +1,7 @@
 #include "onetimepad.h"
 #include "nand.h"
 #include "config.h"
+#include "leds.h"
 
 #define MAGIC_LEN 8
 const uint8_t MAGIC[MAGIC_LEN] = { 'S','N','A','P','-','P','A','D' };
@@ -205,7 +206,7 @@ bool otp_initialize_header() {
 	}
 	header->major_version = MAJOR_VERSION;
 	header->minor_version = MINOR_VERSION;
-	header->is_A = IS_A;
+	header->is_A = has_confirm()?0xFF:0x00;
 	header->block_count = 2048 - (1 + bbcount);
 	debug("prepared header\n");
 	uint16_t* bbl_target = (uint16_t*)(nand_para_buffer() + BBL_START);

@@ -93,7 +93,8 @@ void main (void)
                 // automatically wake.  Other events can also wake the
                 // CPU, if their event handlers in eventHandlers.c are 
                 // configured to return TRUE.
-                __bis_SR_register(LPM3_bits + GIE);  
+                //__bis_SR_register(LPM3_bits + GIE);
+            	leds_set(0x09);
                 break;
 
             // The default is executed for the momentary state
@@ -101,6 +102,7 @@ void main (void)
             // few seconds.  Be sure not to enter LPM3 in this state; USB 
             // communication is taking place, so mode must be LPM0 or active.
             case ST_ENUM_IN_PROGRESS:
+            	leds_set(0x06);
             default:;
         }
     }
@@ -267,6 +269,7 @@ char cmdbuf[CMDBUFSZ];
 uint16_t cmdidx = 0;
 
 void run_snap_pad() {
+	leds_set(has_confirm()?0xff:0x00);
 	uint16_t delta = cdcReceiveDataInBuffer((BYTE*)(cmdbuf + cmdidx), CMDBUFSZ-cmdidx, CDC0_INTFNUM);
 	cmdidx += delta;
 	// Scan for eol
