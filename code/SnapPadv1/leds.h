@@ -9,9 +9,11 @@
 #define LEDS_H_
 
 #include <stdint.h>
+#include <stdbool.h>
 
+/// A bit of a misnomer: LEDs and buttons, really.
 /**
- * Initialize LED pins
+ * Initialize LED pins and switch
  */
 void leds_init();
 
@@ -21,5 +23,16 @@ void leds_init();
  */
 void leds_set(uint8_t leds);
 
+/**
+ * Detect whether the CONFIRM button is currently being held down.
+ * @return true if CONFIRM is depressed.
+ */
+bool has_confirm();
+
+/**
+ * Wait for a complete depress and release of the confirm button.
+ * Handles debouncing. Returns when CONFIRM has been released.
+ */
+void wait_for_confirm();
 
 #endif /* LEDS_H_ */
