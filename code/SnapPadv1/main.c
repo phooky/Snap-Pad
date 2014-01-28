@@ -167,17 +167,16 @@ void read_rng() {
 
 void debug_dec(int i) {
 	char buf[10];
-	if (i < 0) {
-		cdcSendDataWaitTilDone((BYTE*)'-', 1, CDC0_INTFNUM, 100);
-	}
 	int ip = i/10;
 	int digits = 1;
 	while (ip != 0) {
 		digits++; ip = ip/10;
 	}
 	int idx = digits;
+	buf[--idx] = '0'+(i%10);
+	i = i/10;
 	while(i != 0) {
-		buf[idx--] = '0'+(i%10);
+		buf[--idx] = '0'+(i%10);
 		i = i/10;
 	}
 	cdcSendDataWaitTilDone((BYTE*)buf, digits, CDC0_INTFNUM, 100);

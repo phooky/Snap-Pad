@@ -151,7 +151,7 @@ OTPConfig otp_read_header() {
 }
 
 inline uint16_t next_good(uint16_t last, uint16_t* bbl, uint8_t bbcount) {
-	uint8_t next = last;
+	uint16_t next = last;
 	uint8_t i;
 	bool okay = false;
 	while (!okay) {
@@ -188,11 +188,11 @@ bool otp_initialize_header() {
 	uint8_t bbcount;
 	// Check for existing header with BBL
 	OTPConfig config = otp_read_header();
-	//if (config.has_header) {
-	//	bbcount = otp_fetch_bad_blocks(bbl, BBL_MAX_ENTRIES);
-	//} else {
+	if (config.has_header) {
+		bbcount = otp_fetch_bad_blocks(bbl, BBL_MAX_ENTRIES);
+	} else {
 		bbcount = otp_scan_bad_blocks(bbl, BBL_MAX_ENTRIES);
-	//}
+	}
 	debug("got bbl\n");
 	// Erase block 0
 	nand_block_erase(nand_make_addr(0,0,0,0));
