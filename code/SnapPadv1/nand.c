@@ -295,7 +295,7 @@ uint8_t* nand_para_buffer() {
  * @return true if the zero was successful
  */
 bool nand_zero_paragraph(uint16_t block, uint8_t page, uint8_t paragraph) {
-	uint32_t address = nand_make_para_address(block,page,paragraph);
+	uint32_t address = nand_make_para_addr(block,page,paragraph);
 	nand_send_command(0x80);
 	nand_send_address(address);
 	nand_send_zeros(PARA_SIZE+PARA_SPARE_SIZE);

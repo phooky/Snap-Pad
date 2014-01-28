@@ -132,8 +132,8 @@ OTPConfig otp_read_header() {
 	config.has_header = false;
 	OTPHeader* header;
 	uint8_t i;
-	nand_load_page(0);
-	header = (OTPHeader*)nand_page_buffer();
+	nand_load_para(0,0,0);
+	header = (OTPHeader*)nand_para_buffer();
 	for (i = 0; i < MAGIC_LEN; i++) {
 		if (header->magic[i] != MAGIC[i]) return config; // no header found
 	}
@@ -164,6 +164,10 @@ inline uint16_t next_good(uint16_t last, uint16_t* bbl, uint8_t bbcount) {
 	return next;
 }
 
+// debug proto
+void debug(char*);
+void debug_dec(int i);
+
 /** Initialize the header block. If there's already one, erase block zero and recreate the
  * header block from scratch. Be careful! This method:
  * * Checks for and reads the bad block list
@@ -184,13 +188,15 @@ bool otp_initialize_header() {
 	uint8_t bbcount;
 	// Check for existing header with BBL
 	OTPConfig config = otp_read_header();
-	if (config.has_header) {
-		bbcount = otp_fetch_bad_blocks(bbl, BBL_MAX_ENTRIES);
-	} else {
+	//if (config.has_header) {
+	//	bbcount = otp_fetch_bad_blocks(bbl, BBL_MAX_ENTRIES);
+	//} else {
 		bbcount = otp_scan_bad_blocks(bbl, BBL_MAX_ENTRIES);
-	}
+	//}
+	debug("got bbl\n");
 	// Erase block 0
 	nand_block_erase(nand_make_addr(0,0,0,0));
+	debug("erased block 0\n");
 	// Create and write header, version, bbl
 	nand_initialize_para_buffer();
 	header = (OTPHeader*)nand_para_buffer();
@@ -201,36 +207,43 @@ bool otp_initialize_header() {
 	header->minor_version = MINOR_VERSION;
 	header->is_A = IS_A;
 	header->block_count = 2048 - (1 + bbcount);
+	debug("prepared header\n");
 	uint16_t* bbl_target = (uint16_t*)(nand_para_buffer() + BBL_START);
 	for (i = 0; i < bbcount; i++) {
 		*(bbl_target++) = bbl[i];
 	}
+	debug("prepared bbl\n");
 	// write header page
 	bool write_succ = nand_save_para(0,0,0);
+	debug("wrote paragraph 0\n");
 	nand_wait_for_ready();
 
 	if (!write_succ) return false;
-
 	// write header confirmation bits
 	OTPFlags flags;
 	uint32_t flagaddr = nand_make_addr(0,0,FLAGS_PAGE,0);
 	nand_read_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
 	nand_wait_for_ready();
+	debug("read flags\n");
 	flags.header_written = 0x00;
 	nand_program_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
 	nand_wait_for_ready();
+	debug("wrote header-written flag\n");
 
 	// create block mapping table
 	nand_initialize_para_buffer();
 	uint16_t idx = 0;
 	uint16_t para = 0;
-	uint16_t* map = (uint16_t*)nand_page_buffer();
+	uint16_t* map = (uint16_t*)nand_para_buffer();
 	uint16_t next_free = next_good(0, bbl, bbcount);
 	while (next_free < 2048) {
 		map[idx] = next_free;
 		idx++;
-		if (idx == PARA_SIZE) {
-			nand_save_page(0,2+(para/4),para%4);
+		if (idx == PARA_SIZE/2) {
+			debug("Writing paragraph ");
+			debug_dec(para);
+			debug("\n");
+			nand_save_para(0,2+(para/4),para%4);
 			nand_wait_for_ready();
 			nand_initialize_para_buffer();
 			para++;
@@ -238,12 +251,14 @@ bool otp_initialize_header() {
 		}
 		next_free = next_good(next_free, bbl, bbcount);
 	}
-	nand_save_page(3);
+	if (idx > 0) {
+		nand_save_para(0,2+(para/4),para%4);
+		nand_wait_for_ready();
+	}
 
 	// mark block mapping table written
 	flags.block_map_written = 0x00;
 	nand_program_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
 	nand_wait_for_ready();
-
-	return nand_save_page(0);
+	return true;
 }

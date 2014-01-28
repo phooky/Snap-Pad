@@ -165,9 +165,53 @@ void read_rng() {
 	cdcSendDataWaitTilDone((BYTE*)bits, 16*4, CDC0_INTFNUM, 100);
 }
 
+void debug_dec(int i) {
+	char buf[10];
+	if (i < 0) {
+		cdcSendDataWaitTilDone((BYTE*)'-', 1, CDC0_INTFNUM, 100);
+	}
+	int ip = i/10;
+	int digits = 1;
+	while (ip != 0) {
+		digits++; ip = ip/10;
+	}
+	int idx = digits;
+	while(i != 0) {
+		buf[idx--] = '0'+(i%10);
+		i = i/10;
+	}
+	cdcSendDataWaitTilDone((BYTE*)buf, digits, CDC0_INTFNUM, 100);
+}
+
+void debug(char* s) {
+	int len = 0;
+	while (s[len] != '\0') {
+		len++;
+		if (len == 64) break;
+	}
+	cdcSendDataWaitTilDone((BYTE*)s, len, CDC0_INTFNUM, 100);
+}
+
 void do_command(uint8_t* cmdbuf, uint16_t len) {
 	if (cmdbuf[0] == '\n' || cmdbuf[0] == '\r') {
 		// skip
+	} else if (cmdbuf[0] == 'T') {
+		// check otp
+		OTPConfig config = otp_read_header();
+		if (!config.has_header) {
+			debug("No header\n");
+		} else {
+			debug("Has header\n");
+			if (config.block_map_written) {
+				debug("Has block map\n");
+				debug("Block count ");
+				debug_dec(config.block_count);
+				debug("\n");
+			}
+			if (config.is_A) {
+				debug("Is pad A\n");
+			}
+		}
 	} else if (cmdbuf[0] == 'I') {
 		// Initialize nand
 		otp_initialize_header();
@@ -195,13 +239,7 @@ void do_command(uint8_t* cmdbuf, uint16_t len) {
 			}
 
 			nand_read_raw_page(addr, (uint8_t*)cmdbuf, rlen);
-
-			//char* rsp = "[";
-			//cdcSendDataWaitTilDone((BYTE*)rsp, 1, CDC0_INTFNUM, 100);
-
 			cdcSendDataWaitTilDone((BYTE*)cmdbuf, rlen, CDC0_INTFNUM, 100);
-			//rsp = "]\r\n";
-			//cdcSendDataWaitTilDone((BYTE*)rsp, 3, CDC0_INTFNUM, 100);
 		} else if (cmdbuf[0] == 'E') {
 			char* rsp = "OK\r\n";
 			nand_block_erase(addr);
