@@ -52,6 +52,7 @@
 #include "hwrng.h"
 #include "onetimepad.h"
 #include "leds.h"
+#include "uarts.h"
 
 void run_snap_pad();
 
@@ -73,6 +74,8 @@ void main (void)
     hwrng_init();            // Initialize HW RNG
     initClocks(8000000);     // Configure clocks
     USB_setup(TRUE,TRUE);    // Init USB & events; if a host is present, connect
+    uarts_init();			 // Initialize uarts between hosts
+	leds_set(0x01);
 
     __enable_interrupt();    // Enable interrupts globally
 
@@ -94,7 +97,7 @@ void main (void)
                 // CPU, if their event handlers in eventHandlers.c are 
                 // configured to return TRUE.
                 //__bis_SR_register(LPM3_bits + GIE);
-            	leds_set(0x09);
+            	//leds_set(0x09);
                 break;
 
             // The default is executed for the momentary state
@@ -102,7 +105,7 @@ void main (void)
             // few seconds.  Be sure not to enter LPM3 in this state; USB 
             // communication is taking place, so mode must be LPM0 or active.
             case ST_ENUM_IN_PROGRESS:
-            	leds_set(0x06);
+            	//leds_set(0x06);
             default:;
         }
     }
@@ -213,6 +216,9 @@ void do_command(uint8_t* cmdbuf, uint16_t len) {
 				debug("Is pad A\n");
 			}
 		}
+	} else if (cmdbuf[0] == 'U') {
+		// send bytes over uart
+		uarts_send(cmdbuf+1,len-1);
 	} else if (cmdbuf[0] == 'I') {
 		// Initialize nand
 		otp_initialize_header();
@@ -269,7 +275,7 @@ char cmdbuf[CMDBUFSZ];
 uint16_t cmdidx = 0;
 
 void run_snap_pad() {
-	leds_set(has_confirm()?0xff:0x00);
+	//leds_set(has_confirm()?0xff:0x00);
 	uint16_t delta = cdcReceiveDataInBuffer((BYTE*)(cmdbuf + cmdidx), CMDBUFSZ-cmdidx, CDC0_INTFNUM);
 	cmdidx += delta;
 	// Scan for eol
