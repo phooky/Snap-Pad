@@ -56,6 +56,8 @@
 
 void run_snap_pad();
 
+ConnectionState cs;
+
 void main (void)
 {
     // Set up clocks/IOs.  initPorts()/initClocks() will need to be customized
@@ -79,7 +81,10 @@ void main (void)
 
     __enable_interrupt();    // Enable interrupts globally
 
-
+    // Work out UART contention
+	OTPConfig config = otp_read_header();
+	bool master = config.has_header && config.is_A;
+	cs = uarts_determine_state(master);
 
     while (1)  // main loop
     {
@@ -89,7 +94,7 @@ void main (void)
             	run_snap_pad();
             	break;
             case ST_USB_DISCONNECTED: // physically disconnected from the host
-            case ST_ENUM_SUSPENDED:   // connected/enumerated, but suspended
+            case ST_ENUM_SUSPENDED:   // connecte d/enumerated, but suspended
             case ST_NOENUM_SUSPENDED: // connected, enum started, but the host is unresponsive
                 // In this example, for all of these states we enter LPM3.  If 
                 // the host performs a "USB resume" from suspend, the CPU will
@@ -217,8 +222,13 @@ void do_command(uint8_t* cmdbuf, uint16_t len) {
 			}
 		}
 	} else if (cmdbuf[0] == 'U') {
-		// send bytes over uart
-		uarts_send(cmdbuf+1,len-1);
+		// get uart state
+		debug("Uart state ");
+		if (cs == CS_CONNECTED_MASTER) debug("CONN_MSTR");
+		if (cs == CS_CONNECTED_SLAVE) debug("CONN_SLAVE");
+		if (cs == CS_NOT_CONNECTED) debug("NO_CONN");
+		if (cs == CS_INDETERMINATE) debug("CONN_IND");
+		debug("\n");
 	} else if (cmdbuf[0] == 'I') {
 		// Initialize nand
 		otp_initialize_header();
