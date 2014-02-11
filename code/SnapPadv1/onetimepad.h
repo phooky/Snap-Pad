@@ -63,10 +63,4 @@ OTPConfig otp_read_header();
  */
 bool otp_initialize_header();
 
-typedef enum {
-	MODE_SNAPPED = 0,
-	MODE_MASTER = 1,
-	MODE_SLAVE = 2,
-} Mode;
-
 #endif // ONETIMEPAD_H
