@@ -30,7 +30,7 @@ void uarts_init() {
 	UCA1MCTL |= UCBRS_1 + UCBRF_0;
 	// Take uart module out of reset
 	UCA1CTL1 &= ~UCSWRST;
-	//UCA1IE |= UCRXIE;
+	UCA1IE |= UCRXIE;
 }
 
 void uarts_send(uint8_t* buffer, uint16_t len) {
