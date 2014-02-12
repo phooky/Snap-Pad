@@ -73,6 +73,10 @@ ConnectionState uarts_play_round(bool force_master) {
 		ms = hwrng_bits()[0] & 0x3f; // wait up to 64 ms
 		remain -= (ms + 2);
 	}
+	// scale both timing numbers by a factor of 10 to reduce the chance of jabber condition
+	// when force_master is asserted on one or both boards
+	remain *= 10;
+	ms *= 10;
 	while (ms--) {
 		if (uarts_msg_len > 0) {
 			if (uarts_msg_buf[0] == UTOK_GAME_PING) {
@@ -82,7 +86,7 @@ ConnectionState uarts_play_round(bool force_master) {
 				return CS_COLLISION;
 			}
 		}
-		__delay_cycles(8000);
+		__delay_cycles(800);
 	}
 	UCA1TXBUF = UTOK_GAME_PING;
 	while (remain--) {
@@ -93,7 +97,7 @@ ConnectionState uarts_play_round(bool force_master) {
 				return CS_COLLISION;
 			}
 		}
-		__delay_cycles(8000);
+		__delay_cycles(800);
 	}
 	return CS_NOT_CONNECTED;
 }
