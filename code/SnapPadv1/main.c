@@ -83,8 +83,7 @@ void main (void)
 
     // Work out UART contention
 	OTPConfig config = otp_read_header();
-	bool master = config.has_header && config.is_A;
-	cs = uarts_determine_state(master);
+	cs = uarts_determine_state(has_confirm());
 
     while (1)  // main loop
     {

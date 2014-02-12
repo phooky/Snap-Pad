@@ -15,7 +15,8 @@ enum {
 	CS_INDETERMINATE = 0,
 	CS_CONNECTED_MASTER = 1,
 	CS_CONNECTED_SLAVE = 2,
-	CS_NOT_CONNECTED = 3
+	CS_NOT_CONNECTED = 3,
+	CS_COLLISION = 4
 };
 
 typedef uint8_t ConnectionState;
@@ -28,11 +29,13 @@ void uarts_init();
 void uarts_send(uint8_t* buffer, uint16_t len);
 
 /**
- * Based on the given master/slave assumption, figure out if the uart is connected and what state it's
- * in. (We can use this method to play the contention game if necessary- NYI)
- * @param is_master true if this side of the board is known to be in master mode
+ * Determine if the snap-pad is still connected to its twin, and if so, figure out if this snap-pad should operate
+ * in master mode or slave mode. If the force_master flag is set, this half of the board will "cheat" and attempt
+ * to become master by skipping the inital delay. This is useful in certain conditions, like starting a "factory
+ * reset".
+ * @param force_master true if this twin should cheat to become the master
  * @return the connection state
  */
-ConnectionState uarts_determine_state(bool is_master);
+ConnectionState uarts_determine_state(bool force_master);
 
 #endif /* UARTS_H_ */

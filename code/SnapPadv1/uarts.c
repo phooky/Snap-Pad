@@ -59,44 +59,58 @@ enum {
 	UTOK_GAME_PING = 0x10,
 	UTOK_GAME_ACK  = 0x11
 };
+
+
+ConnectionState uarts_play_round(bool force_master) {
+	uint8_t remain = 100; // 100 ms total timeout
+	uint16_t ms = 0;
+	uarts_clear_msg();
+	if (!force_master) {
+		hwrng_start();
+		__delay_cycles(16000); // wait 2 ms
+		while (!hwrng_done());
+		ms = hwrng_bits()[0] & 0x3f; // wait up to 64 ms
+		remain -= (ms + 2);
+	}
+	while (ms--) {
+		if (uarts_msg_len > 0) {
+			if (uarts_msg_buf[0] == UTOK_GAME_PING) {
+				UCA1TXBUF = UTOK_GAME_ACK;
+				return CS_CONNECTED_SLAVE;
+			} else {
+				return CS_COLLISION;
+			}
+		}
+		__delay_cycles(8000);
+	}
+	UCA1TXBUF = UTOK_GAME_PING;
+	while (remain--) {
+		if (uarts_msg_len > 0) {
+			if (uarts_msg_buf[0] == UTOK_GAME_ACK) {
+				return CS_CONNECTED_MASTER;
+			} else {
+				return CS_COLLISION;
+			}
+		}
+		__delay_cycles(8000);
+	}
+	return CS_NOT_CONNECTED;
+}
+
 /**
  * Based on the given master/slave assumption, figure out if the uart is connected and what state it's
  * in. (We can use this method to play the contention game if necessary- NYI)
  * @param is_master true if this side of the board is known to be in master mode
  * @return the connection state
  */
-ConnectionState uarts_determine_state(bool is_master) {
-	uint8_t i;
-	uarts_clear_msg();
-	__delay_cycles(16000); // wait 2 ms
-	if (is_master) {
-		UCA1TXBUF = UTOK_GAME_PING;
-		for (i = 0; i < 100; i++) {
-			if (uarts_msg_len > 0) {
-				if (uarts_msg_buf[0] == UTOK_GAME_ACK) {
-					return uarts_state = CS_CONNECTED_MASTER;
-				} else {
-					return uarts_state = CS_INDETERMINATE;
-				}
-			}
-			__delay_cycles(800);
-		}
-	} else {
-		for (i = 0; i < 100; i++) {
-			if (uarts_msg_len > 0) {
-				if (uarts_msg_buf[0] == UTOK_GAME_PING) {
-					UCA1TXBUF = UTOK_GAME_ACK;
-					return uarts_state = CS_CONNECTED_SLAVE;
-				} else {
-					return uarts_state = CS_INDETERMINATE;
-				}
-			}
-			__delay_cycles(800);
+ConnectionState uarts_determine_state(bool force_master) {
+	while (1) {
+		ConnectionState cs = uarts_play_round(force_master);
+		if (cs != CS_COLLISION) {
+			return uarts_state = cs;
 		}
 	}
-	return uarts_state = CS_NOT_CONNECTED;
 }
-
 
 /**
  * See if the uart is connected (which is to say, the other side is working and
