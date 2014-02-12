@@ -65,6 +65,7 @@ ConnectionState uarts_play_round(bool force_master) {
 	uint8_t remain = 100; // 100 ms total timeout
 	uint16_t ms = 0;
 	uarts_clear_msg();
+	__delay_cycles(8000); // allow uarts on both ends to come up
 	if (!force_master) {
 		hwrng_start();
 		__delay_cycles(16000); // wait 2 ms
