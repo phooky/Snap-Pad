@@ -87,6 +87,11 @@ void main (void)
     bool button_pressed = has_confirm();
     cs = uart_determine_state(button_pressed);
 
+    leds_set_led(0,LED_FAST_0);
+    leds_set_led(1,LED_FAST_1);
+    leds_set_led(2,LED_SLOW_0);
+    leds_set_led(3,LED_SLOW_1);
+
     if (cs == CS_CONNECTED_MASTER) {
     	if (button_pressed) {
     		// Don't bother entering the main loop; go directly to reset confirmation mode
@@ -208,17 +213,14 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		// check otp
 		OTPConfig config = otp_read_header();
 		if (!config.has_header) {
-			usb_debug("No header\n");
+			usb_debug("NOHD\n");
 		} else {
-			usb_debug("Has header\n");
+			usb_debug("HD\n");
 			if (config.block_map_written) {
-				usb_debug("Has block map\n");
-				usb_debug("Block count ");
+				usb_debug("BMAP\n");
+				usb_debug("BCNT");
 				usb_debug_dec(config.block_count);
 				usb_debug("\n");
-			}
-			if (config.is_A) {
-				usb_debug("Is pad A\n");
 			}
 		}
 	} else if (cmdbuf[0] == 'U') {
@@ -238,6 +240,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		read_rng();
 	} else if (cmdbuf[0] == 'C') {
 		scan_bb();
+	/*
 	} else if (cmdbuf[0] == 'R' || cmdbuf[0] == 'W' || cmdbuf[0] == 'E') {
 		if (cmdbuf[1] != ':') { error(); return; }
 		uint32_t addr = 0;
@@ -274,6 +277,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			nand_program_raw_page(addr, (uint8_t*)(cmdbuf + idx), len - idx);
 			cdcSendDataWaitTilDone((BYTE*)rsp, 4, CDC0_INTFNUM, 100);
 		}
+		*/
 	} else {
 		cdcSendDataWaitTilDone((BYTE*)cmdbuf, 1, CDC0_INTFNUM, 100);
 		error(); return;

@@ -20,6 +20,11 @@
  * CONFIRM - P6.3
  */
 
+#define LED_COUNT 4
+
+uint8_t phase = 0;
+uint8_t led_mode[LED_COUNT];
+
 #define ALL_LED_BITS (1<<0 | 1<<1 | 1<<4 | 1<<5)
 /**
  * Initialize LED pins and switch
@@ -39,12 +44,17 @@ void leds_init() {
 }
 
 
-volatile uint8_t phase = 0;
+bool is_on(uint8_t mode, uint8_t phase) {
+	if (mode == LED_ON) return true;
+	if (mode == LED_FAST_0) return (phase & 1) == 0;
+	if (mode == LED_FAST_1) return (phase & 1) != 0;
+	if (mode == LED_SLOW_0) return (phase & 4) == 0;
+	if (mode == LED_SLOW_1) return (phase & 4) != 0;
+	return false;
+}
 
-#pragma vector=TIMER0_A0_VECTOR
-__interrupt void Timer0_A0 (void) {
-	phase = (phase + 1) % 8;
-	leds_set(phase);
+void leds_set_led(uint8_t led, uint8_t mode) {
+	led_mode[led] = mode;
 }
 
 
@@ -53,12 +63,8 @@ __interrupt void Timer0_A0 (void) {
  * @param leds bits 0-3 correspond to LED 0-3.
  */
 void leds_set(uint8_t leds) {
-	uint8_t out = P5OUT & ~ALL_LED_BITS;
-	if ((leds & 1<<0) == 0) out |= 1 << 0;
-	if ((leds & 1<<1) == 0) out |= 1 << 1;
-	if ((leds & 1<<2) == 0) out |= 1 << 4;
-	if ((leds & 1<<3) == 0) out |= 1 << 5;
-	P5OUT = out;
+	uint8_t i;
+	for (i = 0; i < LED_COUNT; i++) leds_set_led(i, ((leds & 1 << i) == 0)?LED_OFF:LED_ON);
 }
 
 /**
@@ -78,4 +84,15 @@ void wait_for_confirm() {
 	while (has_confirm());
 	while (!has_confirm());
 	while (has_confirm());
+}
+
+#pragma vector=TIMER0_A0_VECTOR
+__interrupt void Timer0_A0 (void) {
+	phase = (phase + 1) % 8;
+	uint8_t out = P5OUT & ~ALL_LED_BITS;
+	if (is_on(led_mode[0],phase)) out |= 1 << 0;
+	if (is_on(led_mode[1],phase)) out |= 1 << 1;
+	if (is_on(led_mode[2],phase)) out |= 1 << 4;
+	if (is_on(led_mode[3],phase)) out |= 1 << 5;
+	P5OUT = out;
 }

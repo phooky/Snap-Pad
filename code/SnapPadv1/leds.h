@@ -23,6 +23,22 @@ void leds_init();
  */
 void leds_set(uint8_t leds);
 
+enum {
+	LED_OFF = 0,
+	LED_ON = 1,
+	LED_SLOW_0 = 2,
+	LED_SLOW_1 = 3,
+	LED_FAST_0 = 4,
+	LED_FAST_1 = 5
+};
+
+/**
+ * Set the high-level behavior of each led.
+ * @param led the index of the LED to set (0-3).
+ * @param mode the blink mode to use, or 0 to turn off.
+ */
+void leds_set_led(uint8_t led, uint8_t mode);
+
 /**
  * Detect whether the CONFIRM button is currently being held down.
  * @return true if CONFIRM is depressed.
