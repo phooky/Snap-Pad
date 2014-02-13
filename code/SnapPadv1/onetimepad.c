@@ -166,8 +166,8 @@ inline uint16_t next_good(uint16_t last, uint16_t* bbl, uint8_t bbcount) {
 }
 
 // debug proto
-void debug(char*);
-void debug_dec(int i);
+void usb_debug(char*);
+void usb_debug_dec(int i);
 
 /** Initialize the header block. If there's already one, erase block zero and recreate the
  * header block from scratch. Be careful! This method:
@@ -194,10 +194,10 @@ bool otp_initialize_header() {
 	} else {
 		bbcount = otp_scan_bad_blocks(bbl, BBL_MAX_ENTRIES);
 	}
-	debug("got bbl\n");
+	usb_debug("got bbl\n");
 	// Erase block 0
 	nand_block_erase(nand_make_addr(0,0,0,0));
-	debug("erased block 0\n");
+	usb_debug("erased block 0\n");
 	// Create and write header, version, bbl
 	nand_initialize_para_buffer();
 	header = (OTPHeader*)nand_para_buffer();
@@ -208,15 +208,15 @@ bool otp_initialize_header() {
 	header->minor_version = MINOR_VERSION;
 	header->is_A = has_confirm()?0xFF:0x00;
 	header->block_count = 2048 - (1 + bbcount);
-	debug("prepared header\n");
+	usb_debug("prepared header\n");
 	uint16_t* bbl_target = (uint16_t*)(nand_para_buffer() + BBL_START);
 	for (i = 0; i < bbcount; i++) {
 		*(bbl_target++) = bbl[i];
 	}
-	debug("prepared bbl\n");
+	usb_debug("prepared bbl\n");
 	// write header page
 	bool write_succ = nand_save_para(0,0,0);
-	debug("wrote paragraph 0\n");
+	usb_debug("wrote paragraph 0\n");
 	nand_wait_for_ready();
 
 	if (!write_succ) return false;
@@ -225,11 +225,11 @@ bool otp_initialize_header() {
 	uint32_t flagaddr = nand_make_addr(0,0,FLAGS_PAGE,0);
 	nand_read_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
 	nand_wait_for_ready();
-	debug("read flags\n");
+	usb_debug("read flags\n");
 	flags.header_written = 0x00;
 	nand_program_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
 	nand_wait_for_ready();
-	debug("wrote header-written flag\n");
+	usb_debug("wrote header-written flag\n");
 
 	// create block mapping table
 	nand_initialize_para_buffer();
@@ -241,9 +241,9 @@ bool otp_initialize_header() {
 		map[idx] = next_free;
 		idx++;
 		if (idx == PARA_SIZE/2) {
-			debug("Writing paragraph ");
-			debug_dec(para);
-			debug("\n");
+			usb_debug("Writing paragraph ");
+			usb_debug_dec(para);
+			usb_debug("\n");
 			nand_save_para(0,2+(para/4),para%4);
 			nand_wait_for_ready();
 			nand_initialize_para_buffer();

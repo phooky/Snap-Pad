@@ -54,9 +54,12 @@
 #include "leds.h"
 #include "uarts.h"
 
-void run_snap_pad();
+void process_usb();
 
 ConnectionState cs;
+
+void factory_reset_confirm();
+void factory_reset();
 
 void main (void)
 {
@@ -76,40 +79,38 @@ void main (void)
     hwrng_init();            // Initialize HW RNG
     initClocks(8000000);     // Configure clocks
     USB_setup(TRUE,TRUE);    // Init USB & events; if a host is present, connect
-    uarts_init();			 // Initialize uarts between hosts
-	leds_set(0x01);
+    uart_init();			 // Initialize uarts between hosts
 
     __enable_interrupt();    // Enable interrupts globally
 
     // Work out UART contention
-	OTPConfig config = otp_read_header();
-	cs = uarts_determine_state(has_confirm());
+    bool button_pressed = has_confirm();
+    cs = uart_determine_state(button_pressed);
+
+    if (cs == CS_CONNECTED_MASTER) {
+    	if (button_pressed) {
+    		// Don't bother entering the main loop; go directly to reset confirmation mode
+    		//factory_reset_confirm();
+    		//factory_reset();
+    	} else {
+    		// Check for needed initialization and run it
+    	}
+    }
 
     while (1)  // main loop
     {
+    	if (cs == CS_CONNECTED_SLAVE) {
+    		uart_process(); // process uart commands
+    	}
         switch(USB_connectionState())
         {
             case ST_ENUM_ACTIVE:
-            	run_snap_pad();
+            	process_usb();
             	break;
             case ST_USB_DISCONNECTED: // physically disconnected from the host
             case ST_ENUM_SUSPENDED:   // connecte d/enumerated, but suspended
             case ST_NOENUM_SUSPENDED: // connected, enum started, but the host is unresponsive
-                // In this example, for all of these states we enter LPM3.  If 
-                // the host performs a "USB resume" from suspend, the CPU will
-                // automatically wake.  Other events can also wake the
-                // CPU, if their event handlers in eventHandlers.c are 
-                // configured to return TRUE.
-                //__bis_SR_register(LPM3_bits + GIE);
-            	//leds_set(0x09);
-                break;
-
-            // The default is executed for the momentary state
-            // ST_ENUM_IN_PROGRESS.  Almost always, this state lasts no more than a 
-            // few seconds.  Be sure not to enter LPM3 in this state; USB 
-            // communication is taking place, so mode must be LPM0 or active.
             case ST_ENUM_IN_PROGRESS:
-            	//leds_set(0x06);
             default:;
         }
     }
@@ -174,7 +175,7 @@ void read_rng() {
 	cdcSendDataWaitTilDone((BYTE*)bits, 16*4, CDC0_INTFNUM, 100);
 }
 
-void debug_dec(int i) {
+void usb_debug_dec(int i) {
 	char buf[10];
 	int ip = i/10;
 	int digits = 1;
@@ -191,7 +192,7 @@ void debug_dec(int i) {
 	cdcSendDataWaitTilDone((BYTE*)buf, digits, CDC0_INTFNUM, 100);
 }
 
-void debug(char* s) {
+void usb_debug(char* s) {
 	int len = 0;
 	while (s[len] != '\0') {
 		len++;
@@ -200,34 +201,34 @@ void debug(char* s) {
 	cdcSendDataWaitTilDone((BYTE*)s, len, CDC0_INTFNUM, 100);
 }
 
-void do_command(uint8_t* cmdbuf, uint16_t len) {
+void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	if (cmdbuf[0] == '\n' || cmdbuf[0] == '\r') {
 		// skip
 	} else if (cmdbuf[0] == 'T') {
 		// check otp
 		OTPConfig config = otp_read_header();
 		if (!config.has_header) {
-			debug("No header\n");
+			usb_debug("No header\n");
 		} else {
-			debug("Has header\n");
+			usb_debug("Has header\n");
 			if (config.block_map_written) {
-				debug("Has block map\n");
-				debug("Block count ");
-				debug_dec(config.block_count);
-				debug("\n");
+				usb_debug("Has block map\n");
+				usb_debug("Block count ");
+				usb_debug_dec(config.block_count);
+				usb_debug("\n");
 			}
 			if (config.is_A) {
-				debug("Is pad A\n");
+				usb_debug("Is pad A\n");
 			}
 		}
 	} else if (cmdbuf[0] == 'U') {
 		// get uart state
-		debug("Uart state ");
-		if (cs == CS_CONNECTED_MASTER) debug("CONN_MSTR");
-		if (cs == CS_CONNECTED_SLAVE) debug("CONN_SLAVE");
-		if (cs == CS_NOT_CONNECTED) debug("NO_CONN");
-		if (cs == CS_INDETERMINATE) debug("CONN_IND");
-		debug("\n");
+		usb_debug("Uart state ");
+		if (cs == CS_CONNECTED_MASTER) usb_debug("CONN_MSTR");
+		if (cs == CS_CONNECTED_SLAVE) usb_debug("CONN_SLAVE");
+		if (cs == CS_NOT_CONNECTED) usb_debug("NO_CONN");
+		if (cs == CS_INDETERMINATE) usb_debug("CONN_IND");
+		usb_debug("\n");
 	} else if (cmdbuf[0] == 'I') {
 		// Initialize nand
 		otp_initialize_header();
@@ -283,8 +284,7 @@ void do_command(uint8_t* cmdbuf, uint16_t len) {
 char cmdbuf[CMDBUFSZ];
 uint16_t cmdidx = 0;
 
-void run_snap_pad() {
-	//leds_set(has_confirm()?0xff:0x00);
+void process_usb() {
 	uint16_t delta = cdcReceiveDataInBuffer((BYTE*)(cmdbuf + cmdidx), CMDBUFSZ-cmdidx, CDC0_INTFNUM);
 	cmdidx += delta;
 	// Scan for eol
@@ -292,7 +292,7 @@ void run_snap_pad() {
 	for (c=0;c<cmdidx;c++) {
 		char ch = cmdbuf[c];
 		if (ch == '\r' || ch == '\n') {
-			do_command((uint8_t*)cmdbuf,c);
+			do_usb_command((uint8_t*)cmdbuf,c);
 			c++;
 			uint16_t cb = 0;
 			while (c < cmdidx) {
@@ -305,7 +305,6 @@ void run_snap_pad() {
 		}
 	}
 	if (cmdidx == CMDBUFSZ) { cmdidx--; }
-	//USBCDC_sendData((BYTE*)&l,	1, CDC0_INTFNUM);
 }
 
 /*  

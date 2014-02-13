@@ -18,7 +18,7 @@
 /**
  * Init the UART for cross-chip communication.
  */
-void uarts_init() {
+void uart_init() {
 	// Set pin directions
 	P4SEL |= 1<<4 | 1<<5;
 	// Put uart module in reset
@@ -33,7 +33,7 @@ void uarts_init() {
 	UCA1IE |= UCRXIE;
 }
 
-void uarts_send(uint8_t* buffer, uint16_t len) {
+void uart_send(uint8_t* buffer, uint16_t len) {
 	while (len > 0) {
 		while (!(UCA1IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
 		UCA1TXBUF = *(buffer++);
@@ -42,29 +42,64 @@ void uarts_send(uint8_t* buffer, uint16_t len) {
 }
 
 
-#define MSG_BUF_LEN 16
-volatile uint8_t uarts_msg_len;
-volatile uint8_t uarts_msg_buf[MSG_BUF_LEN];
+#define UART_RING_LEN 128
+volatile uint8_t uart_ring_start = 0;
+volatile uint8_t uart_ring_end = 0;
+volatile uint8_t uart_ring_buf[UART_RING_LEN];
 
-/**
- * Prepare response buffer for another response.
- */
-void uarts_clear_msg() {
-	uarts_msg_len = 0;
+void uart_clear_buf() {
+	UCA1IE &= ~UCRXIE;
+	uart_ring_start = uart_ring_end = 0;
+	UCA1IE |= UCRXIE;
 }
 
-ConnectionState uarts_state = CS_INDETERMINATE;
+bool uart_has_data() {
+	return uart_ring_start != uart_ring_end;
+}
+
+uint8_t uart_consume() {
+	uint8_t c = uart_ring_buf[uart_ring_start++];
+	uart_ring_start = uart_ring_start % UART_RING_LEN;
+	return c;
+}
+
+
+/**
+ * Consume response buffer
+ */
+ConnectionState uart_state = CS_INDETERMINATE;
 
 enum {
-	UTOK_GAME_PING = 0x10,
-	UTOK_GAME_ACK  = 0x11
+	// Protocol for master/slave contention and factory reset
+	UTOK_GAME_PING        = 0x10,
+	UTOK_GAME_ACK         = 0x11,
+	UTOK_RST_PROPOSE      = 0x12,
+	UTOK_RST_CONFIRM      = 0x13,
+	UTOK_RST_COMMIT       = 0x14,
+
+	// Protocol for sending pages of data
+	UTOK_SELECT_BLOCK     = 0x20, // followed by 16-bit block #
+	UTOK_SELECT_PAGE      = 0x21, // followed by 16-bit page #
+	UTOK_BEGIN_DATA       = 0x23, // followed by 2112 bytes
+	UTOK_DATA_ACK         = 0x24, // data transfer successfully written
+	UTOK_DATA_NAK         = 0x25, // data transfer failed
+
+	UTOK_LAST
 };
 
 
-ConnectionState uarts_play_round(bool force_master) {
+/**
+ * Play one round of the contention game. If neither side received the force_master flag,
+ * they each wait a random amount of time before sending the ping packet. The first to acknowledge
+ * the other side's ping is the slave. If the two packets conflict, the came ends in a conflict and
+ * must be run again.
+ * If after a timeout passes no token has been received, the device assumes that the pad has
+ * been snapped and is disconnected from its twin.
+ */
+ConnectionState uart_play_round(bool force_master) {
 	uint8_t remain = 100; // 100 ms total timeout
 	uint16_t ms = 0;
-	uarts_clear_msg();
+	uart_clear_buf();
 	__delay_cycles(8000); // allow uarts on both ends to come up
 	if (!force_master) {
 		hwrng_start();
@@ -78,8 +113,8 @@ ConnectionState uarts_play_round(bool force_master) {
 	remain *= 10;
 	ms *= 10;
 	while (ms--) {
-		if (uarts_msg_len > 0) {
-			if (uarts_msg_buf[0] == UTOK_GAME_PING) {
+		if (uart_has_data()) {
+			if (uart_consume() == UTOK_GAME_PING) {
 				UCA1TXBUF = UTOK_GAME_ACK;
 				return CS_CONNECTED_SLAVE;
 			} else {
@@ -90,8 +125,8 @@ ConnectionState uarts_play_round(bool force_master) {
 	}
 	UCA1TXBUF = UTOK_GAME_PING;
 	while (remain--) {
-		if (uarts_msg_len > 0) {
-			if (uarts_msg_buf[0] == UTOK_GAME_ACK) {
+		if (uart_has_data()) {
+			if (uart_consume() == UTOK_GAME_ACK) {
 				return CS_CONNECTED_MASTER;
 			} else {
 				return CS_COLLISION;
@@ -103,16 +138,18 @@ ConnectionState uarts_play_round(bool force_master) {
 }
 
 /**
- * Based on the given master/slave assumption, figure out if the uart is connected and what state it's
- * in. (We can use this method to play the contention game if necessary- NYI)
- * @param is_master true if this side of the board is known to be in master mode
+ * Determine if the snap-pad is still connected to its twin, and if so, figure out if this snap-pad should operate
+ * in master mode or slave mode. If the factory_reset flag is set, this half of the board will "cheat" and attempt
+ * to become master by skipping the inital delay. This is useful in certain conditions, like starting a "factory
+ * reset".
+ * @param force_master true if this twin should cheat to become the master
  * @return the connection state
  */
-ConnectionState uarts_determine_state(bool force_master) {
+ConnectionState uart_determine_state(bool force_master) {
 	while (1) {
-		ConnectionState cs = uarts_play_round(force_master);
+		ConnectionState cs = uart_play_round(force_master);
 		if (cs != CS_COLLISION) {
-			return uarts_state = cs;
+			return uart_state = cs;
 		}
 		force_master = false; // If the cheat didn't work the first time, they're both cheating; play nice.
 	}
@@ -123,23 +160,13 @@ ConnectionState uarts_determine_state(bool force_master) {
  * still attached).
  * @return true if connected to other half of snap-pad
  */
-bool uarts_is_connected() {
-	return (uarts_state == CS_CONNECTED_MASTER) || (uarts_state == CS_CONNECTED_SLAVE);
+bool uart_is_connected() {
+	return (uart_state == CS_CONNECTED_MASTER) || (uart_state == CS_CONNECTED_SLAVE);
 }
 
-/**
- * NOTE: The UART contention game is on ice for now! Keeping the doc in case we need
- * it again.
- * ---
- * After boot, the device enters contention mode. Each half waits for 10ms, and then a randomly
- * determined delay from 0-20ms. If it receives the game token before that period times out, it
- * returns an acknowledgement token and goes into slave mode. Otherwise, it sends a game token.
- * If it  receives an acknowledgement token, it has won the game and goes into master mode. If
- * it has received a game token instead, a conflict has emerged and both sides restart the game.
- * If after a timeout passes no token has been received, the device assumes that the pad has
- * been snapped and is disconnected from its twin.
- */
+void uart_process() {
 
+}
 /**
  *
  */
@@ -153,8 +180,8 @@ __interrupt void USCI_A1_ISR(void)
   	case 0:break;                             // Vector 0 - no interrupt
 	case 2:                                   // Vector 2 - RXIFG
   		rx = UCA1RXBUF;
-  		uarts_msg_buf[uarts_msg_len++] = rx;
-  		if (uarts_msg_len >= MSG_BUF_LEN) { uarts_msg_len--; }
+  		uart_ring_buf[uart_ring_end++] = rx;
+  		uart_ring_end =  uart_ring_end % UART_RING_LEN;
   		break;
 	case 4:break;                             // Vector 4 - TXIFG
 	default: break;
