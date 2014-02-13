@@ -58,7 +58,6 @@ void process_usb();
 
 ConnectionState cs;
 
-void factory_reset_confirm();
 void factory_reset();
 
 void main (void)
@@ -87,15 +86,13 @@ void main (void)
     bool button_pressed = has_confirm();
     cs = uart_determine_state(button_pressed);
 
-    leds_set_led(0,LED_FAST_0);
-    leds_set_led(1,LED_FAST_1);
-    leds_set_led(2,LED_SLOW_0);
-    leds_set_led(3,LED_SLOW_1);
-
     if (cs == CS_CONNECTED_MASTER) {
     	if (button_pressed) {
     		// Don't bother entering the main loop; go directly to reset confirmation mode
-    		//factory_reset_confirm();
+    		uint8_t i;
+    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_0);
+    		uart_factory_reset_confirm();
+    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_FAST_0);
     		//factory_reset();
     	} else {
     		// Check for needed initialization and run it

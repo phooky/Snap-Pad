@@ -137,6 +137,15 @@ ConnectionState uart_play_round(bool force_master) {
 	return CS_NOT_CONNECTED;
 }
 
+void uart_factory_reset_confirm() {
+	while (!(UCA1IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
+	UCA1TXBUF = UTOK_RST_PROPOSE;
+	while (1) {
+		if (uart_has_data() && (uart_consume() == UTOK_RST_CONFIRM)) return;
+	}
+}
+
+
 /**
  * Determine if the snap-pad is still connected to its twin, and if so, figure out if this snap-pad should operate
  * in master mode or slave mode. If the factory_reset flag is set, this half of the board will "cheat" and attempt
@@ -167,26 +176,15 @@ bool uart_is_connected() {
 void uart_process() {
 	if (uart_has_data()) {
 		uint8_t command = uart_consume();
-		return;
 		// Process factory reset commands:
 		// UTOK_RST_PROPOSE, UTOK_RST_CONFIRM, UTOK_RST_COMMIT
 		if (command == UTOK_RST_PROPOSE) {
-			// Loop until confirmation!
-			while (has_confirm()); // wait until button release
-			bool down = false;
-			while (!down || has_confirm()) {
-				int16_t ms = 500;
-				//leds_set(0x00);
-				while (ms--) {
-					if (has_confirm()) down = true;
-					__delay_cycles(8000);
-				}
-				leds_set(0xff);
-				while (ms--) {
-					if (has_confirm()) down = true;
-					__delay_cycles(8000);
-				}
-			}
+			uint8_t i;
+    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_1);
+    		wait_for_confirm();
+    		while (!(UCA1IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
+    		UCA1TXBUF = UTOK_RST_CONFIRM;
+    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_FAST_1);
 		}
 	}
 }

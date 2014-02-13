@@ -20,8 +20,6 @@
  * CONFIRM - P6.3
  */
 
-#define LED_COUNT 4
-
 uint8_t phase = 0;
 uint8_t led_mode[LED_COUNT];
 
@@ -90,9 +88,9 @@ void wait_for_confirm() {
 __interrupt void Timer0_A0 (void) {
 	phase = (phase + 1) % 8;
 	uint8_t out = P5OUT & ~ALL_LED_BITS;
-	if (is_on(led_mode[0],phase)) out |= 1 << 0;
-	if (is_on(led_mode[1],phase)) out |= 1 << 1;
-	if (is_on(led_mode[2],phase)) out |= 1 << 4;
-	if (is_on(led_mode[3],phase)) out |= 1 << 5;
+	if (!is_on(led_mode[0],phase)) out |= 1 << 0;
+	if (!is_on(led_mode[1],phase)) out |= 1 << 1;
+	if (!is_on(led_mode[2],phase)) out |= 1 << 4;
+	if (!is_on(led_mode[3],phase)) out |= 1 << 5;
 	P5OUT = out;
 }

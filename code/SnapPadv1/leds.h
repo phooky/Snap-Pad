@@ -23,6 +23,8 @@ void leds_init();
  */
 void leds_set(uint8_t leds);
 
+#define LED_COUNT 4
+
 enum {
 	LED_OFF = 0,
 	LED_ON = 1,
