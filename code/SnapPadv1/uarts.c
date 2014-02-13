@@ -114,6 +114,7 @@ ConnectionState uarts_determine_state(bool force_master) {
 		if (cs != CS_COLLISION) {
 			return uarts_state = cs;
 		}
+		force_master = false; // If the cheat didn't work the first time, they're both cheating; play nice.
 	}
 }
 
