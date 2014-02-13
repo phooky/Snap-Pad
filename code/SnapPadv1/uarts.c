@@ -165,7 +165,29 @@ bool uart_is_connected() {
 }
 
 void uart_process() {
-
+	if (uart_has_data()) {
+		uint8_t command = uart_consume();
+		// Process factory reset commands:
+		// UTOK_RST_PROPOSE, UTOK_RST_CONFIRM, UTOK_RST_COMMIT
+		if (command == UTOK_RST_PROPOSE) {
+			// Loop until confirmation!
+			while (has_confirm()); // wait until button release
+			bool down = false;
+			while (!down || has_confirm()) {
+				uint16_t ms = 500;
+				leds_set(0x00);
+				while (ms--) {
+					if (has_confirm()) down = true;
+					__delay_cycles(8000);
+				}
+				leds_set(0xff);
+				while (ms--) {
+					if (has_confirm()) down = true;
+					__delay_cycles(8000);
+				}
+			}
+		}
+	}
 }
 /**
  *
