@@ -94,7 +94,6 @@ void main (void)
     		otp_factory_reset();
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
     	} else {
-    		// Check for needed initialization and run it
     	}
     }
 
@@ -236,6 +235,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		otp_initialize_header();
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
+#ifdef DEBUG
 	} else if (cmdbuf[0] == 'R' || cmdbuf[0] == 'W' || cmdbuf[0] == 'E') {
 		if (cmdbuf[1] != ':') { error(); return; }
 		uint32_t addr = 0;
@@ -272,6 +272,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			nand_program_raw_page(addr, (uint8_t*)(cmdbuf + idx), len - idx);
 			cdcSendDataWaitTilDone((BYTE*)rsp, 4, CDC0_INTFNUM, 100);
 		}
+#endif
 	} else {
 		cdcSendDataWaitTilDone((BYTE*)cmdbuf, 1, CDC0_INTFNUM, 100);
 		error(); return;
