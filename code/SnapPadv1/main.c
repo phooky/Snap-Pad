@@ -205,6 +205,7 @@ void usb_debug(char* s) {
 void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	if (cmdbuf[0] == '\n' || cmdbuf[0] == '\r') {
 		// skip
+#if DEBUG
 	} else if (cmdbuf[0] == 'T') {
 		// check otp
 		OTPConfig config = otp_read_header();
@@ -227,13 +228,14 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		if (cs == CS_NOT_CONNECTED) usb_debug("NO_CONN");
 		if (cs == CS_INDETERMINATE) usb_debug("CONN_IND");
 		usb_debug("\n");
+	} else if (cmdbuf[0] == 'C') {
+		scan_bb();
+#endif
 	} else if (cmdbuf[0] == 'I') {
 		// Initialize nand
 		otp_initialize_header();
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
-	} else if (cmdbuf[0] == 'C') {
-		scan_bb();
 	} else if (cmdbuf[0] == 'R' || cmdbuf[0] == 'W' || cmdbuf[0] == 'E') {
 		if (cmdbuf[1] != ':') { error(); return; }
 		uint32_t addr = 0;

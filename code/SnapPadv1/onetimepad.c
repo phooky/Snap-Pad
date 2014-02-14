@@ -16,7 +16,6 @@ typedef struct {
 	uint8_t major_version;
 	uint8_t minor_version;
 	uint16_t block_count;
-	uint8_t is_A;
 } OTPHeader;
 
 typedef struct {
@@ -167,7 +166,6 @@ OTPConfig otp_read_header() {
 	config.has_header = true;
 	config.major_version = header->major_version;
 	config.minor_version = header->minor_version;
-	config.is_A = header->is_A == 0xff;
 	config.block_count = header->block_count;
 
 	OTPFlags flags;
@@ -232,7 +230,6 @@ bool otp_initialize_header() {
 	}
 	header->major_version = MAJOR_VERSION;
 	header->minor_version = MINOR_VERSION;
-	header->is_A = has_confirm()?0xFF:0x00;
 	header->block_count = 2048 - (1 + bbcount);
 	usb_debug("prepared header\n");
 	uint16_t* bbl_target = (uint16_t*)(nand_para_buffer() + BBL_START);
