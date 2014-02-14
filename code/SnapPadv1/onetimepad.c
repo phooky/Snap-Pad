@@ -86,6 +86,32 @@ uint8_t otp_scan_bad_blocks(uint16_t* bad_block_list, uint8_t block_list_len) {
 }
 
 /**
+ * Erase entire nand chip (bad blocks excepted).
+ */
+void otp_factory_reset() {
+	OTPConfig config = otp_read_header();
+	uint16_t bbl[BBL_MAX_ENTRIES];
+	uint8_t bbcount;
+	uint32_t plane, block;
+	uint8_t bbidx;
+	if (config.has_header) {
+		bbcount = otp_fetch_bad_blocks(bbl, BBL_MAX_ENTRIES);
+	} else {
+		bbcount = otp_scan_bad_blocks(bbl, BBL_MAX_ENTRIES);
+	}
+	for (plane = 0; plane < PLANE_COUNT; plane++) {
+		for (block = 0; block < BLOCK_COUNT; block++) {
+			nand_block_erase(nand_make_addr(plane,block,0,0));
+		}
+	}
+	for (bbidx = 0; bbidx < bbcount; bbidx++) {
+		plane = bbl[bbidx] >> 10;
+		block = bbl[bbidx] & 0x3ff;
+		mark_bad_block(plane,block);
+	}
+}
+
+/**
  * Retrieve the bad block list stored on the NAND.
  * @param bad_block_list buffer to populate with bad block ids
  * @param block_list_sz size of the bad block list buffer
@@ -188,7 +214,7 @@ bool otp_initialize_header() {
 	uint16_t bbl[BBL_MAX_ENTRIES];
 	uint8_t bbcount;
 	// Check for existing header with BBL
-	OTPConfig config = otp_read_header();
+	OTPConfig config = otp_read_header();\
 	if (config.has_header) {
 		bbcount = otp_fetch_bad_blocks(bbl, BBL_MAX_ENTRIES);
 	} else {

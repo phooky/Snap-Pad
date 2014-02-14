@@ -32,6 +32,11 @@ uint8_t otp_fetch_bad_blocks(uint16_t* bad_block_list, uint8_t block_list_sz);
  */
 bool otp_write_bad_blocks(uint16_t* bad_block_list, uint8_t bad_block_count);
 
+/**
+ * Erase entire nand chip (bad blocks excepted).
+ */
+void otp_factory_reset();
+
 typedef struct {
 	bool has_header;
 	bool block_map_written;

@@ -9,6 +9,7 @@
 #include "msp430.h"
 #include "leds.h"
 #include "hwrng.h"
+#include "onetimepad.h"
 #include <stdbool.h>
 
 // Pins:
@@ -184,7 +185,9 @@ void uart_process() {
     		wait_for_confirm();
     		while (!(UCA1IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
     		UCA1TXBUF = UTOK_RST_CONFIRM;
-    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_FAST_1);
+    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_1:LED_FAST_0);
+    		otp_factory_reset();
+    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
 		}
 	}
 }

@@ -58,8 +58,6 @@ void process_usb();
 
 ConnectionState cs;
 
-void factory_reset();
-
 void main (void)
 {
     // Set up clocks/IOs.  initPorts()/initClocks() will need to be customized
@@ -92,8 +90,9 @@ void main (void)
     		uint8_t i;
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_0);
     		uart_factory_reset_confirm();
-    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_FAST_0);
-    		//factory_reset();
+    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_0:LED_FAST_1);
+    		otp_factory_reset();
+    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
     	} else {
     		// Check for needed initialization and run it
     	}
@@ -231,13 +230,10 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == 'I') {
 		// Initialize nand
 		otp_initialize_header();
-	} else if (cmdbuf[0] == 'l') { // set LEDs
-		leds_set(dehex(cmdbuf[1]));
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
 	} else if (cmdbuf[0] == 'C') {
 		scan_bb();
-	/*
 	} else if (cmdbuf[0] == 'R' || cmdbuf[0] == 'W' || cmdbuf[0] == 'E') {
 		if (cmdbuf[1] != ':') { error(); return; }
 		uint32_t addr = 0;
@@ -274,7 +270,6 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			nand_program_raw_page(addr, (uint8_t*)(cmdbuf + idx), len - idx);
 			cdcSendDataWaitTilDone((BYTE*)rsp, 4, CDC0_INTFNUM, 100);
 		}
-		*/
 	} else {
 		cdcSendDataWaitTilDone((BYTE*)cmdbuf, 1, CDC0_INTFNUM, 100);
 		error(); return;
