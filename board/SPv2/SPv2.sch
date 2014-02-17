@@ -1502,6 +1502,16 @@ For boards designed to be plugged directly into a USB slot. If possible, ensure 
 </polygon>
 <wire x1="0" y1="6.985" x2="0" y2="-6.985" width="0.3048" layer="48" style="shortdash"/>
 </package>
+<package name="FIDUCAL">
+<polygon width="0.3048" layer="1">
+<vertex x="-1" y="0" curve="90"/>
+<vertex x="0" y="-1" curve="90"/>
+<vertex x="1" y="0" curve="90"/>
+<vertex x="0" y="1" curve="90"/>
+</polygon>
+<circle x="0" y="0" radius="1.27" width="1.27" layer="29"/>
+<rectangle x1="-1.27" y1="-1.27" x2="1.27" y2="1.27" layer="29"/>
+</package>
 </packages>
 <symbols>
 <symbol name="Q">
@@ -1610,6 +1620,11 @@ For boards designed to be plugged directly into a USB slot. If possible, ensure 
 <wire x1="0" y1="20.32" x2="0" y2="-20.32" width="0.6096" layer="94" style="longdash"/>
 <wire x1="-10.16" y1="12.7" x2="2.54" y2="12.7" width="0.254" layer="94"/>
 <wire x1="-10.16" y1="-12.7" x2="2.54" y2="-12.7" width="0.254" layer="94"/>
+</symbol>
+<symbol name="FIDUCAL">
+<circle x="0" y="0" radius="3.5921" width="0.254" layer="94"/>
+<circle x="0" y="0" radius="2.54" width="0.254" layer="94"/>
+<text x="0" y="0" size="1.778" layer="94" align="center">FID</text>
 </symbol>
 </symbols>
 <devicesets>
@@ -1761,6 +1776,18 @@ For boards designed to be plugged directly into a USB slot. If possible, ensure 
 <connect gate="G$1" pin="V1" pad="P$1"/>
 <connect gate="G$1" pin="V2" pad="P$5"/>
 </connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="FIDUCAL">
+<gates>
+<gate name="G$1" symbol="FIDUCAL" x="0" y="0"/>
+</gates>
+<devices>
+<device name="" package="FIDUCAL">
 <technologies>
 <technology name=""/>
 </technologies>
@@ -2190,6 +2217,8 @@ Based on the following sources:
 <part name="SJ1" library="jumper" deviceset="SJ" device="W"/>
 <part name="SUPPLY14" library="supply2" deviceset="GND" device=""/>
 <part name="U$2" library="Passives" deviceset="SNAP-HALF" device=""/>
+<part name="U$3" library="Passives" deviceset="FIDUCAL" device=""/>
+<part name="U$12" library="Passives" deviceset="FIDUCAL" device=""/>
 </parts>
 <sheets>
 <sheet>
@@ -2867,6 +2896,8 @@ Based on the following sources:
 <instance part="R7" gate="G$1" x="71.12" y="30.48" rot="R90"/>
 <instance part="SUPPLY13" gate="GND" x="71.12" y="17.78"/>
 <instance part="U$2" gate="G$1" x="-35.56" y="38.1"/>
+<instance part="U$3" gate="G$1" x="-7.62" y="60.96"/>
+<instance part="U$12" gate="G$1" x="5.08" y="60.96"/>
 </instances>
 <busses>
 </busses>
