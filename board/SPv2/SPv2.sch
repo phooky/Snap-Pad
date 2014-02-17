@@ -1411,11 +1411,11 @@ For boards designed to be plugged directly into a USB slot. If possible, ensure 
 <wire x1="-1.321" y1="-0.787" x2="1.321" y2="-0.787" width="0.1016" layer="51"/>
 <wire x1="-1.321" y1="-0.787" x2="-1.321" y2="0.787" width="0.1016" layer="51"/>
 <wire x1="1.321" y1="-0.787" x2="1.321" y2="0.787" width="0.1016" layer="51"/>
-<wire x1="-1" y1="0" x2="0" y2="0.5" width="0.2032" layer="51"/>
-<wire x1="0" y1="0.5" x2="0" y2="-0.5" width="0.2032" layer="51"/>
-<wire x1="0" y1="-0.5" x2="-1" y2="0" width="0.2032" layer="51"/>
-<wire x1="-1" y1="0.5" x2="-1" y2="0" width="0.2032" layer="51"/>
-<wire x1="-1" y1="0" x2="-1" y2="-0.5" width="0.2032" layer="51"/>
+<wire x1="-0.492" y1="0" x2="0.508" y2="0.5" width="0.2032" layer="21"/>
+<wire x1="0.508" y1="0.5" x2="0.508" y2="-0.5" width="0.2032" layer="21"/>
+<wire x1="0.508" y1="-0.5" x2="-0.492" y2="0" width="0.2032" layer="21"/>
+<wire x1="-0.492" y1="0.5" x2="-0.492" y2="0" width="0.2032" layer="21"/>
+<wire x1="-0.492" y1="0" x2="-0.492" y2="-0.5" width="0.2032" layer="21"/>
 <smd name="CATHODE" x="-1.7" y="0" dx="1.6" dy="0.8" layer="1"/>
 <smd name="ANODE" x="1.7" y="0" dx="1.6" dy="0.8" layer="1"/>
 <text x="-1.905" y="1.905" size="1.27" layer="25">&gt;NAME</text>
