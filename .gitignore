@@ -1,0 +1,20 @@
+# Objects
+*.obj
+*.pp
+
+# Map files
+*.map
+
+# Binaries
+*.out
+
+# Eagle library, board, and schematic backups
+*.s#?
+*.b#?
+*.l#?
+
+# Generated mill files
+*.ngc
+
+# Compiled python
+*.pyc
