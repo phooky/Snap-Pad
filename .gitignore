@@ -1,6 +1,7 @@
 # Objects
 *.obj
 *.pp
+*.o
 
 # Map files
 *.map
@@ -18,3 +19,4 @@
 
 # Compiled python
 *.pyc
+
