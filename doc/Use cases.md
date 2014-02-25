@@ -36,7 +36,7 @@ For a twinned board that is either clean or has been randomized:
 
 1. Plug in one end of the snap-pad to power or a USB port without pressing either button.
 2. The LEDs enter "attract" mode.
-3. ... todo
+3. Run the diagnostic script (or connect to the snap-pad directly and enter "diag").
 
 #### T4. Factory reset
 The snap-pad needs to be reset to fresh from the factory conditions (no random data on the one-time-pads, clear usage maps). Steps:
@@ -59,7 +59,12 @@ The snap-pad needs to be reset to fresh from the factory conditions (no random d
 6. Turn the snap-pad around and repeat steps 3-5.
 
 #### T6. Provisioning twinned SPs for an organization
+
+Ping some folks to see what's needed, but we'll probably need a large blank area of silkscreen or a label that can be marked upon.
+
 #### T7. Storing twinned SPs
+
+The packaging should be reusable so that twinned snap-pads can be transported easily without breakage. Alternately: a thin cardboard liner?
 
 ## Single cases
 #### U1. Encode 1-4 blocks
