@@ -41,20 +41,16 @@ void leds_init() {
 	TA0CTL |= TACLR;						// Clear and restart clock
 }
 
-
-bool is_on(uint8_t mode, uint8_t phase) {
-	if (mode == LED_ON) return true;
-	if (mode == LED_FAST_0) return (phase & 1) == 0;
-	if (mode == LED_FAST_1) return (phase & 1) != 0;
-	if (mode == LED_SLOW_0) return (phase & 4) == 0;
-	if (mode == LED_SLOW_1) return (phase & 4) != 0;
-	return false;
-}
-
 void leds_set_led(uint8_t led, uint8_t mode) {
 	led_mode[led] = mode;
 }
 
+void leds_set_larson() {
+	led_mode[0] = 0x81;
+	led_mode[1] = 0x42;
+	led_mode[2] = 0x24;
+	led_mode[3] = 0x18;
+}
 
 /**
  * Turn on and off the four LEDs.
@@ -82,6 +78,10 @@ void wait_for_confirm() {
 	while (has_confirm());
 	while (!has_confirm());
 	while (has_confirm());
+}
+
+inline bool is_on(uint8_t mode, uint8_t phase) {
+	return (mode & phase) != 0;
 }
 
 #pragma vector=TIMER0_A0_VECTOR
