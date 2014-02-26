@@ -34,7 +34,7 @@ void leds_init() {
 	P6OUT |= 1<<3;  // pull resistor is high
 	P6REN |= 1<<3;  // turn on pull up
 	// Set up blink timer
-	TA0CCR0 = 31250;					  	// Count up to 1/4 second
+	TA0CCR0 = 15625;					  	// Count up to 1/8 second
 	TA0CCTL0 = 0x10;					  	// Enable counter interrupts, bit 4=1
 	TA0EX0 = 0x07;							// Additional /8
 	TA0CTL = TASSEL_1 | MC_1 | ID1 | ID0;	// Clock SMCLK, /8, upcount mode
@@ -81,7 +81,7 @@ void wait_for_confirm() {
 }
 
 inline bool is_on(uint8_t mode, uint8_t phase) {
-	return (mode & phase) != 0;
+	return (mode & (1<<phase)) != 0;
 }
 
 #pragma vector=TIMER0_A0_VECTOR

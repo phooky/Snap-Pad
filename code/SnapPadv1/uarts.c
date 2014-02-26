@@ -188,6 +188,7 @@ void uart_process() {
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_1:LED_FAST_0);
     		otp_factory_reset();
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
+    		while(1){} // Loop forever
 		}
 	}
 }

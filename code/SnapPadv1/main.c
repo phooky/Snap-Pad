@@ -88,13 +88,20 @@ void main (void)
     	if (button_pressed) {
     		// Don't bother entering the main loop; go directly to reset confirmation mode
     		uint8_t i;
+    		// Alternating side slow blink: confirm reset
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_0);
     		uart_factory_reset_confirm();
+    		// Alternating leds on board: reset in process
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_0:LED_FAST_1);
     		otp_factory_reset();
+    		// Lights off: reset done
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
-    	} else {
+    		while (1){} // Loop forever
     	}
+    }
+    if (cs != CS_NOT_CONNECTED) {
+    	// Go ahead to attract mode
+    	leds_set_larson();
     }
 
     while (1)  // main loop
