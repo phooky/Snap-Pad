@@ -53,6 +53,10 @@
 #include "onetimepad.h"
 #include "leds.h"
 #include "uarts.h"
+#include "config.h"
+
+// instantiate connection_state
+uint8_t connection_state;
 
 void process_usb();
 
@@ -80,12 +84,20 @@ void main (void)
 
     __enable_interrupt();    // Enable interrupts globally
 
-    // Work out UART contention
-    bool button_pressed = has_confirm();
-    cs = uart_determine_state(button_pressed);
+    // If the button is pressed at startup time on a twinned board, note that fact: it means that we want to
+    // start factory reset mode.
+    bool button_pressed_on_startup = has_confirm();
 
-    if (cs == CS_CONNECTED_MASTER) {
-    	if (button_pressed) {
+    // Work out our configuration state. We can be:
+    // Half pad and USB connected - SINGLE
+    // Half pad and USB disconnected - SINGLE (don't care)
+    // Twinned pad and USB connected - TWINNED_MASTER
+    // Twinned pad and USB disconnected - TWINNED_SLAVE or TWINNED_MASTER (uart contention for role)
+    cs = uart_determine_state(button_pressed_on_startup);
+
+
+    if (cs == CS_TWINNED_MASTER) {
+    	if (button_pressed_on_startup) {
     		// Don't bother entering the main loop; go directly to reset confirmation mode
     		uint8_t i;
     		// Alternating side slow blink: confirm reset
@@ -99,14 +111,14 @@ void main (void)
     		while (1){} // Loop forever
     	}
     }
-    if (cs != CS_NOT_CONNECTED) {
+    if (cs != CS_SINGLE) {
     	// Go ahead to attract mode
     	leds_set_larson();
     }
 
     while (1)  // main loop
     {
-    	if (cs == CS_CONNECTED_SLAVE) {
+    	if (cs == CS_TWINNED_SLAVE) {
     		uart_process(); // process uart commands
     	}
         switch(USB_connectionState())
@@ -211,7 +223,7 @@ void usb_debug(char* s) {
 void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	if (cmdbuf[0] == '\n' || cmdbuf[0] == '\r') {
 		// skip
-#if DEBUG
+#ifdef DEBUG
 	} else if (cmdbuf[0] == 'T') {
 		// check otp
 		OTPConfig config = otp_read_header();
@@ -229,9 +241,9 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == 'U') {
 		// get uart state
 		usb_debug("Uart state ");
-		if (cs == CS_CONNECTED_MASTER) usb_debug("CONN_MSTR");
-		if (cs == CS_CONNECTED_SLAVE) usb_debug("CONN_SLAVE");
-		if (cs == CS_NOT_CONNECTED) usb_debug("NO_CONN");
+		if (cs == CS_TWINNED_MASTER) usb_debug("CONN_MSTR");
+		if (cs == CS_TWINNED_SLAVE) usb_debug("CONN_SLAVE");
+		if (cs == CS_SINGLE) usb_debug("NO_CONN");
 		if (cs == CS_INDETERMINATE) usb_debug("CONN_IND");
 		usb_debug("\n");
 	} else if (cmdbuf[0] == 'C') {

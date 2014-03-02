@@ -10,16 +10,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
-enum {
-	CS_INDETERMINATE = 0,
-	CS_CONNECTED_MASTER = 1,
-	CS_CONNECTED_SLAVE = 2,
-	CS_NOT_CONNECTED = 3,
-	CS_COLLISION = 4
-};
-
-typedef uint8_t ConnectionState;
+#include "config.h"
 
 /**
  * Init the UART for cross-chip communication.

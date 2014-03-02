@@ -90,7 +90,7 @@ __interrupt void Timer0_A0 (void) {
 	uint8_t out = P5OUT & ~ALL_LED_BITS;
 	if (!is_on(led_mode[0],phase)) out |= 1 << 0;
 	if (!is_on(led_mode[1],phase)) out |= 1 << 1;
-	if (!is_on(led_mode[2],phase)) out |= 1 << 4;
-	if (!is_on(led_mode[3],phase)) out |= 1 << 5;
+	if (!is_on(led_mode[2],phase)) out |= 1 << 5;
+	if (!is_on(led_mode[3],phase)) out |= 1 << 4;
 	P5OUT = out;
 }

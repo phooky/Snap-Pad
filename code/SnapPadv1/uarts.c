@@ -117,9 +117,9 @@ ConnectionState uart_play_round(bool force_master) {
 		if (uart_has_data()) {
 			if (uart_consume() == UTOK_GAME_PING) {
 				UCA1TXBUF = UTOK_GAME_ACK;
-				return CS_CONNECTED_SLAVE;
+				return CS_TWINNED_SLAVE;
 			} else {
-				return CS_COLLISION;
+				return CS_TWINNED_COLLISION;
 			}
 		}
 		__delay_cycles(800);
@@ -128,14 +128,14 @@ ConnectionState uart_play_round(bool force_master) {
 	while (remain--) {
 		if (uart_has_data()) {
 			if (uart_consume() == UTOK_GAME_ACK) {
-				return CS_CONNECTED_MASTER;
+				return CS_TWINNED_MASTER;
 			} else {
-				return CS_COLLISION;
+				return CS_TWINNED_COLLISION;
 			}
 		}
 		__delay_cycles(800);
 	}
-	return CS_NOT_CONNECTED;
+	return CS_SINGLE;
 }
 
 void uart_factory_reset_confirm() {
@@ -158,7 +158,7 @@ void uart_factory_reset_confirm() {
 ConnectionState uart_determine_state(bool force_master) {
 	while (1) {
 		ConnectionState cs = uart_play_round(force_master);
-		if (cs != CS_COLLISION) {
+		if (cs != CS_TWINNED_COLLISION) {
 			return uart_state = cs;
 		}
 		force_master = false; // If the cheat didn't work the first time, they're both cheating; play nice.
@@ -171,7 +171,7 @@ ConnectionState uart_determine_state(bool force_master) {
  * @return true if connected to other half of snap-pad
  */
 bool uart_is_connected() {
-	return (uart_state == CS_CONNECTED_MASTER) || (uart_state == CS_CONNECTED_SLAVE);
+	return (uart_state == CS_TWINNED_MASTER) || (uart_state == CS_TWINNED_SLAVE);
 }
 
 void uart_process() {
