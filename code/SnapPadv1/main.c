@@ -97,18 +97,17 @@ void main (void)
     // Twinned pad and USB disconnected - TWINNED_SLAVE or TWINNED_MASTER (uart contention for role)
 
     // First, scan the USB connection for ~100ms to see if the device is being enumerated.
-    // TODO
-
+    bool usb_attached = false;
     timer_reset();
-    while (timer_msec() < 1000);
-    leds_set_led(0,0xff);
-    while (timer_msec() < 2000);
-    leds_set_led(1,0xff);
-    while (timer_msec() < 3000);
-    leds_set_led(2,0xff);
-    while (timer_msec() < 4000);
+    while (timer_msec() < 1000) {
+    	uint8_t s = USB_connectionState();
+        if (s == ST_ENUM_ACTIVE)  {
+    		usb_attached = true;
+    		break;
+    	}
+    }
 
-    cs = uart_determine_state(button_pressed_on_startup);
+    cs = uart_determine_state(usb_attached);
 
 
     if (cs == CS_TWINNED_MASTER) {
