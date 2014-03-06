@@ -54,6 +54,7 @@
 #include "leds.h"
 #include "uarts.h"
 #include "config.h"
+#include "timer.h"
 
 // instantiate connection_state
 uint8_t connection_state;
@@ -77,6 +78,7 @@ void main (void)
     initPorts();             // Configure all GPIOs
     nand_init();             // Set up NAND pins
     leds_init();			 // Set up LED pins
+    timer_init();			 // Set up msec timer
     hwrng_init();            // Initialize HW RNG
     initClocks(8000000);     // Configure clocks
     USB_setup(TRUE,TRUE);    // Init USB & events; if a host is present, connect
@@ -93,6 +95,19 @@ void main (void)
     // Half pad and USB disconnected - SINGLE (don't care)
     // Twinned pad and USB connected - TWINNED_MASTER
     // Twinned pad and USB disconnected - TWINNED_SLAVE or TWINNED_MASTER (uart contention for role)
+
+    // First, scan the USB connection for ~100ms to see if the device is being enumerated.
+    // TODO
+
+    timer_reset();
+    while (timer_msec() < 1000);
+    leds_set_led(0,0xff);
+    while (timer_msec() < 2000);
+    leds_set_led(1,0xff);
+    while (timer_msec() < 3000);
+    leds_set_led(2,0xff);
+    while (timer_msec() < 4000);
+
     cs = uart_determine_state(button_pressed_on_startup);
 
 

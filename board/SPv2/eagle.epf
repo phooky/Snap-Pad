@@ -321,7 +321,7 @@ UsedLibrary="/home/phooky/Repos/Snap-Pad/board/SPv0/rng.lbr"
 
 [Win_1]
 Type="Control Panel"
-Loc="599 98 1858 821"
+Loc="591 90 1850 813"
 State=2
 Number=0
 

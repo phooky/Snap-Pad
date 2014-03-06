@@ -71,12 +71,18 @@ uint8_t uart_consume() {
 ConnectionState uart_state = CS_INDETERMINATE;
 
 enum {
-	// Protocol for master/slave contention and factory reset
+	// Tokens for master/slave contention
 	UTOK_GAME_PING        = 0x10,
 	UTOK_GAME_ACK         = 0x11,
+
+	// Tokens for factory reset
 	UTOK_RST_PROPOSE      = 0x12,
 	UTOK_RST_CONFIRM      = 0x13,
 	UTOK_RST_COMMIT       = 0x14,
+
+	// Tokens for remote button press
+	UTOK_BUTTON_QUERY     = 0x30,
+	UTOK_BUTTON_RSP       = 0x31,
 
 	// Protocol for sending pages of data
 	UTOK_SELECT_BLOCK     = 0x20, // followed by 16-bit block #

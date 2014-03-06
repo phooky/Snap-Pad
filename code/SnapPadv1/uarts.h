@@ -13,6 +13,11 @@
 #include "config.h"
 
 /**
+ * Packet format:
+ * TOK LEN DAT*
+ */
+
+/**
  * Init the UART for cross-chip communication.
  */
 void uart_init();
@@ -24,10 +29,9 @@ void uart_send(uint8_t* buffer, uint16_t len);
  */
 void uart_factory_reset_confirm();
 
-
 /**
  * Determine if the snap-pad is still connected to its twin, and if so, figure out if this snap-pad should operate
- * in master mode or slave mode. If the factory_reset flag is set, this half of the board will "cheat" and attempt
+ * in master mode or slave mode. If the force_master flag is set, this half of the board will "cheat" and attempt
  * to become master by skipping the inital delay. This is useful in certain conditions, like starting a "factory
  * reset".
  * @param force_master true if this twin should cheat to become the master
