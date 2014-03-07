@@ -68,6 +68,9 @@ void do_twinned_master_mode();
 void do_twinned_slave_mode();
 void do_single_mode();
 
+void usb_debug_dec(int i);
+void usb_debug(char* s);
+
 void main (void)
 {
     // Set up clocks/IOs.  initPorts()/initClocks() will need to be customized
@@ -125,7 +128,7 @@ void main (void)
     	do_twinned_slave_mode();
     } else if (cs == CS_SINGLE) {
     	leds_set_led(0,0xff);
-    	//do_single_mode();
+    	do_single_mode();
     }
 }
 
@@ -149,6 +152,12 @@ void do_single_mode() {
 }
 
 void do_twinned_master_mode() {
+	// check otp header
+	OTPConfig config = otp_read_header();
+	if (!config.has_header) {
+		otp_initialize_header();
+	}
+
 	// Go ahead to attract mode
 	leds_set_larson();
     while (1)  // main loop
@@ -168,6 +177,12 @@ void do_twinned_master_mode() {
 }
 
 void do_twinned_slave_mode() {
+	// check otp header
+	OTPConfig config = otp_read_header();
+	if (!config.has_header) {
+		otp_initialize_header();
+	}
+
 	// Go ahead to attract mode
 	//leds_set_larson();
     while (1)  // main loop
@@ -220,6 +235,27 @@ void read_status() {
 	cdcSendDataWaitTilDone((BYTE*)rsp, 6, CDC0_INTFNUM, 100);
 }
 
+void diagnostics() {
+	// Check chip connection
+	if (!nand_check_ONFI()) {
+		usb_debug("ONFI FAIL\n");
+		return;
+	}
+	// check otp
+	OTPConfig config = otp_read_header();
+	if (!config.has_header) {
+		usb_debug("NOHD\n");
+	} else {
+		usb_debug("HD\n");
+		if (config.block_map_written) {
+			usb_debug("BMAP\n");
+			usb_debug("BCNT");
+			usb_debug_dec(config.block_count);
+			usb_debug("\n");
+		}
+	}
+
+}
 void scan_bb() {
 	uint16_t bbl[10];
 	otp_scan_bad_blocks(bbl, 10);
@@ -280,19 +316,8 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		// skip
 #ifdef DEBUG
 	} else if (cmdbuf[0] == 'T') {
-		// check otp
-		OTPConfig config = otp_read_header();
-		if (!config.has_header) {
-			usb_debug("NOHD\n");
-		} else {
-			usb_debug("HD\n");
-			if (config.block_map_written) {
-				usb_debug("BMAP\n");
-				usb_debug("BCNT");
-				usb_debug_dec(config.block_count);
-				usb_debug("\n");
-			}
-		}
+		// run diagnostics
+		diagnostics();
 	} else if (cmdbuf[0] == 'U') {
 		// get uart state
 		usb_debug("Uart state ");
