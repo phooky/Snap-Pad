@@ -10,6 +10,7 @@
 #include "leds.h"
 #include "hwrng.h"
 #include "onetimepad.h"
+#include "timer.h"
 #include <stdbool.h>
 
 // Pins:
@@ -104,42 +105,39 @@ enum {
  * been snapped and is disconnected from its twin.
  */
 ConnectionState uart_play_round(bool force_master) {
-	uint8_t remain = 100; // 100 ms total timeout
+	timer_reset();
 	uint16_t ms = 0;
-	uart_clear_buf();
-	__delay_cycles(8000); // allow uarts on both ends to come up
+	while (timer_msec() < 1) {} // let uarts settle
 	if (!force_master) {
 		hwrng_start();
-		__delay_cycles(16000); // wait 2 ms
-		while (!hwrng_done());
-		ms = hwrng_bits()[0] & 0x3f; // wait up to 64 ms
-		remain -= (ms + 2);
+		timer_reset(); while (timer_msec() < 2) {} // wait 2 ms
+		while (!hwrng_done()) {} // wait for random data to become available
+		ms = 2+(hwrng_bits()[0] & 0x3f); // additional delay of 2-66 ms
 	}
-	// scale both timing numbers by a factor of 10 to reduce the chance of jabber condition
-	// when force_master is asserted on one or both boards
-	remain *= 10;
-	ms *= 10;
-	while (ms--) {
+	timer_reset();
+	while (timer_msec() < ms) {
 		if (uart_has_data()) {
-			if (uart_consume() == UTOK_GAME_PING) {
+			uint8_t b = uart_consume();
+			if (b == UTOK_GAME_PING) {
 				UCA1TXBUF = UTOK_GAME_ACK;
 				return CS_TWINNED_SLAVE;
-			} else {
+			} else if (b == UTOK_GAME_ACK) {
 				return CS_TWINNED_COLLISION;
 			}
 		}
-		__delay_cycles(800);
 	}
 	UCA1TXBUF = UTOK_GAME_PING;
-	while (remain--) {
+	timer_reset();
+	ms = 1000 - ms;
+	while (timer_msec() < ms) {
 		if (uart_has_data()) {
-			if (uart_consume() == UTOK_GAME_ACK) {
+			uint8_t b = uart_consume();
+			if (b == UTOK_GAME_ACK) {
 				return CS_TWINNED_MASTER;
-			} else {
+			} else if (b == UTOK_GAME_PING) {
 				return CS_TWINNED_COLLISION;
 			}
 		}
-		__delay_cycles(800);
 	}
 	return CS_SINGLE;
 }

@@ -63,6 +63,11 @@ void process_usb();
 
 ConnectionState cs;
 
+void do_factory_reset_mode();
+void do_twinned_master_mode();
+void do_twinned_slave_mode();
+void do_single_mode();
+
 void main (void)
 {
     // Set up clocks/IOs.  initPorts()/initClocks() will need to be customized
@@ -99,42 +104,36 @@ void main (void)
     // First, scan the USB connection for ~100ms to see if the device is being enumerated.
     bool usb_attached = false;
     timer_reset();
-    while (timer_msec() < 1000) {
+    while (timer_msec() < 600) {
     	uint8_t s = USB_connectionState();
-        if (s == ST_ENUM_ACTIVE)  {
+        if (s == ST_ENUM_ACTIVE || s == ST_ENUM_SUSPENDED)  {
     		usb_attached = true;
     		break;
     	}
     }
 
-    cs = uart_determine_state(usb_attached);
-
+    cs = uart_determine_state(usb_attached || button_pressed_on_startup);
 
     if (cs == CS_TWINNED_MASTER) {
     	if (button_pressed_on_startup) {
-    		// Don't bother entering the main loop; go directly to reset confirmation mode
-    		uint8_t i;
-    		// Alternating side slow blink: confirm reset
-    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_0);
-    		uart_factory_reset_confirm();
-    		// Alternating leds on board: reset in process
-    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_0:LED_FAST_1);
-    		otp_factory_reset();
-    		// Lights off: reset done
-    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
-    		while (1){} // Loop forever
+    		do_factory_reset_mode();
+    	} else {
+    		do_twinned_master_mode();
     	}
+    } else if (cs == CS_TWINNED_SLAVE) {
+    	leds_set_led(0,0x55);
+    	do_twinned_slave_mode();
+    } else if (cs == CS_SINGLE) {
+    	leds_set_led(0,0xff);
+    	//do_single_mode();
     }
-    if (cs != CS_SINGLE) {
-    	// Go ahead to attract mode
-    	leds_set_larson();
-    }
+}
 
+void do_single_mode() {
+	// Go ahead to attract mode
+	leds_set_larson();
     while (1)  // main loop
     {
-    	if (cs == CS_TWINNED_SLAVE) {
-    		uart_process(); // process uart commands
-    	}
         switch(USB_connectionState())
         {
             case ST_ENUM_ACTIVE:
@@ -147,6 +146,48 @@ void main (void)
             default:;
         }
     }
+}
+
+void do_twinned_master_mode() {
+	// Go ahead to attract mode
+	leds_set_larson();
+    while (1)  // main loop
+    {
+        switch(USB_connectionState())
+        {
+            case ST_ENUM_ACTIVE:
+            	process_usb();
+            	break;
+            case ST_USB_DISCONNECTED: // physically disconnected from the host
+            case ST_ENUM_SUSPENDED:   // connecte d/enumerated, but suspended
+            case ST_NOENUM_SUSPENDED: // connected, enum started, but the host is unresponsive
+            case ST_ENUM_IN_PROGRESS:
+            default:;
+        }
+    }
+}
+
+void do_twinned_slave_mode() {
+	// Go ahead to attract mode
+	//leds_set_larson();
+    while (1)  // main loop
+    {
+    	uart_process(); // process uart commands
+    }
+}
+
+void do_factory_reset_mode() {
+	// Don't bother entering the main loop; go directly to reset confirmation mode
+	uint8_t i;
+	// Alternating side slow blink: confirm reset
+	for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_0);
+	uart_factory_reset_confirm();
+	// Alternating leds on board: reset in process
+	for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_0:LED_FAST_1);
+	otp_factory_reset();
+	// Lights off: reset done
+	for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
+	while (1){} // Loop forever
 }
 
 char hex(uint8_t v) {
