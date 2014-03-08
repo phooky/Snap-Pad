@@ -236,6 +236,11 @@ void read_status() {
 }
 
 void diagnostics() {
+	// Display connection state
+	if (cs == CS_TWINNED_MASTER) { usb_debug("CS_MASTER\n"); }
+	else if (cs == CS_TWINNED_SLAVE) { usb_debug("CS_SLAVE\n"); }
+	else if (cs == CS_SINGLE) { usb_debug("CS_SINGLE\n"); }
+	else { usb_debug("CS_?\n"); }
 	// Check chip connection
 	if (!nand_check_ONFI()) {
 		usb_debug("ONFI FAIL\n");
@@ -314,24 +319,16 @@ void usb_debug(char* s) {
 void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	if (cmdbuf[0] == '\n' || cmdbuf[0] == '\r') {
 		// skip
-#ifdef DEBUG
-	} else if (cmdbuf[0] == 'T') {
+	} else if (cmdbuf[0] == 'D') {
 		// run diagnostics
 		diagnostics();
-	} else if (cmdbuf[0] == 'U') {
-		// get uart state
-		usb_debug("Uart state ");
-		if (cs == CS_TWINNED_MASTER) usb_debug("CONN_MSTR");
-		if (cs == CS_TWINNED_SLAVE) usb_debug("CONN_SLAVE");
-		if (cs == CS_SINGLE) usb_debug("NO_CONN");
-		if (cs == CS_INDETERMINATE) usb_debug("CONN_IND");
-		usb_debug("\n");
+	} else if (cmdbuf[0] == 'T')  {
+		// run full production test suite
 	} else if (cmdbuf[0] == 'C') {
 		scan_bb();
-#endif
-	} else if (cmdbuf[0] == 'I') {
-		// Initialize nand
-		otp_initialize_header();
+	//} else if (cmdbuf[0] == 'I') {
+	// Initialize nand
+	//	otp_initialize_header();
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
 #ifdef DEBUG
