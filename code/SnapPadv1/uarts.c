@@ -27,16 +27,16 @@ void uart_init() {
 	UCA1CTL1 |= UCSWRST;
 	// Configure module
 	UCA1CTL1 |= UCSSEL_2;
-	UCA1BR0 = 9;
+	UCA1BR0 = 17;
 	UCA1BR1 = 0;
-	UCA1MCTL |= UCBRS_1 + UCBRF_0;
+	UCA1MCTL |= UCBRS_3 + UCBRF_0;
 	// Take uart module out of reset
 	UCA1CTL1 &= ~UCSWRST;
-	UCA1IE |= UCRXIE;
+	UCA1IE |= UCRXIE;// | UCTXIE;
 }
 
 void uart_send_byte(uint8_t b) {
-	while (!(UCA1IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
+	while (!(UCA1IFG&UCTXIFG)); // USCI_A1 TX buffer ready?
 	UCA1TXBUF = b;
 }
 
@@ -48,24 +48,24 @@ void uart_send(uint8_t* buffer, uint16_t len) {
 	}
 }
 
-#define UART_RING_LEN 128
-volatile uint8_t uart_ring_start = 0;
-volatile uint8_t uart_ring_end = 0;
-volatile uint8_t uart_ring_buf[UART_RING_LEN];
+#define UART_RING_LEN 32
+volatile uint8_t uart_rx_start = 0;
+volatile uint8_t uart_rx_end = 0;
+volatile uint8_t uart_rx_buf[UART_RING_LEN];
 
 void uart_clear_buf() {
 	UCA1IE &= ~UCRXIE;
-	uart_ring_start = uart_ring_end = 0;
+	uart_rx_start = uart_rx_end = 0;
 	UCA1IE |= UCRXIE;
 }
 
 bool uart_has_data() {
-	return uart_ring_start != uart_ring_end;
+	return uart_rx_start != uart_rx_end;
 }
 
 uint8_t uart_consume() {
-	uint8_t c = uart_ring_buf[uart_ring_start++];
-	uart_ring_start = uart_ring_start % UART_RING_LEN;
+	uint8_t c = uart_rx_buf[uart_rx_start];
+	uart_rx_start = (uart_rx_start +1) % UART_RING_LEN;
 	return c;
 }
 
@@ -207,11 +207,20 @@ bool uart_ping_button() {
 	while (!uart_has_data()) {}
 	uint8_t rsp = uart_consume();
 	if (rsp != UTOK_BUTTON_RSP) {
-		usb_debug("BAD PINGRSP");
+		usb_debug("BAD PINGRSP ");
+		usb_debug_dec(rsp);
+		usb_debug("\n");
+		return false;
+	} else {
+		while (!uart_has_data()) {}
+		rsp = uart_consume();
+		if (rsp != 0xff && rsp != 0x05) {
+			usb_debug("BAD PINGVAL ");
+			usb_debug_dec(rsp);
+			usb_debug("\n");
+		}
+		return rsp == 0xff;
 	}
-	while (!uart_has_data()) {}
-	rsp = uart_consume();
-	return rsp != 0x00;
 }
 
 /**
@@ -226,9 +235,14 @@ __interrupt void USCI_A1_ISR(void)
 	{
   	case 0:break;                             // Vector 0 - no interrupt
 	case 2:                                   // Vector 2 - RXIFG
+		// check for errors
+		//if ((UCA1STAT & (UCOE|UCPE|UCBRK|UCRXERR)) != 0) {
+	  	//	uart_rx_buf[uart_rx_end] = UCA1STAT;
+	  	//	uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
+		//}
   		rx = UCA1RXBUF;
-  		uart_ring_buf[uart_ring_end++] = rx;
-  		uart_ring_end =  uart_ring_end % UART_RING_LEN;
+  		uart_rx_buf[uart_rx_end] = rx;
+  		uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
   		break;
 	case 4:break;                             // Vector 4 - TXIFG
 	default: break;

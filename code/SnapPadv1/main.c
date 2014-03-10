@@ -187,7 +187,10 @@ void do_twinned_slave_mode() {
 	}
 
 	// Go ahead to attract mode
-	//leds_set_larson();
+	leds_set_led(0,0xf);
+	leds_set_led(1,0);
+	leds_set_led(2,0);
+	leds_set_led(3,0xf);
     while (1)  // main loop
     {
     	uart_process(); // process uart commands
