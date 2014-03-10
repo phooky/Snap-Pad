@@ -29,6 +29,12 @@ void uart_send(uint8_t* buffer, uint16_t len);
  */
 void uart_factory_reset_confirm();
 
+/*
+ * Ping remote end for a button push
+ * @return true if remote twin has a button push
+ */
+bool uart_ping_button();
+
 /**
  * Determine if the snap-pad is still connected to its twin, and if so, figure out if this snap-pad should operate
  * in master mode or slave mode. If the force_master flag is set, this half of the board will "cheat" and attempt

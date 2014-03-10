@@ -35,14 +35,18 @@ void uart_init() {
 	UCA1IE |= UCRXIE;
 }
 
+void uart_send_byte(uint8_t b) {
+	while (!(UCA1IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
+	UCA1TXBUF = b;
+}
+
+
 void uart_send(uint8_t* buffer, uint16_t len) {
 	while (len > 0) {
-		while (!(UCA1IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
-		UCA1TXBUF = *(buffer++);
+		uart_send_byte(*(buffer++));
 		len--;
 	}
 }
-
 
 #define UART_RING_LEN 128
 volatile uint8_t uart_ring_start = 0;
@@ -119,14 +123,14 @@ ConnectionState uart_play_round(bool force_master) {
 		if (uart_has_data()) {
 			uint8_t b = uart_consume();
 			if (b == UTOK_GAME_PING) {
-				UCA1TXBUF = UTOK_GAME_ACK;
+				uart_send_byte(UTOK_GAME_ACK);
 				return CS_TWINNED_SLAVE;
 			} else if (b == UTOK_GAME_ACK) {
 				return CS_TWINNED_COLLISION;
 			}
 		}
 	}
-	UCA1TXBUF = UTOK_GAME_PING;
+	uart_send_byte(UTOK_GAME_PING);
 	timer_reset();
 	ms = 1000 - ms;
 	while (timer_msec() < ms) {
@@ -143,8 +147,7 @@ ConnectionState uart_play_round(bool force_master) {
 }
 
 void uart_factory_reset_confirm() {
-	while (!(UCA1IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
-	UCA1TXBUF = UTOK_RST_PROPOSE;
+	uart_send_byte(UTOK_RST_PROPOSE);
 	while (1) {
 		if (uart_has_data() && (uart_consume() == UTOK_RST_CONFIRM)) return;
 	}
@@ -187,14 +190,28 @@ void uart_process() {
 			uint8_t i;
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_1);
     		wait_for_confirm();
-    		while (!(UCA1IFG&UCTXIFG));             // USCI_A0 TX buffer ready?
-    		UCA1TXBUF = UTOK_RST_CONFIRM;
+    		uart_send_byte(UTOK_RST_CONFIRM);
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_1:LED_FAST_0);
     		otp_factory_reset();
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
     		while(1){} // Loop forever
+		} else if (command == UTOK_BUTTON_QUERY) {
+			uart_send_byte(UTOK_BUTTON_RSP);
+			uart_send_byte(has_confirm()?0xff:0x00);
 		}
 	}
+}
+
+bool uart_ping_button() {
+	uart_send_byte(UTOK_BUTTON_QUERY);
+	while (!uart_has_data()) {}
+	uint8_t rsp = uart_consume();
+	if (rsp != UTOK_BUTTON_RSP) {
+		usb_debug("BAD PINGRSP");
+	}
+	while (!uart_has_data()) {}
+	rsp = uart_consume();
+	return rsp != 0x00;
 }
 
 /**

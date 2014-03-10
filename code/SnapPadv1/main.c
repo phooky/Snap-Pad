@@ -68,9 +68,6 @@ void do_twinned_master_mode();
 void do_twinned_slave_mode();
 void do_single_mode();
 
-void usb_debug_dec(int i);
-void usb_debug(char* s);
-
 void main (void)
 {
     // Set up clocks/IOs.  initPorts()/initClocks() will need to be customized
@@ -160,7 +157,7 @@ void do_twinned_master_mode() {
 
 	// Go ahead to attract mode
 	leds_set_larson();
-    while (1)  // main loop
+    while (!has_confirm())  // waiting for button press
     {
         switch(USB_connectionState())
         {
@@ -173,7 +170,13 @@ void do_twinned_master_mode() {
             case ST_ENUM_IN_PROGRESS:
             default:;
         }
+        // ping
+        if (uart_ping_button()) break;
     }
+    leds_set_led(0,0x0f);
+    leds_set_led(1,0xf0);
+    leds_set_led(2,0x0f);
+    leds_set_led(3,0xf0);
 }
 
 void do_twinned_slave_mode() {
