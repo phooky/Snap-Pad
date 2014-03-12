@@ -296,6 +296,15 @@ void read_rng() {
 	cdcSendDataWaitTilDone((BYTE*)bits, 16*4, CDC0_INTFNUM, 100);
 }
 
+void rand_para_test() {
+	uint8_t* p = nand_para_buffer();
+	leds_set_led(2,0x55);
+	hwrng_bits_start(p,512);
+	while (!hwrng_bits_done()) ;
+	leds_set_led(2,0x00);
+	cdcSendDataWaitTilDone((BYTE*)p,512,CDC0_INTFNUM,100);
+}
+
 void usb_debug_dec(int i) {
 	char buf[10];
 	int ip = i/10;
@@ -328,6 +337,9 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == 'D') {
 		// run diagnostics
 		diagnostics();
+	} else if (cmdbuf[0] == 'P') {
+		// random paragraph test
+		rand_para_test();
 	} else if (cmdbuf[0] == 'T')  {
 		// run full production test suite
 	} else if (cmdbuf[0] == 'C') {

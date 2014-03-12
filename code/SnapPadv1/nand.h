@@ -122,7 +122,7 @@ bool nand_load_para(uint16_t block, uint8_t page, uint8_t paragraph);
 bool nand_save_para(uint16_t block, uint8_t page, uint8_t paragraph);
 
 /**
- * Retrieve a pointer to the 2112B page buffer. The area from 2048-2011 is the spare
+ * Retrieve a pointer to the 528B page buffer. The area from 512B-528B is the spare
  * data area; this data should rarely be directly manipulated by the client.
  */
 uint8_t* nand_para_buffer();
