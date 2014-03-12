@@ -6,10 +6,10 @@ p = serial.Serial('/dev/ttyACM0',115200)
 #p = sys.stdout
 
 def read():
-    c = '#\n\r'
+    c = 'P\n\r'
     p.write(c)
     p.flush()
-    return p.read(16*4)
+    return p.read(512)
 
 def dump(l):
     while l > 255 or l < 0:
