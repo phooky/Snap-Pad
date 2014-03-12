@@ -17,6 +17,15 @@
 // P4.4 UCA1RXD
 // P4.5 UCA1TXD
 
+#define UART_RING_LEN 64
+volatile uint8_t uart_rx_start = 0;
+volatile uint8_t uart_rx_end = 0;
+volatile uint8_t uart_rx_buf[UART_RING_LEN];
+
+volatile uint8_t uart_tx_start = 0;
+volatile uint8_t uart_tx_end = 0;
+volatile uint8_t uart_tx_buf[UART_RING_LEN];
+
 /**
  * Init the UART for cross-chip communication.
  */
@@ -32,26 +41,35 @@ void uart_init() {
 	UCA1MCTL |= UCBRS_3 + UCBRF_0;
 	// Take uart module out of reset
 	UCA1CTL1 &= ~UCSWRST;
-	UCA1IE |= UCRXIE;// | UCTXIE;
+	UCA1IE |= UCRXIE;
 }
 
 void uart_send_byte(uint8_t b) {
-	while (!(UCA1IFG&UCTXIFG)); // USCI_A1 TX buffer ready?
-	UCA1TXBUF = b;
+	UCA1IE &= ~UCTXIE;
+	if (UCA1IFG & UCTXIFG) { // ready for next byte?
+		UCA1TXBUF = b;
+	} else {
+		// insert in transmit ring
+		uart_tx_buf[uart_tx_end] = b;
+		uart_tx_end = (uart_tx_end+1) % UART_RING_LEN;
+		UCA1IE |= UCTXIE;
+	}
 }
 
 
 void uart_send(uint8_t* buffer, uint16_t len) {
-	while (len > 0) {
-		uart_send_byte(*(buffer++));
-		len--;
+	UCA1IE &= ~UCTXIE;
+	while (len--) {
+		// insert in transmit ring
+		uart_tx_buf[uart_tx_end] = *(buffer++);
+		uart_tx_end = (uart_tx_end+1) % UART_RING_LEN;
 	}
+	if (UCA1IFG & UCTXIFG) { // If not transmitting, start transfer
+		UCA1TXBUF = uart_tx_buf[uart_tx_start];
+		uart_tx_start = (uart_tx_start+1) % UART_RING_LEN;
+	}
+	UCA1IE |= UCTXIE;
 }
-
-#define UART_RING_LEN 32
-volatile uint8_t uart_rx_start = 0;
-volatile uint8_t uart_rx_end = 0;
-volatile uint8_t uart_rx_buf[UART_RING_LEN];
 
 void uart_clear_buf() {
 	UCA1IE &= ~UCRXIE;
@@ -244,7 +262,14 @@ __interrupt void USCI_A1_ISR(void)
   		uart_rx_buf[uart_rx_end] = rx;
   		uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
   		break;
-	case 4:break;                             // Vector 4 - TXIFG
+	case 4:                                  // Vector 4 - TXIFG
+		if (uart_tx_start == uart_tx_end) {
+			UCA1IE &= ~UCTXIE;
+		} else {
+			UCA1TXBUF = uart_tx_buf[uart_tx_start] = rx;
+			uart_tx_start = (uart_tx_start+1) % UART_RING_LEN;
+		}
+		break;
 	default: break;
 	}
 }
