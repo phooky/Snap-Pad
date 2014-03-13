@@ -232,7 +232,7 @@ bool uart_ping_button() {
 	} else {
 		while (!uart_has_data()) {}
 		rsp = uart_consume();
-		if (rsp != 0xff && rsp != 0x05) {
+		if (rsp != 0xff && rsp != 0x00) {
 			usb_debug("BAD PINGVAL ");
 			usb_debug_dec(rsp);
 			usb_debug("\n");
@@ -266,7 +266,7 @@ __interrupt void USCI_A1_ISR(void)
 		if (uart_tx_start == uart_tx_end) {
 			UCA1IE &= ~UCTXIE;
 		} else {
-			UCA1TXBUF = uart_tx_buf[uart_tx_start] = rx;
+			UCA1TXBUF = uart_tx_buf[uart_tx_start];
 			uart_tx_start = (uart_tx_start+1) % UART_RING_LEN;
 		}
 		break;
