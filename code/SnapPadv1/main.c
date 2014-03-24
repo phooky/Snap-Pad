@@ -341,6 +341,31 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		// random paragraph test
 		rand_para_test();
 	} else if (cmdbuf[0] == 'T')  {
+		if (cmdbuf[1] == 'r') {
+			// time random number production
+			uint16_t paras = 4 * 64 * 4;
+			usb_debug("start\n");
+			while (paras-- > 0) {
+				hwrng_bits_start(nand_para_buffer(), 512);
+				while(!hwrng_bits_done()) ;
+			}
+			usb_debug("stop\n");
+		} else if (cmdbuf[1] == 'w') {
+			uint8_t blocks = 4;
+			usb_debug("start\n");
+			while (blocks-- > 0) {
+				uint8_t page;
+				for (page = 0; page < 64; page++) {
+					uint8_t para;
+					for (para = 0; para < 4; para++) {
+						nand_save_para(blocks+2, page, para);
+					}
+				}
+			}
+			usb_debug("stop\n");
+		} else if (cmdbuf[1] == 'e') {
+			// time serial roundtrip
+		}
 		// run full production test suite
 	} else if (cmdbuf[0] == 'C') {
 		scan_bb();
