@@ -228,6 +228,7 @@ void nand_read_parameter_page(uint8_t* buffer, uint16_t count) {
 }
 
 /**
+ * ***** WRONG ********
  * Data+spare buffer. This is arranged as follows:
  * 0-511      paragraph 0
  * 512-1023   paragraph 1
@@ -237,6 +238,7 @@ void nand_read_parameter_page(uint8_t* buffer, uint16_t count) {
  * 2064-2079  spare 1
  * 2080-2095  spare 2
  * 2096-2111  spare 3
+ * ***** TODO *** Update with current map (data/spare/data/spare/data/spare/data/spare)
  */
 static uint8_t para_buffer[PARA_SIZE+PARA_SPARE_SIZE];
 

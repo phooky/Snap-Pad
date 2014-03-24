@@ -351,14 +351,16 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			}
 			usb_debug("stop\n");
 		} else if (cmdbuf[1] == 'w') {
-			uint8_t blocks = 4;
+			uint8_t blocks;
 			usb_debug("start\n");
-			while (blocks-- > 0) {
+			for (blocks = 0; blocks < 4; blocks++) {
+				nand_block_erase(nand_make_addr(0,blocks,0,0));
 				uint8_t page;
 				for (page = 0; page < 64; page++) {
 					uint8_t para;
 					for (para = 0; para < 4; para++) {
-						nand_save_para(blocks+2, page, para);
+						nand_save_para(blocks, page, para);
+						nand_wait_for_ready();
 					}
 				}
 			}
