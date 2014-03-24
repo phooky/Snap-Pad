@@ -3,6 +3,7 @@
 #include <msp430f5508.h>
 #include <stdbool.h>
 #include "ecc.h"
+#include "buffers.h"
 
 /**
  * Pin assignments
@@ -240,13 +241,14 @@ void nand_read_parameter_page(uint8_t* buffer, uint16_t count) {
  * 2096-2111  spare 3
  * ***** TODO *** Update with current map (data/spare/data/spare/data/spare/data/spare)
  */
-static uint8_t para_buffer[PARA_SIZE+PARA_SPARE_SIZE];
+
 
 /**
  * Initialize the page buffer with unprogrammed (0xff) values.
  */
 void nand_initialize_para_buffer() {
 	uint16_t idx;
+	uint8_t* para_buffer = buffers_get_nand();
 	for (idx = 0; idx < PARA_SIZE; idx++) para_buffer[idx] = 0xff;
 }
 
@@ -259,6 +261,7 @@ void nand_initialize_para_buffer() {
  */
 bool nand_load_para(uint16_t block, uint8_t page, uint8_t paragraph) {
 	uint32_t address = nand_make_para_addr(block,page,paragraph);
+	uint8_t* para_buffer = buffers_get_nand();
 	nand_read_raw_page(address, para_buffer, PARA_SIZE+PARA_SPARE_SIZE);
 	uint32_t ecc = *(uint32_t*)(para_buffer + PARA_SIZE);
 	if (!ecc_verify(para_buffer,ecc)) return false;
@@ -275,6 +278,7 @@ bool nand_load_para(uint16_t block, uint8_t page, uint8_t paragraph) {
  */
 bool nand_save_para(uint16_t block, uint8_t page, uint8_t paragraph) {
 	uint32_t address = nand_make_para_addr(block,page,paragraph);
+	uint8_t* para_buffer = buffers_get_nand();
 	uint32_t ecc = ecc_generate(para_buffer);
 	*(uint32_t*)(para_buffer + PARA_SIZE) = ecc;
 	return nand_program_raw_page(address,para_buffer,PARA_SIZE+PARA_SPARE_SIZE);
@@ -285,6 +289,7 @@ bool nand_save_para(uint16_t block, uint8_t page, uint8_t paragraph) {
  * data area; this data should rarely be directly manipulated by the client.
  */
 uint8_t* nand_para_buffer() {
+	uint8_t* para_buffer = buffers_get_nand();
 	return para_buffer;
 }
 
