@@ -7,6 +7,7 @@
 
 
 #include "buffers.h"
+#include "nand.h"
 
 static uint8_t buffer_A[PARA_SIZE+PARA_SPARE_SIZE];
 static uint8_t buffer_B[PARA_SIZE+PARA_SPARE_SIZE];
