@@ -68,4 +68,9 @@ OTPConfig otp_read_header();
  */
 bool otp_initialize_header();
 
+/**
+ * Run complete randomization process. Can take up to four hours to complete.
+ */
+bool otp_randomize_boards();
+
 #endif // ONETIMEPAD_H

@@ -286,3 +286,11 @@ bool otp_initialize_header() {
 	nand_wait_for_ready();
 	return true;
 }
+
+/**
+ * Run complete randomization process. Can take up to four hours to complete.
+ */
+bool otp_randomize_boards() {
+	/** TODO: sends. */
+
+}
