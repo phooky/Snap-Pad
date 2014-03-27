@@ -55,6 +55,7 @@
 #include "uarts.h"
 #include "config.h"
 #include "timer.h"
+#include "buffers.h"
 
 // instantiate connection_state
 uint8_t connection_state;
@@ -298,7 +299,9 @@ void read_rng() {
 }
 
 void rand_para_test() {
-	uint8_t* p = nand_para_buffer();
+	uint8_t* p = buffers_get_nand();
+	// buffers_get_rng();
+	// nand_para_buffer();
 	leds_set_led(2,0x55);
 	hwrng_bits_start(p,512);
 	while (!hwrng_bits_done()) ;

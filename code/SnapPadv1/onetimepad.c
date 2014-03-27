@@ -296,6 +296,7 @@ bool otp_randomize_boards() {
 	/** TODO: sends. */
 	uint16_t block;
 	hwrng_bits_start(buffers_get_rng(),512);
+	usb_debug("BEGIN RND\n");
 	for (block = 1; block < 2048; block++) {
 		uint8_t page;
 		leds_set_led(0,(block>0)?LED_FAST_0:LED_OFF);
@@ -308,16 +309,19 @@ bool otp_randomize_boards() {
 				// Wait for RNG to finish filling buffer
 				while (!hwrng_bits_done()) {}
 				// swap buffers
-				//buffers_swap();
+				buffers_swap();
 				// restart rng
 				hwrng_bits_start(buffers_get_rng(),512);
 				// write to local nand
-				//nand_save_para(block,page,para);
-				//nand_wait_for_ready();
+				nand_save_para(block,page,para);
+				nand_wait_for_ready();
 				// send over io
 				// wait for confirmation
 			}
 		}
+		usb_debug("BLOCK ");
+		usb_debug_dec(block);
+		usb_debug("\n");
 	}
 	leds_set_led(0,LED_SLOW_0);
 	leds_set_led(1,LED_SLOW_0);
