@@ -177,6 +177,7 @@ void do_twinned_master_mode() {
     leds_set_led(1,0xf0);
     leds_set_led(2,0x0f);
     leds_set_led(3,0xf0);
+    otp_randomize_boards();
 }
 
 void do_twinned_slave_mode() {

@@ -2,6 +2,8 @@
 #include "nand.h"
 #include "config.h"
 #include "leds.h"
+#include "buffers.h"
+#include "hwrng.h"
 
 #define MAGIC_LEN 8
 const uint8_t MAGIC[MAGIC_LEN] = { 'S','N','A','P','-','P','A','D' };
@@ -292,5 +294,34 @@ bool otp_initialize_header() {
  */
 bool otp_randomize_boards() {
 	/** TODO: sends. */
-
+	uint16_t block;
+	hwrng_bits_start(buffers_get_rng(),512);
+	for (block = 1; block < 2048; block++) {
+		uint8_t page;
+		leds_set_led(0,(block>0)?LED_FAST_0:LED_OFF);
+		leds_set_led(1,(block>512)?LED_FAST_0:LED_OFF);
+		leds_set_led(2,(block>1024)?LED_FAST_0:LED_OFF);
+		leds_set_led(3,(block>1536)?LED_FAST_0:LED_OFF);
+		for (page = 0; page < 64; page++) {
+			uint8_t para;
+			for (para = 0; para < 4; para++) {
+				// Wait for RNG to finish filling buffer
+				while (!hwrng_bits_done()) {}
+				// swap buffers
+				buffers_swap();
+				// restart rng
+				hwrng_bits_start(buffers_get_rng(),512);
+				// write to local nand
+				nand_save_para(block,page,para);
+				nand_wait_for_ready();
+				// send over io
+				// wait for confirmation
+			}
+		}
+	}
+	leds_set_led(0,LED_SLOW_0);
+	leds_set_led(1,LED_SLOW_0);
+	leds_set_led(2,LED_SLOW_0);
+	leds_set_led(3,LED_SLOW_0);
+	return true;
 }
