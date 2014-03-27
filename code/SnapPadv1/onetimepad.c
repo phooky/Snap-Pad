@@ -308,12 +308,12 @@ bool otp_randomize_boards() {
 				// Wait for RNG to finish filling buffer
 				while (!hwrng_bits_done()) {}
 				// swap buffers
-				buffers_swap();
+				//buffers_swap();
 				// restart rng
 				hwrng_bits_start(buffers_get_rng(),512);
 				// write to local nand
-				nand_save_para(block,page,para);
-				nand_wait_for_ready();
+				//nand_save_para(block,page,para);
+				//nand_wait_for_ready();
 				// send over io
 				// wait for confirmation
 			}

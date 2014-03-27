@@ -293,7 +293,7 @@ void scan_bb() {
 void read_rng() {
 	hwrng_start();
 	while (!hwrng_done());
-	volatile uint32_t* bits = hwrng_bits();
+	volatile uint16_t* bits = hwrng_bits();
 	cdcSendDataWaitTilDone((BYTE*)bits, 16*4, CDC0_INTFNUM, 100);
 }
 
