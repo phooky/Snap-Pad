@@ -12,6 +12,8 @@
 #include "onetimepad.h"
 #include "timer.h"
 #include <stdbool.h>
+#include "buffers.h"
+#include "nand.h"
 
 // Pins:
 // P4.4 UCA1RXD
@@ -46,12 +48,20 @@ void uart_init() {
 
 void uart_send_byte(uint8_t b) {
 	UCA1IE &= ~UCTXIE;
-	if (UCA1IFG & UCTXIFG) { // ready for next byte?
+	uint8_t newend = (uart_tx_end+1) % UART_RING_LEN;
+	if (newend == uart_tx_start) {
+		UCA1IE |= UCTXIE;
+		//while (newend == uart_tx_start) {} // block on full buffer
+		UCA1IE &= ~UCTXIE;
+	}
+
+	if (uart_tx_end == uart_tx_start) {
+		UCA1IE |= UCTXIE;
 		UCA1TXBUF = b;
 	} else {
 		// insert in transmit ring
 		uart_tx_buf[uart_tx_end] = b;
-		uart_tx_end = (uart_tx_end+1) % UART_RING_LEN;
+		uart_tx_end = newend;
 		UCA1IE |= UCTXIE;
 	}
 }
@@ -108,9 +118,7 @@ enum {
 	UTOK_BUTTON_RSP       = 0x31,
 
 	// Protocol for sending pages of data
-	UTOK_SELECT_BLOCK     = 0x20, // followed by 16-bit block #
-	UTOK_SELECT_PAGE      = 0x21, // followed by 16-bit page #
-	UTOK_BEGIN_DATA       = 0x23, // followed by 2112 bytes
+	UTOK_BEGIN_DATA       = 0x23, // followed by 32-bit address, then 512 bytes
 	UTOK_DATA_ACK         = 0x24, // data transfer successfully written
 	UTOK_DATA_NAK         = 0x25, // data transfer failed
 
@@ -199,6 +207,30 @@ bool uart_is_connected() {
 	return (uart_state == CS_TWINNED_MASTER) || (uart_state == CS_TWINNED_SLAVE);
 }
 
+void uart_send_para(uint16_t block, uint8_t page, uint8_t para) {
+	uint16_t i;
+	uint8_t* buf;
+	uart_send_byte(UTOK_BEGIN_DATA);
+	// send the address
+	uart_send_byte(block >> 8);
+	uart_send_byte(block & 0xff);
+	uart_send_byte(page);
+	uart_send_byte(para);
+	//
+	usb_debug("STARTED\n");
+	buf = buffers_get_nand();
+	for (i = 0; i < 512; i++) {
+		uart_send_byte(buf[i]);
+	}
+	usb_debug("FINISHED\n");
+	while(!uart_has_data()) {}
+	if (uart_consume() == UTOK_DATA_ACK) {
+		usb_debug("OK RSP\n");
+	}else{
+		usb_debug("BAD RSP\n");
+	}
+}
+
 void uart_process() {
 	if (uart_has_data()) {
 		uint8_t command = uart_consume();
@@ -216,6 +248,30 @@ void uart_process() {
 		} else if (command == UTOK_BUTTON_QUERY) {
 			uart_send_byte(UTOK_BUTTON_RSP);
 			uart_send_byte(has_confirm()?0xff:0x00);
+		} else if (command == UTOK_BEGIN_DATA) {
+			uint16_t i;
+			uint8_t* buf;
+			// get the address
+			uint16_t block;
+			uint8_t page;
+			uint8_t para;
+			while (!uart_has_data()) {}
+			block = uart_consume() << 8;
+			while (!uart_has_data()) {}
+			block |= uart_consume();
+			while (!uart_has_data()) {}
+			page = uart_consume();
+			while (!uart_has_data()) {}
+			para = uart_consume();
+
+			buf = buffers_get_nand();
+			for (i = 0; i < 512; i++) {
+				while (!uart_has_data()) {}
+				buf[i] = uart_consume();
+			}
+			nand_save_para(block,page,para);
+			nand_wait_for_ready();
+			uart_send_byte(UTOK_DATA_ACK);
 		}
 	}
 }

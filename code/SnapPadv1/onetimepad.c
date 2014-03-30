@@ -4,6 +4,7 @@
 #include "leds.h"
 #include "buffers.h"
 #include "hwrng.h"
+#include "uarts.h"
 
 #define MAGIC_LEN 8
 const uint8_t MAGIC[MAGIC_LEN] = { 'S','N','A','P','-','P','A','D' };
@@ -314,9 +315,11 @@ bool otp_randomize_boards() {
 				hwrng_bits_start(buffers_get_rng(),512);
 				// write to local nand
 				nand_save_para(block,page,para);
-				nand_wait_for_ready();
 				// send over io
-				// wait for confirmation
+				uart_send_para(block,page,para);
+				// wait for write completion
+				nand_wait_for_ready();
+				// wait for io confirmation
 			}
 		}
 		usb_debug("BLOCK ");
