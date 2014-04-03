@@ -37,21 +37,28 @@ void uart_init() {
 	// Put uart module in reset
 	UCA1CTL1 |= UCSWRST;
 	// Configure module
-	UCA1CTL1 |= UCSSEL_2;
-	UCA1BR0 = 17;
+	UCA1CTL1 |= UCSSEL_1; // ACLK XT2 (12 Mhz)
+	UCA1BR0 = 26;
 	UCA1BR1 = 0;
-	UCA1MCTL |= UCBRS_3 + UCBRF_0;
+	UCA1MCTL |= UCBRS_0 + UCBRF_0;
+	//UCA1BR0 = 17;
+	//UCA1BR1 = 0;
+	//UCA1MCTL |= UCBRS_3 + UCBRF_0;
 	// Take uart module out of reset
 	UCA1CTL1 &= ~UCSWRST;
 	UCA1IE |= UCRXIE;
 }
 
 void uart_send_byte(uint8_t b) {
+	while ((UCA1IFG & UCTXIFG) == 0) ;
+	UCA1TXBUF = b;
+
+	/*
 	UCA1IE &= ~UCTXIE;
 	uint8_t newend = (uart_tx_end+1) % UART_RING_LEN;
 	if (newend == uart_tx_start) {
 		UCA1IE |= UCTXIE;
-		//while (newend == uart_tx_start) {} // block on full buffer
+		while (newend == uart_tx_start) {} // block on full buffer
 		UCA1IE &= ~UCTXIE;
 	}
 
@@ -64,22 +71,9 @@ void uart_send_byte(uint8_t b) {
 		uart_tx_end = newend;
 		UCA1IE |= UCTXIE;
 	}
+	*/
 }
 
-
-void uart_send(uint8_t* buffer, uint16_t len) {
-	UCA1IE &= ~UCTXIE;
-	while (len--) {
-		// insert in transmit ring
-		uart_tx_buf[uart_tx_end] = *(buffer++);
-		uart_tx_end = (uart_tx_end+1) % UART_RING_LEN;
-	}
-	if (UCA1IFG & UCTXIFG) { // If not transmitting, start transfer
-		UCA1TXBUF = uart_tx_buf[uart_tx_start];
-		uart_tx_start = (uart_tx_start+1) % UART_RING_LEN;
-	}
-	UCA1IE |= UCTXIE;
-}
 
 void uart_clear_buf() {
 	UCA1IE &= ~UCRXIE;
@@ -92,6 +86,7 @@ bool uart_has_data() {
 }
 
 uint8_t uart_consume() {
+	while (uart_rx_start == uart_rx_end) {}
 	uint8_t c = uart_rx_buf[uart_rx_start];
 	uart_rx_start = (uart_rx_start +1) % UART_RING_LEN;
 	return c;
@@ -217,15 +212,13 @@ void uart_send_para(uint16_t block, uint8_t page, uint8_t para) {
 	uart_send_byte(page);
 	uart_send_byte(para);
 	//
-	usb_debug("STARTED\n");
 	buf = buffers_get_nand();
-	for (i = 0; i < 512; i++) {
+	for (i = 0; i <512; i++) {
 		uart_send_byte(buf[i]);
 	}
-	usb_debug("FINISHED\n");
 	while(!uart_has_data()) {}
 	if (uart_consume() == UTOK_DATA_ACK) {
-		usb_debug("OK RSP\n");
+		//usb_debug("OK RSP\n");
 	}else{
 		usb_debug("BAD RSP\n");
 	}
@@ -255,28 +248,31 @@ void uart_process() {
 			uint16_t block;
 			uint8_t page;
 			uint8_t para;
-			while (!uart_has_data()) {}
+			leds_set_led(0,0xff);
+
 			block = uart_consume() << 8;
-			while (!uart_has_data()) {}
 			block |= uart_consume();
-			while (!uart_has_data()) {}
 			page = uart_consume();
-			while (!uart_has_data()) {}
 			para = uart_consume();
+
+			leds_set_led(1,0xff);
 
 			buf = buffers_get_nand();
 			for (i = 0; i < 512; i++) {
-				while (!uart_has_data()) {}
 				buf[i] = uart_consume();
 			}
+			leds_set_led(2,0xff);
+
 			nand_save_para(block,page,para);
 			nand_wait_for_ready();
 			uart_send_byte(UTOK_DATA_ACK);
+			leds_set_led(3,0xff);
 		}
 	}
 }
 
 bool uart_ping_button() {
+	//return false;
 	uart_send_byte(UTOK_BUTTON_QUERY);
 	while (!uart_has_data()) {}
 	uint8_t rsp = uart_consume();

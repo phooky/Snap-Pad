@@ -22,9 +22,6 @@
  */
 void uart_init();
 
-/** Begin bulk send from buffer */
-void uart_send(uint8_t* buffer, uint16_t len);
-
 /** Check if last bulk send is complete */
 bool uart_send_complete();
 
