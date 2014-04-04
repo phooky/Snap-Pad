@@ -24,9 +24,8 @@ volatile uint8_t uart_rx_start = 0;
 volatile uint8_t uart_rx_end = 0;
 volatile uint8_t uart_rx_buf[UART_RING_LEN];
 
-volatile uint8_t uart_tx_start = 0;
-volatile uint8_t uart_tx_end = 0;
-volatile uint8_t uart_tx_buf[UART_RING_LEN];
+volatile uint8_t* uart_tx_buf = 0;
+volatile uint16_t uart_tx_len = 0;
 
 /**
  * Init the UART for cross-chip communication.
@@ -50,30 +49,25 @@ void uart_init() {
 }
 
 void uart_send_byte(uint8_t b) {
+	//while (!uart_send_complete()) ;
 	while ((UCA1IFG & UCTXIFG) == 0) ;
 	UCA1TXBUF = b;
-
-	/*
-	UCA1IE &= ~UCTXIE;
-	uint8_t newend = (uart_tx_end+1) % UART_RING_LEN;
-	if (newend == uart_tx_start) {
-		UCA1IE |= UCTXIE;
-		while (newend == uart_tx_start) {} // block on full buffer
-		UCA1IE &= ~UCTXIE;
-	}
-
-	if (uart_tx_end == uart_tx_start) {
-		UCA1IE |= UCTXIE;
-		UCA1TXBUF = b;
-	} else {
-		// insert in transmit ring
-		uart_tx_buf[uart_tx_end] = b;
-		uart_tx_end = newend;
-		UCA1IE |= UCTXIE;
-	}
-	*/
 }
 
+void uart_send_buffer(uint8_t* buffer, uint16_t len) {
+	uart_tx_buf = buffer;
+	uart_tx_len = len;
+	if (uart_tx_len > 0) {
+		uint8_t b = *(uart_tx_buf++);
+		UCA1IE |= UCTXIE;
+		UCA1TXBUF = b;
+	}
+}
+
+/** Check if last bulk send is complete */
+bool uart_send_complete() {
+	return uart_tx_len == 0;
+}
 
 void uart_clear_buf() {
 	UCA1IE &= ~UCRXIE;
@@ -203,21 +197,18 @@ bool uart_is_connected() {
 }
 
 void uart_send_para(uint16_t block, uint8_t page, uint8_t para) {
-	uint16_t i;
-	uint8_t* buf;
+	uint8_t rsp;
+
 	uart_send_byte(UTOK_BEGIN_DATA);
 	// send the address
 	uart_send_byte(block >> 8);
 	uart_send_byte(block & 0xff);
 	uart_send_byte(page);
 	uart_send_byte(para);
-	//
-	buf = buffers_get_nand();
-	for (i = 0; i <512; i++) {
-		uart_send_byte(buf[i]);
-	}
-	while(!uart_has_data()) {}
-	if (uart_consume() == UTOK_DATA_ACK) {
+	uart_send_buffer(buffers_get_nand(),512);
+	while (!uart_send_complete()) {}
+	rsp = uart_consume();
+	if (rsp == UTOK_DATA_ACK) {
 		//usb_debug("OK RSP\n");
 	}else{
 		usb_debug("BAD RSP\n");
@@ -272,7 +263,7 @@ void uart_process() {
 }
 
 bool uart_ping_button() {
-	//return false;
+	return false;
 	uart_send_byte(UTOK_BUTTON_QUERY);
 	while (!uart_has_data()) {}
 	uint8_t rsp = uart_consume();
@@ -315,11 +306,14 @@ __interrupt void USCI_A1_ISR(void)
   		uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
   		break;
 	case 4:                                  // Vector 4 - TXIFG
-		if (uart_tx_start == uart_tx_end) {
+		if (uart_tx_len == 0) {
 			UCA1IE &= ~UCTXIE;
+			// A word of explanation. uart_send_byte depends on this flag being set to indicate that
+			// it's okay to send the next byte of data. It's set on reset, but cleared by this interrupt.
+			UCA1IFG |= UCTXIFG;
 		} else {
-			UCA1TXBUF = uart_tx_buf[uart_tx_start];
-			uart_tx_start = (uart_tx_start+1) % UART_RING_LEN;
+			uart_tx_len--;
+			UCA1TXBUF = *(uart_tx_buf++);
 		}
 		break;
 	default: break;

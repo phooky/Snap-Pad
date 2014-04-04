@@ -22,15 +22,18 @@
  */
 void uart_init();
 
-/** Check if last bulk send is complete */
-bool uart_send_complete();
-
 /*
  * Wait for the other side to confirm a factory reset
  */
 void uart_factory_reset_confirm();
 
+
 void uart_send_para(uint16_t block, uint8_t page, uint8_t para);
+
+void uart_send_buffer(uint8_t* buffer, uint16_t len);
+
+/** Check if last bulk send is complete */
+bool uart_send_complete();
 
 /*
  * Ping remote end for a button push
