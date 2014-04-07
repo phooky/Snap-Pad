@@ -219,6 +219,7 @@ char hex(uint8_t v) {
 	return 'a'+(v-10);
 }
 
+// also used to de-decimal
 uint8_t dehex(char c) {
 	if (c >= '0' && c <= '9') return c - '0';
 	if (c >= 'a' && c <= 'f') return (c - 'a') + 10;
@@ -335,6 +336,24 @@ void usb_debug(char* s) {
 	cdcSendDataWaitTilDone((BYTE*)s, len, CDC0_INTFNUM, 100);
 }
 
+uint16_t parseDec(uint8_t* buf, uint8_t* idx, uint8_t len) {
+	uint16_t val = 0;
+	for (; (*idx < len) && (buf[*idx] >= '0') && (buf[*idx] <= '9'); (*idx)++) {
+		val = val * 10 + (buf[*idx] - '0');
+	}
+	return val;
+}
+// Read paragraph. Parameters are a comma separated list: block, page, paragraph.
+bool parseBPP(uint8_t* buf, uint8_t len, uint16_t* block, uint8_t* page, uint8_t* para) {
+	uint8_t idx = 0;
+	*block = parseDec(buf,&idx,len);
+	if (buf[idx] != ',') return false;
+	*page = parseDec(buf,&idx,len);
+	if (buf[idx] != ',') return false;
+	*para = parseDec(buf,&idx,len);
+	return true;
+}
+
 void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	if (cmdbuf[0] == '\n' || cmdbuf[0] == '\r') {
 		// skip
@@ -355,10 +374,11 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			}
 			usb_debug("stop\n");
 		} else if (cmdbuf[1] == 'w') {
+			// time write operations
 			uint8_t blocks;
 			usb_debug("start\n");
 			for (blocks = 0; blocks < 4; blocks++) {
-				nand_block_erase(nand_make_addr(0,blocks,0,0));
+				nand_block_erase(blocks);
 				uint8_t page;
 				for (page = 0; page < 64; page++) {
 					uint8_t para;
@@ -369,8 +389,6 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 				}
 			}
 			usb_debug("stop\n");
-		} else if (cmdbuf[1] == 'e') {
-			// time serial roundtrip
 		}
 		// run full production test suite
 	} else if (cmdbuf[0] == 'C') {
@@ -381,42 +399,24 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
 #ifdef DEBUG
-	} else if (cmdbuf[0] == 'R' || cmdbuf[0] == 'W' || cmdbuf[0] == 'E') {
-		if (cmdbuf[1] != ':') { error(); return; }
-		uint32_t addr = 0;
-		uint8_t idx = 2;
-		while ((idx < len) && (cmdbuf[idx] != ':')) {
-			addr = (addr << 4) | dehex(cmdbuf[idx]);
-			idx++;
-		}
-		if (cmdbuf[idx] != ':') { error(); return; }
-		idx++;
-		if (cmdbuf[0] == 'R') {
-			uint16_t rlen = 0;
-			while ((idx < len) && (cmdbuf[idx] != '\n' && cmdbuf[idx] != '\r')) {
-				rlen = (rlen << 4) | dehex(cmdbuf[idx]);
-				idx++;
+	} else if (cmdbuf[0] == 'R') {
+		// Read paragraph. Parameters are a comma separated list of decimal values: block, page, paragraph.
+		uint16_t block = 0; uint8_t page = 0; uint8_t para = 0;
+		if (parseBPP(cmdbuf+1,len-1,&block,&page,&para)) {
+			if (nand_load_para(block,page,para)) {
+				cdcSendDataWaitTilDone((BYTE*)buffers_get_nand(),512,CDC0_INTFNUM,100);
+			} else {
+				usb_debug("READ ERROR");
 			}
-
-			nand_read_raw_page(addr, (uint8_t*)cmdbuf, rlen);
-			cdcSendDataWaitTilDone((BYTE*)cmdbuf, rlen, CDC0_INTFNUM, 100);
-		} else if (cmdbuf[0] == 'E') {
-			char* rsp = "OK\r\n";
-			nand_block_erase(addr);
-			cdcSendDataWaitTilDone((BYTE*)rsp, 4, CDC0_INTFNUM, 100);
 		} else {
-			char* rsp = "OK\r\n";
-			char b[8];
-			uint32_t aw = len-idx;
-			int8_t bi;
-			for (bi = 7; bi >= 0; bi--) {
-				b[bi] = hex(aw & 0x0f);
-				aw >>= 4;
-			}
-			cdcSendDataWaitTilDone((BYTE*)b, 8, CDC0_INTFNUM, 100);
-			nand_program_raw_page(addr, (uint8_t*)(cmdbuf + idx), len - idx);
-			cdcSendDataWaitTilDone((BYTE*)rsp, 4, CDC0_INTFNUM, 100);
+			usb_debug("PARSE ERROR");
 		}
+	} else if (cmdbuf[0] == 'E') {
+		// Erase block. Parameter is a decimal block number.
+		uint8_t idx = 1;
+		uint16_t block = parseDec(cmdbuf, &idx, len);
+		nand_block_erase(block);
+		cdcSendDataWaitTilDone((BYTE*)"OK\r\n", 4, CDC0_INTFNUM, 100);
 #endif
 	} else {
 		cdcSendDataWaitTilDone((BYTE*)cmdbuf, 1, CDC0_INTFNUM, 100);

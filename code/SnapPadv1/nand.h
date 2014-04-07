@@ -75,9 +75,9 @@ uint8_t nand_read_status_reg();
 
 /**
  * Erase an entire 128KB block in NAND (resetting it to 0xff)
- * @param an address in the given block (any page or column bits are ignored)
+ * @param block the block to erase; plane is extracted from block #
  */
-void nand_block_erase(uint32_t address);
+void nand_block_erase(uint16_t block);
 
 /**
  * Read raw data from NAND. You can use nand_recv_data to continue to retrieve data

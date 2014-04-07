@@ -199,9 +199,9 @@ uint8_t nand_read_status_reg() {
 	return buf;
 }
 
-void nand_block_erase(uint32_t address) {
+void nand_block_erase(uint16_t block) {
 	nand_send_command(0x60);
-	nand_send_row_address(address);
+	nand_send_row_address(nand_make_para_addr(block,0,0));
 	nand_send_command(0xd0);
 	nand_wait_for_ready();
 }

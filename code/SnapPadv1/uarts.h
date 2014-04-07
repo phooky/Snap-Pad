@@ -14,21 +14,45 @@
 
 /**
  * Packet format:
- * TOK LEN DAT*
+ * TOK DAT*
  */
+
+enum {
+	// Tokens for master/slave contention
+	UTOK_GAME_PING        = 0x10,
+	UTOK_GAME_ACK         = 0x11,
+
+	// Tokens for factory reset
+	UTOK_RST_PROPOSE      = 0x12,
+	UTOK_RST_CONFIRM      = 0x13,
+	UTOK_RST_COMMIT       = 0x14,
+
+	// Tokens for remote button press
+	UTOK_BUTTON_QUERY     = 0x30,
+	UTOK_BUTTON_RSP       = 0x31, // followed by state of button (1 byte)
+
+	// Protocol for sending pages of data
+	UTOK_BEGIN_DATA       = 0x23, // followed by 32-bit address, then 512 bytes
+	UTOK_DATA_ACK         = 0x24, // data transfer successfully written
+	UTOK_DATA_NAK         = 0x25, // data transfer failed
+
+	UTOK_LAST
+};
+
 
 /**
  * Init the UART for cross-chip communication.
  */
 void uart_init();
 
+
+uint8_t uart_consume();
+void uart_send_byte(uint8_t b);
+
 /*
  * Wait for the other side to confirm a factory reset
  */
 void uart_factory_reset_confirm();
-
-
-void uart_send_para(uint16_t block, uint8_t page, uint8_t para);
 
 void uart_send_buffer(uint8_t* buffer, uint16_t len);
 

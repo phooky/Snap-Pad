@@ -94,20 +94,18 @@ void otp_factory_reset() {
 	OTPConfig config = otp_read_header();
 	uint16_t bbl[BBL_MAX_ENTRIES];
 	uint8_t bbcount;
-	uint32_t plane, block;
+	uint16_t block;
 	uint8_t bbidx;
 	if (config.has_header) {
 		bbcount = otp_fetch_bad_blocks(bbl, BBL_MAX_ENTRIES);
 	} else {
 		bbcount = otp_scan_bad_blocks(bbl, BBL_MAX_ENTRIES);
 	}
-	for (plane = 0; plane < PLANE_COUNT; plane++) {
-		for (block = 0; block < BLOCK_COUNT; block++) {
-			nand_block_erase(nand_make_addr(plane,block,0,0));
-		}
+	for (block = 0; block < BLOCK_COUNT*PLANE_COUNT; block++) {
+		nand_block_erase(block);
 	}
 	for (bbidx = 0; bbidx < bbcount; bbidx++) {
-		plane = bbl[bbidx] >> 10;
+		uint16_t plane = bbl[bbidx] >> 10;
 		block = bbl[bbidx] & 0x3ff;
 		mark_bad_block(plane,block);
 	}
@@ -223,7 +221,7 @@ bool otp_initialize_header() {
 	}
 	usb_debug("got bbl\n");
 	// Erase block 0
-	nand_block_erase(nand_make_addr(0,0,0,0));
+	nand_block_erase(0);
 	usb_debug("erased block 0\n");
 	// Create and write header, version, bbl
 	nand_initialize_para_buffer();
@@ -300,6 +298,8 @@ bool otp_randomize_boards() {
 	usb_debug("BEGIN RND\n");
 	for (block = 1; block < 2048; block++) {
 		uint8_t page;
+		bool hwrngblock = false;
+		bool uartblock = false;
 		leds_set_led(0,(block>0)?LED_FAST_0:LED_OFF);
 		leds_set_led(1,(block>512)?LED_FAST_0:LED_OFF);
 		leds_set_led(2,(block>1024)?LED_FAST_0:LED_OFF);
@@ -308,20 +308,40 @@ bool otp_randomize_boards() {
 			uint8_t para;
 			for (para = 0; para < 4; para++) {
 				// Wait for RNG to finish filling buffer
-				while (!hwrng_bits_done()) {}
+				while (!hwrng_bits_done()) {
+					hwrngblock = true;
+				}
 				// swap buffers
 				buffers_swap();
 				// restart rng
 				hwrng_bits_start(buffers_get_rng(),512);
+				// begin uart send
+				uart_send_byte(UTOK_BEGIN_DATA);
+				uart_send_byte(block >> 8);
+				uart_send_byte(block & 0xff);
+				uart_send_byte(page);
+				uart_send_byte(para);
+				uart_send_buffer(buffers_get_nand(),512);
 				// write to local nand
 				nand_save_para(block,page,para);
-				// send over io
-				uart_send_para(block,page,para);
 				// wait for write completion
 				nand_wait_for_ready();
 				// wait for io confirmation
+				while (!uart_send_complete()) { uartblock = true; }
+				{
+					uint8_t rsp;
+					rsp = uart_consume();
+					if (rsp == UTOK_DATA_ACK) {
+						//usb_debug("OK RSP\n");
+					} else {
+						usb_debug("BAD RSP\n");
+					}
+				}
 			}
 		}
+		if (hwrngblock) usb_debug("RNGBLK ");
+		if (uartblock) usb_debug("UARTBLK ");
+
 		usb_debug("BLOCK ");
 		usb_debug_dec(block);
 		usb_debug("\n");

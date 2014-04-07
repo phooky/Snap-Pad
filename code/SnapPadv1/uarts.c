@@ -92,28 +92,6 @@ uint8_t uart_consume() {
  */
 ConnectionState uart_state = CS_INDETERMINATE;
 
-enum {
-	// Tokens for master/slave contention
-	UTOK_GAME_PING        = 0x10,
-	UTOK_GAME_ACK         = 0x11,
-
-	// Tokens for factory reset
-	UTOK_RST_PROPOSE      = 0x12,
-	UTOK_RST_CONFIRM      = 0x13,
-	UTOK_RST_COMMIT       = 0x14,
-
-	// Tokens for remote button press
-	UTOK_BUTTON_QUERY     = 0x30,
-	UTOK_BUTTON_RSP       = 0x31,
-
-	// Protocol for sending pages of data
-	UTOK_BEGIN_DATA       = 0x23, // followed by 32-bit address, then 512 bytes
-	UTOK_DATA_ACK         = 0x24, // data transfer successfully written
-	UTOK_DATA_NAK         = 0x25, // data transfer failed
-
-	UTOK_LAST
-};
-
 
 /**
  * Play one round of the contention game. If neither side received the force_master flag,
@@ -196,25 +174,6 @@ bool uart_is_connected() {
 	return (uart_state == CS_TWINNED_MASTER) || (uart_state == CS_TWINNED_SLAVE);
 }
 
-void uart_send_para(uint16_t block, uint8_t page, uint8_t para) {
-	uint8_t rsp;
-
-	uart_send_byte(UTOK_BEGIN_DATA);
-	// send the address
-	uart_send_byte(block >> 8);
-	uart_send_byte(block & 0xff);
-	uart_send_byte(page);
-	uart_send_byte(para);
-	uart_send_buffer(buffers_get_nand(),512);
-	while (!uart_send_complete()) {}
-	rsp = uart_consume();
-	if (rsp == UTOK_DATA_ACK) {
-		//usb_debug("OK RSP\n");
-	}else{
-		usb_debug("BAD RSP\n");
-	}
-}
-
 void uart_process() {
 	if (uart_has_data()) {
 		uint8_t command = uart_consume();
@@ -263,7 +222,7 @@ void uart_process() {
 }
 
 bool uart_ping_button() {
-	return false;
+	//return false;
 	uart_send_byte(UTOK_BUTTON_QUERY);
 	while (!uart_has_data()) {}
 	uint8_t rsp = uart_consume();
