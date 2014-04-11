@@ -87,6 +87,16 @@ uint8_t uart_consume() {
 }
 
 
+uint8_t uart_consume_timeout(uint16_t timeout) {
+	timer_reset();
+	while (uart_rx_start == uart_rx_end) {
+		if (timer_msec() >= timeout) { return 0xff; }
+	}
+	uint8_t c = uart_rx_buf[uart_rx_start];
+	uart_rx_start = (uart_rx_start +1) % UART_RING_LEN;
+	return c;
+}
+
 /**
  * Consume response buffer
  */
@@ -208,21 +218,25 @@ void uart_process() {
 			leds_set_led(1,0xff);
 
 			buf = buffers_get_nand();
-			for (i = 0; i < 512; i++) {
+			for (i = 0; i < 100; i++) {
 				buf[i] = uart_consume();
 			}
-			leds_set_led(2,0xff);
 
+			if (page == 0 && para == 0) {
+				leds_set_led(2,0xff);
+				nand_block_erase(block);
+				nand_wait_for_ready();
+			}
 			nand_save_para(block,page,para);
 			nand_wait_for_ready();
 			uart_send_byte(UTOK_DATA_ACK);
-			leds_set_led(3,0xff);
+			if (block == 1 && page == 0 && para == 0) leds_set_led(3,0xff);
 		}
 	}
 }
 
 bool uart_ping_button() {
-	//return false;
+	uart_clear_buf(); // clear the rx buffer
 	uart_send_byte(UTOK_BUTTON_QUERY);
 	while (!uart_has_data()) {}
 	uint8_t rsp = uart_consume();

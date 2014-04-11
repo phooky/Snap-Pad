@@ -171,8 +171,11 @@ void do_twinned_master_mode() {
             case ST_ENUM_IN_PROGRESS:
             default:;
         }
-        // ping
-        if (uart_ping_button()) break;
+        // ping every 2ms
+    	if (timer_msec() >= 2) {
+            if (uart_ping_button()) break;
+        	timer_reset();
+    	}
     }
     leds_set_led(0,0x0f);
     leds_set_led(1,0xf0);
@@ -189,10 +192,12 @@ void do_twinned_slave_mode() {
 	}
 
 	// Go ahead to attract mode
-	leds_set_led(0,0xf);
+	//leds_set_led(0,0xf);
+	leds_set_led(0,0);
 	leds_set_led(1,0);
 	leds_set_led(2,0);
-	leds_set_led(3,0xf);
+	//leds_set_led(3,0xf);
+	leds_set_led(3,0);
     while (1)  // main loop
     {
     	uart_process(); // process uart commands
@@ -347,9 +352,9 @@ uint16_t parseDec(uint8_t* buf, uint8_t* idx, uint8_t len) {
 bool parseBPP(uint8_t* buf, uint8_t len, uint16_t* block, uint8_t* page, uint8_t* para) {
 	uint8_t idx = 0;
 	*block = parseDec(buf,&idx,len);
-	if (buf[idx] != ',') return false;
+	if (buf[idx] != ',') return false; idx++;
 	*page = parseDec(buf,&idx,len);
-	if (buf[idx] != ',') return false;
+	if (buf[idx] != ',') return false; idx++;
 	*para = parseDec(buf,&idx,len);
 	return true;
 }
@@ -403,6 +408,9 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		// Read paragraph. Parameters are a comma separated list of decimal values: block, page, paragraph.
 		uint16_t block = 0; uint8_t page = 0; uint8_t para = 0;
 		if (parseBPP(cmdbuf+1,len-1,&block,&page,&para)) {
+			usb_debug_dec(block); usb_debug(":");
+			usb_debug_dec(page); usb_debug(":");
+			usb_debug_dec(para); usb_debug("\n");
 			if (nand_load_para(block,page,para)) {
 				cdcSendDataWaitTilDone((BYTE*)buffers_get_nand(),512,CDC0_INTFNUM,100);
 			} else {

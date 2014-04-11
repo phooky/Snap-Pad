@@ -300,6 +300,10 @@ bool otp_randomize_boards() {
 		uint8_t page;
 		bool hwrngblock = false;
 		bool uartblock = false;
+
+		nand_block_erase(block);
+		nand_wait_for_ready();
+
 		leds_set_led(0,(block>0)?LED_FAST_0:LED_OFF);
 		leds_set_led(1,(block>512)?LED_FAST_0:LED_OFF);
 		leds_set_led(2,(block>1024)?LED_FAST_0:LED_OFF);

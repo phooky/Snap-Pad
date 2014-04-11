@@ -47,6 +47,7 @@ void uart_init();
 
 
 uint8_t uart_consume();
+uint8_t uart_consume_timeout(uint16_t msec);
 void uart_send_byte(uint8_t b);
 
 /*
