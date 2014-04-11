@@ -46,29 +46,35 @@ void uart_init() {
 	// Take uart module out of reset
 	UCA1CTL1 &= ~UCSWRST;
 	UCA1IE |= UCRXIE;
+	UCA1IE |= UCTXIE;
 }
 
+volatile bool ready_for_send = true;
+
+uint8_t bytebuf;
+
 void uart_send_byte(uint8_t b) {
-	//while (!uart_send_complete()) ;
-	while ((UCA1IFG & UCTXIFG) == 0) ;
-	UCA1TXBUF = b;
+	while (!uart_send_complete()) {}
+	bytebuf = b;
+	uart_send_buffer(&bytebuf,1);
 }
 
 void uart_send_buffer(uint8_t* buffer, uint16_t len) {
+	while (!uart_send_complete()) {}
+	ready_for_send = false;
 	uart_tx_buf = buffer;
 	uart_tx_len = len;
 	if (uart_tx_len > 0) {
-		while ((UCA1IFG & UCTXIFG) == 0) ;
 		uint8_t b = *(uart_tx_buf++);
 		uart_tx_len--;
-		UCA1IE |= UCTXIE;
+		//UCA1IE |= UCTXIE;
 		UCA1TXBUF = b;
 	}
 }
 
 /** Check if last bulk send is complete */
 bool uart_send_complete() {
-	return uart_tx_len == 0;
+	return ready_for_send;
 }
 
 void uart_clear_buf() {
@@ -282,10 +288,11 @@ __interrupt void USCI_A1_ISR(void)
   		break;
 	case 4:                                  // Vector 4 - TXIFG
 		if (uart_tx_len == 0) {
-			UCA1IE &= ~UCTXIE;
+			ready_for_send = true;
+			//UCA1IE &= ~UCTXIE;
 			// A word of explanation. uart_send_byte depends on this flag being set to indicate that
 			// it's okay to send the next byte of data. It's set on reset, but cleared by this interrupt.
-			UCA1IFG |= UCTXIFG;
+			//UCA1IFG |= UCTXIFG;
 		} else {
 			uart_tx_len--;
 			UCA1TXBUF = *(uart_tx_buf++);
