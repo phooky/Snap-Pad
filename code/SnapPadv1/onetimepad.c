@@ -325,7 +325,7 @@ bool otp_randomize_boards() {
 				uart_send_byte(block & 0xff);
 				uart_send_byte(page);
 				uart_send_byte(para);
-				uart_send_buffer(buffers_get_nand(),512);
+				uart_send_buffer(buffers_get_nand(),PARA_SIZE);
 				// write to local nand
 				nand_save_para(block,page,para);
 				// wait for write completion

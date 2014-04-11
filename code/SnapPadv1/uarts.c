@@ -58,6 +58,7 @@ void uart_send_buffer(uint8_t* buffer, uint16_t len) {
 	uart_tx_buf = buffer;
 	uart_tx_len = len;
 	if (uart_tx_len > 0) {
+		while ((UCA1IFG & UCTXIFG) == 0) ;
 		uint8_t b = *(uart_tx_buf++);
 		UCA1IE |= UCTXIE;
 		UCA1TXBUF = b;
@@ -218,7 +219,7 @@ void uart_process() {
 			leds_set_led(1,0xff);
 
 			buf = buffers_get_nand();
-			for (i = 0; i < 100; i++) {
+			for (i = 0; i < PARA_SIZE; i++) {
 				buf[i] = uart_consume();
 			}
 
