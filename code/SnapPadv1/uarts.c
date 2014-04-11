@@ -60,6 +60,7 @@ void uart_send_buffer(uint8_t* buffer, uint16_t len) {
 	if (uart_tx_len > 0) {
 		while ((UCA1IFG & UCTXIFG) == 0) ;
 		uint8_t b = *(uart_tx_buf++);
+		uart_tx_len--;
 		UCA1IE |= UCTXIE;
 		UCA1TXBUF = b;
 	}
