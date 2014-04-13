@@ -60,7 +60,7 @@
 // instantiate connection_state
 uint8_t connection_state;
 
-void process_usb();
+bool process_usb();
 
 ConnectionState cs;
 
@@ -158,8 +158,13 @@ void do_twinned_master_mode() {
 
 	// Go ahead to attract mode
 	leds_set_larson();
+	bool do_pings = true;
     while (!has_confirm())  // waiting for button press
     {
+    	if (cs == ST_ENUM_ACTIVE) {
+    		// quit pinging remote button once a USB command has been processed.
+    		if (process_usb()) { do_pings = false; }
+    	}
         switch(USB_connectionState())
         {
             case ST_ENUM_ACTIVE:
@@ -171,8 +176,8 @@ void do_twinned_master_mode() {
             case ST_ENUM_IN_PROGRESS:
             default:;
         }
-        // ping every 2ms
-    	if (timer_msec() >= 2) {
+        // ping every 2ms if no usb commands have yet been received.
+    	if (do_pings && timer_msec() >= 2) {
             if (uart_ping_button()) break;
         	timer_reset();
     	}
@@ -408,9 +413,9 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		// Read paragraph. Parameters are a comma separated list of decimal values: block, page, paragraph.
 		uint16_t block = 0; uint8_t page = 0; uint8_t para = 0;
 		if (parseBPP(cmdbuf+1,len-1,&block,&page,&para)) {
-			usb_debug_dec(block); usb_debug(":");
-			usb_debug_dec(page); usb_debug(":");
-			usb_debug_dec(para); usb_debug("\n");
+			//usb_debug_dec(block); usb_debug(":");
+			//usb_debug_dec(page); usb_debug(":");
+			//usb_debug_dec(para); usb_debug("\n");
 			if (nand_load_para(block,page,para)) {
 				cdcSendDataWaitTilDone((BYTE*)buffers_get_nand(),512,CDC0_INTFNUM,100);
 			} else {
@@ -436,7 +441,8 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 char cmdbuf[CMDBUFSZ];
 uint16_t cmdidx = 0;
 
-void process_usb() {
+bool process_usb() {
+	bool processed = false;
 	uint16_t delta = cdcReceiveDataInBuffer((BYTE*)(cmdbuf + cmdidx), CMDBUFSZ-cmdidx, CDC0_INTFNUM);
 	cmdidx += delta;
 	// Scan for eol
@@ -445,6 +451,7 @@ void process_usb() {
 		char ch = cmdbuf[c];
 		if (ch == '\r' || ch == '\n') {
 			do_usb_command((uint8_t*)cmdbuf,c);
+			processed = true;
 			c++;
 			uint16_t cb = 0;
 			while (c < cmdidx) {
@@ -457,6 +464,7 @@ void process_usb() {
 		}
 	}
 	if (cmdidx == CMDBUFSZ) { cmdidx--; }
+	return processed;
 }
 
 /*  
