@@ -161,21 +161,12 @@ void do_twinned_master_mode() {
 	bool do_pings = true;
     while (!has_confirm())  // waiting for button press
     {
-    	if (cs == ST_ENUM_ACTIVE) {
+    	int ucs = USB_connectionState();
+    	if (ucs == ST_ENUM_ACTIVE) {
     		// quit pinging remote button once a USB command has been processed.
-    		if (process_usb()) { do_pings = false; }
+    		// (slow nand reads can cause very rare ping timeouts, and there's no need anyway.)
+    		if (process_usb()) { do_pings = false; leds_set_led(0,0); }
     	}
-        switch(USB_connectionState())
-        {
-            case ST_ENUM_ACTIVE:
-            	process_usb();
-            	break;
-            case ST_USB_DISCONNECTED: // physically disconnected from the host
-            case ST_ENUM_SUSPENDED:   // connecte d/enumerated, but suspended
-            case ST_NOENUM_SUSPENDED: // connected, enum started, but the host is unresponsive
-            case ST_ENUM_IN_PROGRESS:
-            default:;
-        }
         // ping every 2ms if no usb commands have yet been received.
     	if (do_pings && timer_msec() >= 2) {
             if (uart_ping_button()) break;
