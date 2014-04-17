@@ -10,22 +10,17 @@
 const uint8_t MAGIC[MAGIC_LEN] = { 'S','N','A','P','-','P','A','D' };
 
 #define HEADER_PAGE 0
-#define MAPPING_PAGE_START 2
-#define USAGE_PAGE 4
+
+// Block usage page
+#define BLOCK_USAGE_PAGE 4
+
 #define FLAGS_PAGE 5
 
 typedef struct {
-	uint8_t magic[MAGIC_LEN];
-	uint8_t major_version;
-	uint8_t minor_version;
-	uint16_t block_count;
-} OTPHeader;
-
-typedef struct {
 	uint8_t header_written : 2;
-	uint8_t block_map_written : 2;
+	uint8_t reserved_a: 2;
 	uint8_t random_data_written : 2;
-	uint8_t reserved : 2;
+	uint8_t reserved_b : 2;
 } OTPFlags;
 
 #define BBL_START 0x10
@@ -149,10 +144,19 @@ bool otp_write_bad_blocks(uint16_t* bad_block_list, uint8_t bad_block_count) {
  *  0x00: "SNAP-PAD" (8B)
  *  0x08: major version (1B)
  *  0x09: minor version (1B)
- *  0x10: block count (2B)
- *  0x0C: reserved (4B)
+ *  0x0A: block count (2B)
+ *  0x0C: A/B select (1B)
+ *  0x0D: reserved (3B)
  *  0x10: bad block list (32B, 16 16-bit entries, terminated by 0xff)
  */
+typedef struct {
+	uint8_t magic[MAGIC_LEN];
+	uint8_t major_version;
+	uint8_t minor_version;
+	uint16_t block_count;
+	uint8_t is_A;
+} OTPHeader;
+
 
 OTPConfig otp_read_header() {
 	OTPConfig config;
@@ -168,26 +172,12 @@ OTPConfig otp_read_header() {
 	config.major_version = header->major_version;
 	config.minor_version = header->minor_version;
 	config.block_count = header->block_count;
+	config.is_A = header->is_A != 0x00;
 
 	OTPFlags flags;
 	nand_read_raw_page(nand_make_addr(0,0,FLAGS_PAGE,0),(uint8_t*)&flags,sizeof(flags));
-	config.block_map_written = flags.block_map_written != 0x03;
 	config.random_data_written = flags.random_data_written != 0x03;
 	return config;
-}
-
-inline uint16_t next_good(uint16_t last, uint16_t* bbl, uint8_t bbcount) {
-	uint16_t next = last;
-	uint8_t i;
-	bool okay = false;
-	while (!okay) {
-		next++;
-		okay = true;
-		for (i = 0; i < bbcount; i++) {
-			if (bbl[i] == next) okay = false;
-		}
-	}
-	return next;
 }
 
 // debug proto
@@ -202,12 +192,9 @@ void usb_debug_dec(int i);
  *   * Set-once flags and usage map are implicitly created by erasure (all 0xff)
  * * Creates and writes the header, version, and BBL
  *   * Marks header as written
- * * Creates the block mapping table
- *   * Marks non-present blocks in usage map as used
- *   * Marks block mapping table as created
  * @return true if successful
  */
-bool otp_initialize_header() {
+bool otp_initialize_header(bool is_A) {
 	OTPHeader* header;
 	uint8_t i;
 	uint16_t bbl[BBL_MAX_ENTRIES];
@@ -232,6 +219,7 @@ bool otp_initialize_header() {
 	header->major_version = MAJOR_VERSION;
 	header->minor_version = MINOR_VERSION;
 	header->block_count = 2048 - (1 + bbcount);
+	header->is_A = is_A?0xff:0x00;
 	usb_debug("prepared header\n");
 	uint16_t* bbl_target = (uint16_t*)(nand_para_buffer() + BBL_START);
 	for (i = 0; i < bbcount; i++) {
@@ -255,35 +243,6 @@ bool otp_initialize_header() {
 	nand_wait_for_ready();
 	usb_debug("wrote header-written flag\n");
 
-	// create block mapping table
-	nand_initialize_para_buffer();
-	uint16_t idx = 0;
-	uint16_t para = 0;
-	uint16_t* map = (uint16_t*)nand_para_buffer();
-	uint16_t next_free = next_good(0, bbl, bbcount);
-	while (next_free < 2048) {
-		map[idx] = next_free;
-		idx++;
-		if (idx == PARA_SIZE/2) {
-			usb_debug("Writing paragraph ");
-			usb_debug_dec(para);
-			usb_debug("\n");
-			nand_save_para(0,2+(para/4),para%4);
-			nand_wait_for_ready();
-			nand_initialize_para_buffer();
-			para++;
-			idx = 0;
-		}
-		next_free = next_good(next_free, bbl, bbcount);
-	}
-	if (idx > 0) {
-		nand_save_para(0,2+(para/4),para%4);
-		nand_wait_for_ready();
-	}
-
-	// mark block mapping table written
-	flags.block_map_written = 0x00;
-	nand_program_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
 	nand_wait_for_ready();
 	return true;
 }
@@ -355,4 +314,37 @@ bool otp_randomize_boards() {
 	leds_set_led(2,LED_SLOW_0);
 	leds_set_led(3,LED_SLOW_0);
 	return true;
+}
+
+/**
+ * Mark a block as completely used
+ */
+void otp_mark_block(uint16_t block, uint8_t usage) {
+	uint32_t addr = nand_make_para_addr(0,BLOCK_USAGE_PAGE,0);
+	addr += block;
+	nand_program_raw_page(addr, &usage, 1);
+	nand_wait_for_ready();
+}
+
+/**
+ * Find the first/last unmarked block
+ * @return the first/last available block, or 0xffff if none remain
+ * @param backwards search backwards from the last block
+ */
+uint16_t otp_find_unmarked_block(bool backwards) {
+	uint32_t addr = nand_make_para_addr(0,BLOCK_USAGE_PAGE,0);
+	uint8_t entry;
+	uint16_t i;
+	if (!backwards) {
+		for (i = 1; i < 2048; i++) {
+			nand_read_raw_page(addr+i,&entry,1);
+			if (entry == BU_UNUSED_BLOCK) { return i; }
+		}
+	} else {
+		for (i = 2047; i > 0; i--) {
+			nand_read_raw_page(addr+i,&entry,1);
+			if (entry == BU_UNUSED_BLOCK) { return i; }
+		}
+	}
+	return 0xffff;
 }

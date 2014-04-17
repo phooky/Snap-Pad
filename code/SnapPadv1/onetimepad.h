@@ -39,7 +39,6 @@ void otp_factory_reset();
 
 typedef struct {
 	bool has_header;
-	bool block_map_written;
 	bool random_data_written;
 	bool is_A;
 	uint8_t major_version;
@@ -61,16 +60,33 @@ OTPConfig otp_read_header();
  *   * Set-once flags and usage map are implicitly created by erasure (all 0xff)
  * * Creates and writes the header, version, and BBL
  *   * Marks header as written
- * * Creates the block mapping table
- *   * Marks non-present blocks in usage map as used
- *   * Marks block mapping table as created
  * @return true if successful
+ * @param is_A are we board A (consume blocks from start) or board B (consume blocks from end)
  */
-bool otp_initialize_header();
+bool otp_initialize_header(bool is_A);
 
 /**
  * Run complete randomization process. Can take up to four hours to complete.
  */
 bool otp_randomize_boards();
+
+// The block usage page is a simple of map of the blocks of the chip; each block is represented by one byte. Block 0x00 is always marked as used.
+enum {
+	BU_UNUSED_BLOCK = 0xff,
+	BU_USED_BLOCK = 0x00,
+	BU_BAD_BLOCK = 0x70
+};
+
+/**
+ * Mark a block in the block usage map
+ */
+void otp_mark_block(uint16_t block, uint8_t usage);
+
+/**
+ * Find the first/last unmarked block
+ * @return the first/last available block, or 0xffff if none remain
+ * @param backwards search backwards from the last block
+ */
+uint16_t otp_find_unmarked_block(bool backwards);
 
 #endif // ONETIMEPAD_H

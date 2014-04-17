@@ -153,7 +153,7 @@ void do_twinned_master_mode() {
 	// check otp header
 	OTPConfig config = otp_read_header();
 	if (!config.has_header) {
-		otp_initialize_header();
+		otp_initialize_header(true);
 	}
 
 	// Go ahead to attract mode
@@ -184,7 +184,7 @@ void do_twinned_slave_mode() {
 	// check otp header
 	OTPConfig config = otp_read_header();
 	if (!config.has_header) {
-		otp_initialize_header();
+		otp_initialize_header(false);
 	}
 
 	// Go ahead to attract mode
@@ -262,12 +262,9 @@ void diagnostics() {
 		usb_debug("NOHD\n");
 	} else {
 		usb_debug("HD\n");
-		if (config.block_map_written) {
-			usb_debug("BMAP\n");
-			usb_debug("BCNT");
-			usb_debug_dec(config.block_count);
-			usb_debug("\n");
-		}
+		usb_debug("BCNT");
+		usb_debug_dec(config.block_count);
+		usb_debug("\n");
 	}
 
 }
@@ -400,6 +397,20 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
 #ifdef DEBUG
+	} else if (cmdbuf[0] == 'M') {
+		// mark block
+		uint8_t idx = 1;
+		uint16_t block = parseDec(cmdbuf,&idx,len);
+		otp_mark_block(block,BU_USED_BLOCK);
+		usb_debug("Marked block ");
+		usb_debug_dec(block);
+		usb_debug("\n");
+	} else if (cmdbuf[0] == 'F') {
+		// find next available bloc
+		uint16_t block = otp_find_unmarked_block(false);
+		usb_debug("Next unused block ");
+		usb_debug_dec(block);
+		usb_debug("\n");
 	} else if (cmdbuf[0] == 'R') {
 		// Read paragraph. Parameters are a comma separated list of decimal values: block, page, paragraph.
 		uint16_t block = 0; uint8_t page = 0; uint8_t para = 0;
