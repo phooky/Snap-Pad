@@ -82,6 +82,7 @@ enum {
  */
 void otp_mark_block(uint16_t block, uint8_t usage);
 
+
 /**
  * Find the first/last unmarked block
  * @return the first/last available block, or 0xffff if none remain

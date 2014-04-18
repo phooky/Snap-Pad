@@ -269,6 +269,29 @@ bool nand_load_para(uint16_t block, uint8_t page, uint8_t paragraph) {
 }
 
 /**
+ * Compute the trivial checksum of a block.
+ * @block the index of the block to generate a checksum for
+ * @return the computed checksum
+ */
+uint16_t nand_block_checksum(uint16_t block) {
+	uint16_t checksum = 0;
+	uint8_t page, para;
+	uint8_t* para_buffer = buffers_get_nand();
+	for (page = 0; page < 64; page++) {
+		for (para = 0; para < 4; para++) {
+			if (nand_load_para(block,page,para)) {
+				uint16_t idx;
+				for (idx = 0; idx < 512; idx++) {
+					checksum += para_buffer[idx];
+				}
+			}
+		}
+	}
+	return checksum;
+}
+
+
+/**
  * Write an entire page from the page buffer into NAND with SEC-DED error correction.
  * At present, blocks until entire page write is complete.
  * @param block the block number (>1024 indicates plane 1)

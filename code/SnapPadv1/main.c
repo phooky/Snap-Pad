@@ -86,7 +86,7 @@ void main (void)
     leds_init();			 // Set up LED pins
     timer_init();			 // Set up msec timer
     hwrng_init();            // Initialize HW RNG
-    initClocks(8000000);     // Configure clocks
+    initClocks(20000000);     // Configure clocks
     USB_setup(TRUE,TRUE);    // Init USB & events; if a host is present, connect
     uart_init();			 // Initialize uarts between hosts
 
@@ -308,10 +308,10 @@ void rand_para_test() {
 	cdcSendDataWaitTilDone((BYTE*)p,512,CDC0_INTFNUM,100);
 }
 
-void usb_debug_dec(int i) {
+void usb_debug_dec(unsigned int i) {
 	char buf[10];
-	int ip = i/10;
-	int digits = 1;
+	unsigned int ip = i/10;
+	unsigned int digits = 1;
 	while (ip != 0) {
 		digits++; ip = ip/10;
 	}
@@ -397,6 +397,16 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
 #ifdef DEBUG
+	} else if (cmdbuf[0] == 'c') {
+		// compute checksum of block
+		uint8_t idx = 1;
+		uint16_t block = parseDec(cmdbuf,&idx,len);
+		uint32_t sum;
+		usb_debug("Starting checksum\n");
+		sum = nand_block_checksum(block);
+		usb_debug("Finished checksum ");
+		usb_debug_dec(sum);
+		usb_debug("\n");
 	} else if (cmdbuf[0] == 'M') {
 		// mark block
 		uint8_t idx = 1;

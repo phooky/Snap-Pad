@@ -89,6 +89,13 @@ void nand_block_erase(uint16_t block);
 void nand_read_raw_page(uint32_t address, uint8_t* buffer, uint16_t count);
 
 /**
+ * Compute the trivial checksum of a block.
+ * @block the index of the block to generate a checksum for
+ * @return the computed checksum
+ */
+uint16_t nand_block_checksum(uint16_t block);
+
+/**
  * Write raw data to NAND.
  * @param address the full address to begin writing to
  * @param buffer the data to transfer to the NAND
