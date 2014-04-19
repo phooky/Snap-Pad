@@ -36,6 +36,12 @@ enum {
 	UTOK_DATA_ACK         = 0x24, // data transfer successfully written
 	UTOK_DATA_NAK         = 0x25, // data transfer failed
 
+	UTOK_REQ_CHKSM        = 0x26, // followed by 16-bit block number
+	UTOK_RSP_CHKSM        = 0x27, // followed by 16-bit checksum
+
+	UTOK_MARK_BLOCK       = 0x28, // followed by 16-bit block number
+	UTOK_MARK_ACK         = 0x29, // block marked
+
 	UTOK_LAST
 };
 

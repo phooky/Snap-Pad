@@ -209,6 +209,21 @@ void uart_process() {
 		} else if (command == UTOK_BUTTON_QUERY) {
 			uart_send_byte(UTOK_BUTTON_RSP);
 			uart_send_byte(has_confirm()?0xff:0x00);
+		} else if (command == UTOK_REQ_CHKSM) {
+			uint16_t block;
+			uint16_t sum;
+			block = uart_consume() << 8;
+			block |= uart_consume();
+			sum = nand_block_checksum(block);
+			uart_send_byte(UTOK_RSP_CHKSM);
+			uart_send_byte(sum >> 8);
+			uart_send_byte(sum & 0xff);
+		} else if (command == UTOK_MARK_BLOCK) {
+			uint16_t block;
+			block = uart_consume() << 8;
+			block |= uart_consume();
+			otp_mark_block(block,BU_BAD_BLOCK);
+			uart_send_byte(UTOK_MARK_ACK);
 		} else if (command == UTOK_BEGIN_DATA) {
 			uint16_t i;
 			uint8_t* buf;

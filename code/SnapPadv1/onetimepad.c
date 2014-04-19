@@ -257,8 +257,8 @@ bool otp_randomize_boards() {
 	usb_debug("BEGIN RND\n");
 	for (block = 1; block < 2048; block++) {
 		uint8_t page;
-		bool hwrngblock = false;
-		bool uartblock = false;
+		//bool hwrngblock = false;
+		//bool uartblock = false;
 
 		nand_block_erase(block);
 		nand_wait_for_ready();
@@ -272,7 +272,7 @@ bool otp_randomize_boards() {
 			for (para = 0; para < 4; para++) {
 				// Wait for RNG to finish filling buffer
 				while (!hwrng_bits_done()) {
-					hwrngblock = true;
+					//hwrngblock = true;
 				}
 				// swap buffers
 				buffers_swap();
@@ -290,7 +290,9 @@ bool otp_randomize_boards() {
 				// wait for write completion
 				nand_wait_for_ready();
 				// wait for io confirmation
-				while (!uart_send_complete()) { uartblock = true; }
+				while (!uart_send_complete()) {
+					//uartblock = true;
+				}
 				{
 					uint8_t rsp;
 					rsp = uart_consume();
@@ -302,8 +304,46 @@ bool otp_randomize_boards() {
 				}
 			}
 		}
-		if (hwrngblock) usb_debug("RNGBLK ");
-		if (uartblock) usb_debug("UARTBLK ");
+		//if (hwrngblock) usb_debug("RNGBLK ");
+		//if (uartblock) usb_debug("UARTBLK ");
+
+		{
+			// Checksum check
+			uint8_t rsp;
+			uint16_t checksum_local;
+			uint16_t checksum_remote;
+
+			uart_send_byte(UTOK_REQ_CHKSM);
+			uart_send_byte(block >> 8);
+			uart_send_byte(block & 0xff);
+
+			checksum_local = nand_block_checksum(block);
+
+			rsp = uart_consume();
+			if (rsp != UTOK_RSP_CHKSM) {
+				usb_debug("BAD CHKSM RSP\n");
+			}
+			checksum_remote = uart_consume() << 8;
+			checksum_remote |= uart_consume() & 0xff;
+
+			if (checksum_local != checksum_remote) {
+				usb_debug("MISMATCH ON ");
+				usb_debug_dec(block);
+				usb_debug("\n\r");
+
+				uart_send_byte(UTOK_MARK_BLOCK);
+				uart_send_byte(block >> 8);
+				uart_send_byte(block & 0xff);
+
+				otp_mark_block(block,BU_BAD_BLOCK);
+
+				if (uart_consume() != UTOK_MARK_ACK) {
+					usb_debug("BAD MARK RSP\n");
+				}
+			}
+		}
+
+
 
 		usb_debug("BLOCK ");
 		usb_debug_dec(block);
