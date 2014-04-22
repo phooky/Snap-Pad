@@ -90,4 +90,11 @@ void otp_mark_block(uint16_t block, uint8_t usage);
  */
 uint16_t otp_find_unmarked_block(bool backwards);
 
+/**
+ * Debug function: check usage status of a block
+ * @param the number of the block
+ * @return the usage status of the block (0xff if unused)
+ */
+uint8_t otp_get_block_status(uint16_t block);
+
 #endif // ONETIMEPAD_H

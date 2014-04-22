@@ -290,6 +290,18 @@ void scan_bb() {
 	}
 }
 
+void scan_used() {
+	uint16_t block;
+	for (block = 1; block < 2048; block++) {
+		uint8_t r = otp_get_block_status(block);
+		if (r != BU_UNUSED_BLOCK) {
+			usb_debug("USED ");
+			usb_debug_dec(block);
+			usb_debug("\n");
+		}
+	}
+}
+
 void read_rng() {
 	hwrng_start();
 	while (!hwrng_done());
@@ -358,6 +370,9 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == 'D') {
 		// run diagnostics
 		diagnostics();
+	} else if (cmdbuf[0] == 'U') {
+		// run diagnostics
+		scan_used();
 	} else if (cmdbuf[0] == 'P') {
 		// random paragraph test
 		rand_para_test();

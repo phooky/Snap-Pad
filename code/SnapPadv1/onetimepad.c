@@ -388,3 +388,15 @@ uint16_t otp_find_unmarked_block(bool backwards) {
 	}
 	return 0xffff;
 }
+
+/**
+ * Debug function: check usage status of a block
+ * @param the number of the block
+ * @return the usage status of the block (0xff if unused)
+ */
+uint8_t otp_get_block_status(uint16_t block) {
+	uint32_t addr = nand_make_para_addr(0,BLOCK_USAGE_PAGE,0);
+	uint8_t entry;
+	nand_read_raw_page(addr+block,&entry,1);
+	return entry;
+}
