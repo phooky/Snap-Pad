@@ -416,12 +416,16 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		// compute checksum of block
 		uint8_t idx = 1;
 		uint16_t block = parseDec(cmdbuf,&idx,len);
-		uint32_t sum;
+		struct checksum_ret sum;
 		usb_debug("Starting checksum\n");
 		sum = nand_block_checksum(block);
-		usb_debug("Finished checksum ");
-		usb_debug_dec(sum);
-		usb_debug("\n");
+		if (sum.ok) {
+			usb_debug("Finished checksum ");
+			usb_debug_dec(sum.checksum);
+			usb_debug("\n");
+		} else {
+			usb_debug("Bad checksum/read\n");
+		}
 	} else if (cmdbuf[0] == 'M') {
 		// mark block
 		uint8_t idx = 1;

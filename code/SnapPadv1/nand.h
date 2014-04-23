@@ -88,12 +88,13 @@ void nand_block_erase(uint16_t block);
  */
 void nand_read_raw_page(uint32_t address, uint8_t* buffer, uint16_t count);
 
+struct checksum_ret {uint16_t checksum;bool ok;};
 /**
  * Compute the trivial checksum of a block.
  * @block the index of the block to generate a checksum for
- * @return the computed checksum
+ * @return the computed checksum and a flag indicating any errors
  */
-uint16_t nand_block_checksum(uint16_t block);
+struct checksum_ret nand_block_checksum(uint16_t block);
 
 /**
  * Write raw data to NAND.

@@ -211,13 +211,17 @@ void uart_process() {
 			uart_send_byte(has_confirm()?0xff:0x00);
 		} else if (command == UTOK_REQ_CHKSM) {
 			uint16_t block;
-			uint16_t sum;
+			struct checksum_ret sum;
 			block = uart_consume() << 8;
 			block |= uart_consume();
 			sum = nand_block_checksum(block);
-			uart_send_byte(UTOK_RSP_CHKSM);
-			uart_send_byte(sum >> 8);
-			uart_send_byte(sum & 0xff);
+			if (sum.ok) {
+				uart_send_byte(UTOK_RSP_CHKSM);
+				uart_send_byte(sum.checksum >> 8);
+				uart_send_byte(sum.checksum & 0xff);
+			} else {
+				uart_send_byte(UTOK_RSP_CHKSM_BAD);
+			}
 		} else if (command == UTOK_MARK_BLOCK) {
 			uint16_t block;
 			block = uart_consume() << 8;

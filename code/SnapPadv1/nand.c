@@ -273,8 +273,8 @@ bool nand_load_para(uint16_t block, uint8_t page, uint8_t paragraph) {
  * @block the index of the block to generate a checksum for
  * @return the computed checksum
  */
-uint16_t nand_block_checksum(uint16_t block) {
-	uint16_t checksum = 0;
+struct checksum_ret nand_block_checksum(uint16_t block) {
+	struct checksum_ret rv = {0,true};
 	uint8_t page, para;
 	uint8_t* para_buffer = buffers_get_nand();
 	for (page = 0; page < 64; page++) {
@@ -282,12 +282,14 @@ uint16_t nand_block_checksum(uint16_t block) {
 			if (nand_load_para(block,page,para)) {
 				uint16_t idx;
 				for (idx = 0; idx < 512; idx++) {
-					checksum += para_buffer[idx];
+					rv.checksum += para_buffer[idx];
 				}
+			} else {
+				rv.ok = false;
 			}
 		}
 	}
-	return checksum;
+	return rv;
 }
 
 

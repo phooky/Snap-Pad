@@ -38,9 +38,10 @@ enum {
 
 	UTOK_REQ_CHKSM        = 0x26, // followed by 16-bit block number
 	UTOK_RSP_CHKSM        = 0x27, // followed by 16-bit checksum
+	UTOK_RSP_CHKSM_BAD    = 0x28, // no followup; checksum is bad and block should be marked
 
-	UTOK_MARK_BLOCK       = 0x28, // followed by 16-bit block number
-	UTOK_MARK_ACK         = 0x29, // block marked
+	UTOK_MARK_BLOCK       = 0x29, // followed by 16-bit block number
+	UTOK_MARK_ACK         = 0x2A, // block marked
 
 	UTOK_LAST
 };

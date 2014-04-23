@@ -310,9 +310,9 @@ bool otp_randomize_boards() {
 		{
 			// Checksum check
 			uint8_t rsp;
-			uint16_t checksum_local;
 			uint16_t checksum_remote;
-
+			bool needs_mark = false;
+			struct checksum_ret checksum_local;
 			uart_send_byte(UTOK_REQ_CHKSM);
 			uart_send_byte(block >> 8);
 			uart_send_byte(block & 0xff);
@@ -320,13 +320,19 @@ bool otp_randomize_boards() {
 			checksum_local = nand_block_checksum(block);
 
 			rsp = uart_consume();
-			if (rsp != UTOK_RSP_CHKSM) {
+			if (rsp == UTOK_RSP_CHKSM_BAD) {
+				needs_mark = true;
+			} else if (rsp == UTOK_RSP_CHKSM) {
+				checksum_remote = uart_consume() << 8;
+				checksum_remote |= uart_consume() & 0xff;
+				if (checksum_local.checksum != checksum_remote) {
+					needs_mark = true;
+				}
+			} else {
 				usb_debug("BAD CHKSM RSP\n");
+				needs_mark = true;
 			}
-			checksum_remote = uart_consume() << 8;
-			checksum_remote |= uart_consume() & 0xff;
-
-			if (checksum_local != checksum_remote) {
+			if (needs_mark) {
 				usb_debug("MISMATCH ON ");
 				usb_debug_dec(block);
 				usb_debug("\n\r");
@@ -343,16 +349,14 @@ bool otp_randomize_boards() {
 			}
 		}
 
-
-
 		usb_debug("BLOCK ");
 		usb_debug_dec(block);
 		usb_debug("\n");
 	}
 	leds_set_led(0,LED_SLOW_0);
-	leds_set_led(1,LED_SLOW_0);
+	leds_set_led(1,LED_SLOW_1);
 	leds_set_led(2,LED_SLOW_0);
-	leds_set_led(3,LED_SLOW_0);
+	leds_set_led(3,LED_SLOW_1);
 	return true;
 }
 
