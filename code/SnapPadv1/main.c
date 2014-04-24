@@ -383,6 +383,10 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == 'D') {
 		// run diagnostics
 		diagnostics();
+	} else if (cmdbuf[0] == 'P') {
+		// provision 'count' blocks.
+	} else if (cmdbuf[0] == 'R') {
+		// retrieve 'count' blocks starting at 'block','page','para'
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
 #ifdef DEBUG
