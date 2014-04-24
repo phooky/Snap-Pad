@@ -13,8 +13,8 @@ void encode(uint8_t in[3], uint8_t out[4], uint8_t count) {
 	out[2] = x64_digest_encoding_table[((in[1]<<2) | (in[2]>>6)) & 0x3f];
 	out[3] = x64_digest_encoding_table[in[2] & 0x3f];
 
-    switch (count % 3) {
-    case 1: out[3] = '=';
-    case 2: out[2] = '='; break;
+    switch (count) {
+    case 1: out[2] = '=';
+    case 2: out[3] = '='; break;
     }
 }
