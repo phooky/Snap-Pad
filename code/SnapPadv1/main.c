@@ -309,17 +309,6 @@ void read_rng() {
 	cdcSendDataWaitTilDone((BYTE*)bits, 16*4, CDC0_INTFNUM, 100);
 }
 
-void rand_para_test() {
-	uint8_t* p = buffers_get_nand();
-	// buffers_get_rng();
-	// nand_para_buffer();
-	leds_set_led(2,0x55);
-	hwrng_bits_start(p,512);
-	while (!hwrng_bits_done()) ;
-	leds_set_led(2,0x00);
-	cdcSendDataWaitTilDone((BYTE*)p,512,CDC0_INTFNUM,100);
-}
-
 void usb_debug_dec(unsigned int i) {
 	char buf[10];
 	unsigned int ip = i/10;
@@ -364,18 +353,39 @@ bool parseBPP(uint8_t* buf, uint8_t len, uint16_t* block, uint8_t* page, uint8_t
 	return true;
 }
 
+/**
+ * All commands are terminated by a newline character.
+ * Standard command summary:
+ *
+ * D                       - diagnostics
+ * #                       - produce 64 bytes of random data from the RNG
+ * Rblock,page,para,count  - retrieve (and zero) count paragraphs starting at block,page,para.
+ *                           maximum count is 4. will wait for user button press before continuing.
+ * Pcount                  - provision (and zero) count paragraphs. snap-pad chooses next available paras.
+ *                           maximum count is 4. will wait for user button press before continuing.
+ *
+ * Additional debug build commands:
+ * Tr                       - time random number generation (prints "start", generates four blocks of
+ *                            numbers, prints "stop")
+ * Tw                       - time nand write (prints "start", writes four blocks of
+ *                            numbers, prints "stop")
+ * C                        - print the bad block list
+ * U                        - print the used block list
+ * cblock                   - print the checksum of the indicated block
+ * Mblock                   - mark the given block as used
+ * F                        - find the address of the next block containing provisionable paras
+ * rblock,page,para         - read the given block, page, and paragraph without erasing
+ * Eblock                   - erase the indicated block (0xff everywhere)
+ */
 void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	if (cmdbuf[0] == '\n' || cmdbuf[0] == '\r') {
 		// skip
 	} else if (cmdbuf[0] == 'D') {
 		// run diagnostics
 		diagnostics();
-	} else if (cmdbuf[0] == 'U') {
-		// run diagnostics
-		scan_used();
-	} else if (cmdbuf[0] == 'P') {
-		// random paragraph test
-		rand_para_test();
+	} else if (cmdbuf[0] == '#') {
+		read_rng();
+#ifdef DEBUG
 	} else if (cmdbuf[0] == 'T')  {
 		if (cmdbuf[1] == 'r') {
 			// time random number production
@@ -403,15 +413,10 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			}
 			usb_debug("stop\n");
 		}
-		// run full production test suite
 	} else if (cmdbuf[0] == 'C') {
 		scan_bb();
-	//} else if (cmdbuf[0] == 'I') {
-	// Initialize nand
-	//	otp_initialize_header();
-	} else if (cmdbuf[0] == '#') {
-		read_rng();
-#ifdef DEBUG
+	} else if (cmdbuf[0] == 'U') {
+		scan_used();
 	} else if (cmdbuf[0] == 'c') {
 		// compute checksum of block
 		uint8_t idx = 1;
@@ -435,12 +440,12 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		usb_debug_dec(block);
 		usb_debug("\n");
 	} else if (cmdbuf[0] == 'F') {
-		// find next available bloc
+		// find next available block
 		uint16_t block = otp_find_unmarked_block(false);
 		usb_debug("Next unused block ");
 		usb_debug_dec(block);
 		usb_debug("\n");
-	} else if (cmdbuf[0] == 'R') {
+	} else if (cmdbuf[0] == 'r') {
 		// Read paragraph. Parameters are a comma separated list of decimal values: block, page, paragraph.
 		uint16_t block = 0; uint8_t page = 0; uint8_t para = 0;
 		if (parseBPP(cmdbuf+1,len-1,&block,&page,&para)) {
