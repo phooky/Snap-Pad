@@ -420,5 +420,5 @@ void otp_retrieve(uint16_t block,uint8_t page,uint8_t para,uint8_t count) {
 	usb_debug_dec(para);
 	usb_debug(", ");
 	usb_debug_dec(count);
-	usb_debug(is_A?"A\n":"B\n");
+	usb_debug("\n");
 }
