@@ -63,6 +63,7 @@ uint8_t connection_state;
 bool process_usb();
 
 ConnectionState cs;
+OTPConfig config;
 
 void do_factory_reset_mode();
 void do_twinned_master_mode();
@@ -115,6 +116,8 @@ void main (void)
 
     cs = uart_determine_state(usb_attached || button_pressed_on_startup);
 
+	config = otp_read_header();
+
     if (cs == CS_TWINNED_MASTER) {
     	if (button_pressed_on_startup) {
     		do_factory_reset_mode();
@@ -151,9 +154,9 @@ void do_single_mode() {
 
 void do_twinned_master_mode() {
 	// check otp header
-	OTPConfig config = otp_read_header();
 	if (!config.has_header) {
 		otp_initialize_header(true);
+		config = otp_read_header();
 	}
 
 	// Go ahead to attract mode
@@ -182,9 +185,9 @@ void do_twinned_master_mode() {
 
 void do_twinned_slave_mode() {
 	// check otp header
-	OTPConfig config = otp_read_header();
 	if (!config.has_header) {
 		otp_initialize_header(false);
+		config = otp_read_header();
 	}
 
 	// Go ahead to attract mode
