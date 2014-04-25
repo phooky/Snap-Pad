@@ -404,3 +404,21 @@ uint8_t otp_get_block_status(uint16_t block) {
 	nand_read_raw_page(addr+block,&entry,1);
 	return entry;
 }
+
+void otp_provision(uint8_t count,bool is_A) {
+	usb_debug("provisioning ");
+	usb_debug_dec(count);
+	usb_debug(is_A?"A\n":"B\n");
+}
+
+void otp_retrieve(uint16_t block,uint8_t page,uint8_t para,uint8_t count,bool is_A) {
+	usb_debug("retrieving ");
+	usb_debug_dec(block);
+	usb_debug(", ");
+	usb_debug_dec(page);
+	usb_debug(", ");
+	usb_debug_dec(para);
+	usb_debug(", ");
+	usb_debug_dec(count);
+	usb_debug(is_A?"A\n":"B\n");
+}

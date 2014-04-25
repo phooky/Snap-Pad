@@ -97,4 +97,7 @@ uint16_t otp_find_unmarked_block(bool backwards);
  */
 uint8_t otp_get_block_status(uint16_t block);
 
+void otp_provision(uint8_t count,bool is_A);
+void otp_retrieve(uint16_t block,uint8_t page,uint8_t para,uint8_t count,bool is_A);
+
 #endif // ONETIMEPAD_H

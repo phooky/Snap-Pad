@@ -388,8 +388,51 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		diagnostics();
 	} else if (cmdbuf[0] == 'P') {
 		// provision 'count' blocks.
+		uint8_t idx = 1;
+		uint16_t count = parseDec(cmdbuf,&idx,len);
+		if (count == 0 || count > 4) {
+			// error message
+			return;
+		}
+		otp_provision(count,config.is_A);
 	} else if (cmdbuf[0] == 'R') {
 		// retrieve 'count' blocks starting at 'block','page','para'
+		uint8_t idx = 1;
+		uint16_t block, count, page, para;
+		block = parseDec(cmdbuf,&idx,len);
+		if (cmdbuf[idx++] != ',') {
+			// error message
+			return;
+		}
+		page = parseDec(cmdbuf,&idx,len);
+		if (cmdbuf[idx++] != ',') {
+			// error message
+			return;
+		}
+		para = parseDec(cmdbuf,&idx,len);
+		if (cmdbuf[idx++] != ',') {
+			// error message
+			return;
+		}
+		count = parseDec(cmdbuf,&idx,len);
+
+		if (block == 0 || block > 2047) {
+			// error message
+			return;
+		}
+		if (page > 63) {
+			// error message
+			return;
+		}
+		if (para > 3) {
+			// error message
+			return;
+		}
+		if (count == 0 || count > 4) {
+			// error message
+			return;
+		}
+		otp_retrieve(block,page,para,count,config.is_A);
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
 #ifdef DEBUG
