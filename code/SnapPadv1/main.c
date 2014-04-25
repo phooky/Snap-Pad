@@ -162,7 +162,7 @@ void do_twinned_master_mode() {
 	// Go ahead to attract mode
 	leds_set_larson();
 	bool do_pings = true;
-    while (!has_confirm())  // waiting for button press
+    while (!has_confirm() || !do_pings)  // waiting for button press, must replug if not
     {
     	int ucs = USB_connectionState();
     	if (ucs == ST_ENUM_ACTIVE) {
@@ -369,7 +369,7 @@ bool confirm_count(uint8_t count) {
 	}
 	timer_reset();
 	while (!has_confirm()) {
-		if (timer_msec() >= 5000) { return false; } // timeout
+		if (timer_msec() >= 10000) { return false; } // timeout
 	}
 	return true;
 }
