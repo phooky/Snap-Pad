@@ -356,6 +356,24 @@ bool parseBPP(uint8_t* buf, uint8_t len, uint16_t* block, uint8_t* page, uint8_t
 	return true;
 }
 
+bool confirm_count(uint8_t count) {
+	uint8_t i;
+	// Before we start, make sure the button is released
+	timer_reset();
+	while (has_confirm()) {
+		if  (timer_msec() >= 1000) { return false; } // you get a second to take your finger off the button
+	}
+
+	for (i = 0; i < 4; i++) {
+		leds_set_led(i,(i < count)?LED_FAST_0:LED_OFF);
+	}
+	timer_reset();
+	while (!has_confirm()) {
+		if (timer_msec() >= 5000) { return false; } // timeout
+	}
+	return true;
+}
+
 /**
  * All commands are terminated by a newline character.
  * Standard command summary:
@@ -394,7 +412,9 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			// error message
 			return;
 		}
-		otp_provision(count,config.is_A);
+		if (confirm_count(count)) {
+			otp_provision(count,config.is_A);
+		}
 	} else if (cmdbuf[0] == 'R') {
 		// retrieve 'count' blocks starting at 'block','page','para'
 		uint8_t idx = 1;
@@ -432,7 +452,9 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			// error message
 			return;
 		}
-		otp_retrieve(block,page,para,count,config.is_A);
+		if (confirm_count(count)) {
+			otp_retrieve(block,page,para,count);
+		}
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
 #ifdef DEBUG

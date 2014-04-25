@@ -97,7 +97,20 @@ uint16_t otp_find_unmarked_block(bool backwards);
  */
 uint8_t otp_get_block_status(uint16_t block);
 
+/**
+ * Provision a number of blocks for use.
+ * @param count The number of blocks to provision, where 0 < count <= 4
+ * @param is_A True if is this the A board half; false if B.
+ */
 void otp_provision(uint8_t count,bool is_A);
-void otp_retrieve(uint16_t block,uint8_t page,uint8_t para,uint8_t count,bool is_A);
+
+/**
+ * Retrieve a number of blocks for decoding.
+ * @param block Block number, where 0 < block < 2048
+ * @param page Page number, where 0 <= page < 64
+ * @param para Paragraph number, where 0 <= para < 4
+ * @param count The number of sequential blocks to retrieve, where 0 < count <= 4
+ */
+void otp_retrieve(uint16_t block,uint8_t page,uint8_t para,uint8_t count);
 
 #endif // ONETIMEPAD_H
