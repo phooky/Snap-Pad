@@ -422,8 +422,8 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 				return;
 			}
 			count++;
-			if (cmdbuf[idx] != ',') break;
 			if (count == 4) break;
+			if (cmdbuf[idx++] != ',') break;
 		}
 		if (confirm_count(count)) {
 			for (i = 0; i < count; i++) {
