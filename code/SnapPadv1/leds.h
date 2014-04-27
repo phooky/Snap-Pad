@@ -64,4 +64,10 @@ bool has_confirm();
  */
 void wait_for_confirm();
 
+/**
+ * Give the user ten seconds to confirm releasing blocks. The a number of LEDs
+ * flash proportional to the number of blocks to release.
+ */
+bool confirm_count(uint8_t count);
+
 #endif /* LEDS_H_ */

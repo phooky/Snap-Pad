@@ -346,33 +346,15 @@ uint16_t parseDec(uint8_t* buf, uint8_t* idx, uint8_t len) {
 	return val;
 }
 // Read paragraph. Parameters are a comma separated list: block, page, paragraph.
-bool parseBPP(uint8_t* buf, uint8_t len, uint16_t* block, uint8_t* page, uint8_t* para) {
-	uint8_t idx = 0;
-	*block = parseDec(buf,&idx,len);
-	if (buf[idx] != ',') return false; idx++;
-	*page = parseDec(buf,&idx,len);
-	if (buf[idx] != ',') return false; idx++;
-	*para = parseDec(buf,&idx,len);
+bool parseBPP(uint8_t* buf, uint8_t* idx, uint8_t len, uint16_t* block, uint8_t* page, uint8_t* para) {
+	*block = parseDec(buf,idx,len);
+	if (buf[*idx] != ',') return false; (*idx)++;
+	*page = parseDec(buf,idx,len);
+	if (buf[*idx] != ',') return false; (*idx)++;
+	*para = parseDec(buf,idx,len);
 	return true;
 }
 
-bool confirm_count(uint8_t count) {
-	uint8_t i;
-	// Before we start, make sure the button is released
-	timer_reset();
-	while (has_confirm()) {
-		if  (timer_msec() >= 1000) { return false; } // you get a second to take your finger off the button
-	}
-
-	for (i = 0; i < 4; i++) {
-		leds_set_led(i,(i < count)?LED_FAST_0:LED_OFF);
-	}
-	timer_reset();
-	while (!has_confirm()) {
-		if (timer_msec() >= 10000) { return false; } // timeout
-	}
-	return true;
-}
 
 /**
  * All commands are terminated by a newline character.
@@ -418,42 +400,35 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == 'R') {
 		// retrieve 'count' blocks starting at 'block','page','para'
 		uint8_t idx = 1;
-		uint16_t block, count, page, para;
-		block = parseDec(cmdbuf,&idx,len);
-		if (cmdbuf[idx++] != ',') {
-			// error message
-			return;
-		}
-		page = parseDec(cmdbuf,&idx,len);
-		if (cmdbuf[idx++] != ',') {
-			// error message
-			return;
-		}
-		para = parseDec(cmdbuf,&idx,len);
-		if (cmdbuf[idx++] != ',') {
-			// error message
-			return;
-		}
-		count = parseDec(cmdbuf,&idx,len);
-
-		if (block == 0 || block > 2047) {
-			// error message
-			return;
-		}
-		if (page > 63) {
-			// error message
-			return;
-		}
-		if (para > 3) {
-			// error message
-			return;
-		}
-		if (count == 0 || count > 4) {
-			// error message
-			return;
+		struct {
+			uint16_t block;
+			uint8_t page;
+			uint8_t para;
+		} bpp[4];
+		uint8_t count = 0;
+		uint8_t i;
+		// parse format: block# "," page# "," para# ["," block# "," page# "," para#]*
+		while (true) {
+			if (!parseBPP(cmdbuf, &idx, len, &bpp[count].block, &bpp[count].page, &bpp[count].para)) {
+				// error message
+				return;
+			}
+			// validate
+			if (bpp[count].block == 0 ||
+					bpp[count].block > 2047 ||
+					bpp[count].page > 63 ||
+					bpp[count].para > 3) {
+				// error message
+				return;
+			}
+			count++;
+			if (cmdbuf[idx] != ',') break;
+			if (count == 4) break;
 		}
 		if (confirm_count(count)) {
-			otp_retrieve(block,page,para,count);
+			for (i = 0; i < count; i++) {
+				otp_retrieve(bpp[i].block,bpp[i].page,bpp[i].para);
+			}
 		}
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
@@ -520,7 +495,8 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == 'r') {
 		// Read paragraph. Parameters are a comma separated list of decimal values: block, page, paragraph.
 		uint16_t block = 0; uint8_t page = 0; uint8_t para = 0;
-		if (parseBPP(cmdbuf+1,len-1,&block,&page,&para)) {
+		uint8_t idx = 1;
+		if (parseBPP(cmdbuf,&idx,len,&block,&page,&para)) {
 			//usb_debug_dec(block); usb_debug(":");
 			//usb_debug_dec(page); usb_debug(":");
 			//usb_debug_dec(para); usb_debug("\n");

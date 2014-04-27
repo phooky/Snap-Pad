@@ -7,7 +7,7 @@
 
 #include "leds.h"
 #include "msp430.h"
-
+#include "timer.h"
 
 /**
  * Pin assignments
@@ -78,6 +78,24 @@ void wait_for_confirm() {
 	while (has_confirm());
 	while (!has_confirm());
 	while (has_confirm());
+}
+
+bool confirm_count(uint8_t count) {
+	uint8_t i;
+	// Before we start, make sure the button is released
+	timer_reset();
+	while (has_confirm()) {
+		if  (timer_msec() >= 1000) { return false; } // you get a second to take your finger off the button
+	}
+
+	for (i = 0; i < 4; i++) {
+		leds_set_led(i,(i < count)?LED_FAST_0:LED_OFF);
+	}
+	timer_reset();
+	while (!has_confirm()) {
+		if (timer_msec() >= 10000) { return false; } // timeout
+	}
+	return true;
 }
 
 inline bool is_on(uint8_t mode, uint8_t phase) {
