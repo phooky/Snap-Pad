@@ -256,6 +256,12 @@ void diagnostics() {
 		usb_debug("NOHD\n");
 	} else {
 		usb_debug("HD\n");
+		if (config.randomization_started) {
+			usb_debug("Rstarted\n");
+		}
+		if (config.randomization_finished) {
+			usb_debug("Rfinished\n");
+		}
 		usb_debug("BCNT");
 		usb_debug_dec(config.block_count);
 		usb_debug("\n");

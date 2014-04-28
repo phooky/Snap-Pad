@@ -18,7 +18,7 @@ const uint8_t MAGIC[MAGIC_LEN] = { 'S','N','A','P','-','P','A','D' };
 
 typedef struct {
 	uint8_t header_written : 2;
-	uint8_t reserved_a: 2;
+	uint8_t random_data_started : 2;
 	uint8_t random_data_written : 2;
 	uint8_t reserved_b : 2;
 } OTPFlags;
@@ -176,7 +176,8 @@ OTPConfig otp_read_header() {
 
 	OTPFlags flags;
 	nand_read_raw_page(nand_make_addr(0,0,FLAGS_PAGE,0),(uint8_t*)&flags,sizeof(flags));
-	config.random_data_written = flags.random_data_written != 0x03;
+	config.randomization_started = flags.random_data_started != 0x03;
+	config.randomization_finished = flags.random_data_written != 0x03;
 	return config;
 }
 
@@ -233,15 +234,7 @@ bool otp_initialize_header(bool is_A) {
 
 	if (!write_succ) return false;
 	// write header confirmation bits
-	OTPFlags flags;
-	uint32_t flagaddr = nand_make_addr(0,0,FLAGS_PAGE,0);
-	nand_read_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
-	nand_wait_for_ready();
-	usb_debug("read flags\n");
-	flags.header_written = 0x00;
-	nand_program_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
-	nand_wait_for_ready();
-	usb_debug("wrote header-written flag\n");
+	otp_set_flag(FLAG_HEADER_WRITTEN);
 
 	nand_wait_for_ready();
 	return true;
@@ -255,6 +248,8 @@ bool otp_randomize_boards() {
 	uint16_t block;
 	hwrng_bits_start(buffers_get_rng(),512);
 	usb_debug("BEGIN RND\n");
+	otp_set_flag(FLAG_DATA_STARTED);
+
 	for (block = 1; block < 2048; block++) {
 		uint8_t page;
 		//bool hwrngblock = false;
@@ -354,7 +349,25 @@ bool otp_randomize_boards() {
 		usb_debug("\n");
 	}
 	leds_set_mode(LM_DUAL_PROG_DONE);
+	otp_set_flag(FLAG_DATA_FINISHED);
 	return true;
+}
+
+void otp_set_flag(uint8_t flag) {
+	// write finished flag
+	OTPFlags flags;
+	uint32_t flagaddr = nand_make_addr(0,0,FLAGS_PAGE,0);
+	nand_read_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
+	nand_wait_for_ready();
+	if (flag == FLAG_DATA_FINISHED) {
+		flags.random_data_written = 0x00;
+	} else if (flag == FLAG_DATA_STARTED) {
+		flags.random_data_started = 0x00;
+	} else if (flag == FLAG_HEADER_WRITTEN) {
+		flags.header_written = 0x00;
+	}
+	nand_program_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
+	nand_wait_for_ready();
 }
 
 /**

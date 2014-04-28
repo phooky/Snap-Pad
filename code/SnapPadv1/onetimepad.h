@@ -39,7 +39,8 @@ void otp_factory_reset();
 
 typedef struct {
 	bool has_header;
-	bool random_data_written;
+	bool randomization_finished;
+	bool randomization_started;
 	bool is_A;
 	uint8_t major_version;
 	uint8_t minor_version;
@@ -77,6 +78,12 @@ enum {
 	BU_BAD_BLOCK = 0x70
 };
 
+enum {
+	FLAG_HEADER_WRITTEN,
+	FLAG_DATA_STARTED,
+	FLAG_DATA_FINISHED
+};
+
 /**
  * Mark a block in the block usage map
  */
@@ -111,5 +118,7 @@ void otp_provision(uint8_t count,bool is_A);
  * @param para Paragraph number, where 0 <= para < 4
  */
 void otp_retrieve(uint16_t block,uint8_t page,uint8_t para);
+
+void otp_set_flag(uint8_t flag);
 
 #endif // ONETIMEPAD_H

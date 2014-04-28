@@ -260,6 +260,9 @@ void uart_process() {
 			uart_send_byte(UTOK_DATA_ACK);
 			if (block == 2047 && page == 63 && para == 3) {
 				leds_set_mode(LM_DUAL_PROG_DONE);
+				otp_set_flag(FLAG_DATA_FINISHED);
+			} else if (block == 1 && page == 0 && para == 0) {
+				otp_set_flag(FLAG_DATA_STARTED);
 			}
 		}
 	}
