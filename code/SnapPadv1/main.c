@@ -134,8 +134,9 @@ void main (void)
 }
 
 void do_single_mode() {
-	// Go ahead to attract mode
-	leds_set_larson();
+	// Indicate ready
+	// TODO: indicate exhausted/misprogrammed
+	leds_set_mode(LM_READY);
     while (1)  // main loop
     {
         switch(USB_connectionState())
@@ -160,7 +161,7 @@ void do_twinned_master_mode() {
 	}
 
 	// Go ahead to attract mode
-	leds_set_larson();
+	leds_set_mode(LM_DUAL_NOT_PROG);
 	bool do_pings = true;
     while (!has_confirm() || !do_pings)  // waiting for button press, must replug if not
     {

@@ -20,14 +20,9 @@
  */
 void leds_init();
 
-/**
- * Turn on and off the four LEDs.
- * @param leds bits 0-3 correspond to LED 0-3.
- */
-void leds_set(uint8_t leds);
-
 #define LED_COUNT 4
 
+// Individual LED modes
 enum {
 	LED_OFF = 0,
 	LED_ON = 0xff,
@@ -39,18 +34,37 @@ enum {
 	LED_HYPER_1 = 0xaa
 };
 
+// High-level description of LED modes.
+enum {
+	LM_OFF,
+	LM_READY,
+	LM_CONFIRM_1,
+	LM_CONFIRM_2,
+	LM_CONFIRM_3,
+	LM_CONFIRM_4,
+	LM_ACKNOWLEDGED,
+	LM_TIMEOUT,
+	LM_EXHAUSTED,
+
+	LM_DUAL_NOT_PROG,
+	LM_DUAL_PARTIAL_PROG,
+	LM_PROG_DONE,
+
+	LM_LAST
+};
 
 /**
- * Set the high-level behavior of each led.
+ * Set the behavior of an individual led.
  * @param led the index of the LED to set (0-3).
  * @param mode a bitfield representing the phases that the LED should be lit for.
  */
 void leds_set_led(uint8_t led, uint8_t mode);
 
 /**
- * Convenience method to set Larson scanner mode.
+ * Convenience method to set high-level LED modes.
+ * @param mode State to indicate, see the enum of LM_ modes above
  */
-void leds_set_larson();
+void leds_set_mode(uint8_t mode);
 
 /**
  * Detect whether the CONFIRM button is currently being held down.

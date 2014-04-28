@@ -45,20 +45,49 @@ void leds_set_led(uint8_t led, uint8_t mode) {
 	led_mode[led] = mode;
 }
 
-void leds_set_larson() {
-	led_mode[0] = 0x81;
-	led_mode[1] = 0x42;
-	led_mode[2] = 0x24;
-	led_mode[3] = 0x18;
-}
-
-/**
- * Turn on and off the four LEDs.
- * @param leds bits 0-3 correspond to LED 0-3.
- */
-void leds_set(uint8_t leds) {
+void leds_set_mode(uint8_t mode) {
 	uint8_t i;
-	for (i = 0; i < LED_COUNT; i++) leds_set_led(i, ((leds & 1 << i) == 0)?LED_OFF:LED_ON);
+	for (i = 0; i < 4; i++) { led_mode[i] = LED_OFF; }
+	switch (mode) {
+	case LM_OFF:
+		break;
+	case LM_READY:
+		led_mode[0] = LED_ON; break;
+	case LM_CONFIRM_4:
+		led_mode[3] = LED_SLOW_0;
+	case LM_CONFIRM_3:
+		led_mode[2] = LED_SLOW_0;
+	case LM_CONFIRM_2:
+		led_mode[1] = LED_SLOW_0;
+	case LM_CONFIRM_1:
+		led_mode[0] = LED_SLOW_0;
+		break;
+	case LM_ACKNOWLEDGED:
+		led_mode[0] = LED_ON;
+		led_mode[3] = LED_ON;
+		break;
+	case LM_TIMEOUT:
+		led_mode[1] = LED_ON;
+		led_mode[2] = LED_ON;
+		break;
+	case LM_EXHAUSTED:
+		for (i = 0; i < 4; i++) { led_mode[i] = LED_FAST_0; }
+		break;
+	case LM_DUAL_NOT_PROG:
+		// Larson scanner mode!
+		led_mode[0] = 0x81;
+		led_mode[1] = 0x42;
+		led_mode[2] = 0x24;
+		led_mode[3] = 0x18;
+		break;
+	case LM_DUAL_PARTIAL_PROG:
+		led_mode[0] = led_mode[1] = LED_SLOW_0;
+		led_mode[2] = led_mode[3] = LED_SLOW_1;
+		break;
+	case LM_PROG_DONE:
+		for (i = 0; i < 4; i++) { led_mode[i] = LED_ON; }
+		break;
+	}
 }
 
 /**
@@ -81,19 +110,22 @@ void wait_for_confirm() {
 }
 
 bool confirm_count(uint8_t count) {
-	uint8_t i;
 	// Before we start, make sure the button is released
 	timer_reset();
 	while (has_confirm()) {
 		if  (timer_msec() >= 1000) { return false; } // you get a second to take your finger off the button
 	}
-
-	for (i = 0; i < 4; i++) {
-		leds_set_led(i,(i < count)?LED_FAST_0:LED_OFF);
-	}
+	leds_set_mode(LM_CONFIRM_1 + (count-1));
 	timer_reset();
 	while (!has_confirm()) {
-		if (timer_msec() >= 10000) { return false; } // timeout
+		if (timer_msec() >= 10000) {
+			// Indicate timeout
+			leds_set_mode(LM_TIMEOUT);
+			timer_reset();
+			while (timer_msec() < 1000) {}
+			leds_set_mode(LM_READY);
+			return false;
+		}
 	}
 	return true;
 }
