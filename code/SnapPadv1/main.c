@@ -133,8 +133,13 @@ void main (void)
 
 void do_single_mode() {
 	// Indicate ready
-	// TODO: indicate exhausted/misprogrammed
-	leds_set_mode(LM_READY);
+	// TODO: indicate exhausted
+	if (config.randomization_finished) {
+		leds_set_mode(LM_READY);
+	} else {
+		// error mode: partially programmed half!
+		leds_set_mode(LM_DUAL_PARTIAL_PROG);
+	}
     while (1)  // main loop
     {
         switch(USB_connectionState())
@@ -157,9 +162,14 @@ void do_twinned_master_mode() {
 		otp_initialize_header(true);
 		config = otp_read_header();
 	}
-	// TODO: display different states for partial program; programmed
 	// Go ahead to attract mode
-	leds_set_mode(LM_DUAL_NOT_PROG);
+	if (config.randomization_finished) {
+		leds_set_mode(LM_DUAL_PROG_DONE);
+	} else if (config.randomization_started) {
+		leds_set_mode(LM_DUAL_PARTIAL_PROG);
+	} else {
+		leds_set_mode(LM_DUAL_NOT_PROG);
+	}
 	bool do_pings = true;
     while (!has_confirm() || !do_pings)  // waiting for button press, must replug if not
     {
@@ -185,9 +195,14 @@ void do_twinned_slave_mode() {
 		otp_initialize_header(false);
 		config = otp_read_header();
 	}
-	// TODO: display different states for partial program; programmed
 	// Go ahead to attract mode
-	leds_set_mode(LM_DUAL_NOT_PROG);
+	if (config.randomization_finished) {
+		leds_set_mode(LM_DUAL_PROG_DONE);
+	} else if (config.randomization_started) {
+		leds_set_mode(LM_DUAL_PARTIAL_PROG);
+	} else {
+		leds_set_mode(LM_DUAL_NOT_PROG);
+	}
     while (1)  // main loop
     {
     	uart_process(); // process uart commands
