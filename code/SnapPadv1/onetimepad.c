@@ -353,10 +353,7 @@ bool otp_randomize_boards() {
 		usb_debug_dec(block);
 		usb_debug("\n");
 	}
-	leds_set_led(0,LED_SLOW_0);
-	leds_set_led(1,LED_SLOW_1);
-	leds_set_led(2,LED_SLOW_0);
-	leds_set_led(3,LED_SLOW_1);
+	leds_set_mode(LM_DUAL_PROG_DONE);
 	return true;
 }
 

@@ -235,14 +235,11 @@ void uart_process() {
 			uint16_t block;
 			uint8_t page;
 			uint8_t para;
-			leds_set_led(0,0xff);
 
 			block = uart_consume() << 8;
 			block |= uart_consume();
 			page = uart_consume();
 			para = uart_consume();
-
-			leds_set_led(1,0xff);
 
 			buf = buffers_get_nand();
 			for (i = 0; i < PARA_SIZE; i++) {
@@ -250,14 +247,20 @@ void uart_process() {
 			}
 
 			if (page == 0 && para == 0) {
-				leds_set_led(2,0xff);
+				leds_set_mode(LM_OFF);
+				if (block > 256) { leds_set_led(3,LED_FAST_0); }
+				if (block > 512+256) { leds_set_led(2,LED_FAST_0); }
+				if (block > 1024+256) { leds_set_led(1,LED_FAST_0); }
+				if (block > 1536+256) { leds_set_led(0,LED_FAST_0); }
 				nand_block_erase(block);
 				nand_wait_for_ready();
 			}
 			nand_save_para(block,page,para);
 			nand_wait_for_ready();
 			uart_send_byte(UTOK_DATA_ACK);
-			if (block == 1 && page == 0 && para == 0) leds_set_led(3,0xff);
+			if (block == 2047 && page == 63 && para == 3) {
+				leds_set_mode(LM_DUAL_PROG_DONE);
+			}
 		}
 	}
 }

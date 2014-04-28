@@ -84,7 +84,7 @@ void leds_set_mode(uint8_t mode) {
 		led_mode[0] = led_mode[1] = LED_SLOW_0;
 		led_mode[2] = led_mode[3] = LED_SLOW_1;
 		break;
-	case LM_PROG_DONE:
+	case LM_DUAL_PROG_DONE:
 		for (i = 0; i < 4; i++) { led_mode[i] = LED_ON; }
 		break;
 	}

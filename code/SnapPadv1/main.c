@@ -125,10 +125,8 @@ void main (void)
     		do_twinned_master_mode();
     	}
     } else if (cs == CS_TWINNED_SLAVE) {
-    	leds_set_led(0,0x55);
     	do_twinned_slave_mode();
     } else if (cs == CS_SINGLE) {
-    	leds_set_led(0,0xff);
     	do_single_mode();
     }
 }
@@ -159,7 +157,7 @@ void do_twinned_master_mode() {
 		otp_initialize_header(true);
 		config = otp_read_header();
 	}
-
+	// TODO: display different states for partial program; programmed
 	// Go ahead to attract mode
 	leds_set_mode(LM_DUAL_NOT_PROG);
 	bool do_pings = true;
@@ -169,7 +167,7 @@ void do_twinned_master_mode() {
     	if (ucs == ST_ENUM_ACTIVE) {
     		// quit pinging remote button once a USB command has been processed.
     		// (slow nand reads can cause very rare ping timeouts, and there's no need anyway.)
-    		if (process_usb()) { do_pings = false; leds_set_led(0,0); }
+    		if (process_usb()) { do_pings = false; }
     	}
         // ping every 2ms if no usb commands have yet been received.
     	if (do_pings && timer_msec() >= 2) {
@@ -177,10 +175,7 @@ void do_twinned_master_mode() {
         	timer_reset();
     	}
     }
-    leds_set_led(0,0x0f);
-    leds_set_led(1,0xf0);
-    leds_set_led(2,0x0f);
-    leds_set_led(3,0xf0);
+    leds_set_mode(LM_DUAL_PROG_DONE);
     otp_randomize_boards();
 }
 
@@ -190,14 +185,9 @@ void do_twinned_slave_mode() {
 		otp_initialize_header(false);
 		config = otp_read_header();
 	}
-
+	// TODO: display different states for partial program; programmed
 	// Go ahead to attract mode
-	//leds_set_led(0,0xf);
-	leds_set_led(0,0);
-	leds_set_led(1,0);
-	leds_set_led(2,0);
-	//leds_set_led(3,0xf);
-	leds_set_led(3,0);
+	leds_set_mode(LM_DUAL_NOT_PROG);
     while (1)  // main loop
     {
     	uart_process(); // process uart commands
