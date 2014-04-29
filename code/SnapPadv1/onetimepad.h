@@ -78,12 +78,6 @@ enum {
 	BU_BAD_BLOCK = 0x70
 };
 
-enum {
-	FLAG_HEADER_WRITTEN,
-	FLAG_DATA_STARTED,
-	FLAG_DATA_FINISHED
-};
-
 /**
  * Mark a block in the block usage map
  */
@@ -119,6 +113,16 @@ void otp_provision(uint8_t count,bool is_A);
  */
 void otp_retrieve(uint16_t block,uint8_t page,uint8_t para);
 
+enum {
+	FLAG_HEADER_WRITTEN,
+	FLAG_DATA_STARTED,
+	FLAG_DATA_FINISHED
+};
+
+/**
+ * Set a flag indicating board state. Flags cannot be unmarked without a factory reset.
+ * @param flag the flag to set (see the FLAG_* enumeration).
+ */
 void otp_set_flag(uint8_t flag);
 
 #endif // ONETIMEPAD_H
