@@ -92,6 +92,16 @@ void otp_mark_block(uint16_t block, uint8_t usage);
 uint16_t otp_find_unmarked_block(bool backwards);
 
 /**
+ * Find the first/last usable page/para in the given block
+ * @return true if a valid page/para is found
+ * @param block the block to scan
+ * @param page pointer to page value
+ * @param para pointer to para value
+ * @param backwards search backwards from the last block
+ */
+bool otp_find_unmarked_para(uint16_t block, uint8_t* page, uint8_t* para, bool backwards);
+
+/**
  * Debug function: check usage status of a block
  * @param the number of the block
  * @return the usage status of the block (0xff if unused)

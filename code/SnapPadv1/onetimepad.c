@@ -402,6 +402,40 @@ uint16_t otp_find_unmarked_block(bool backwards) {
 	return 0xffff;
 }
 
+static bool is_para_available(uint16_t block, uint8_t page, uint8_t para) {
+	uint32_t addr = nand_make_para_addr(block,page,para);
+	uint8_t last_byte;
+	nand_read_raw_page(addr+PARA_SIZE+PARA_SPARE_SIZE-1,&last_byte,1);
+	return last_byte = 0xff;
+}
+
+/**
+ * Find the first/last usable page/para in the given block
+ * @return true if a valid page/para is found
+ * @param block the block to scan
+ * @param page pointer to page value
+ * @param para pointer to para value
+ * @param backwards search backwards from the last block
+ */
+bool otp_find_unmarked_para(uint16_t block, uint8_t* page, uint8_t* para, bool backwards) {
+	uint8_t cpage, cpara;
+	for (cpage = 0; cpage < 64; cpage++) {
+		for (cpara = 0; cpara < 4; cpara++) {
+			if (backwards) {
+				*page = 63-cpage;
+				*para = 3-cpara;
+			} else {
+				*page = cpage;
+				*para = cpara;
+			}
+			if (is_para_available(block,*page,*para)) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 /**
  * Debug function: check usage status of a block
  * @param the number of the block
