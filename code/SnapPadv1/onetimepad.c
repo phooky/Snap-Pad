@@ -5,6 +5,7 @@
 #include "buffers.h"
 #include "hwrng.h"
 #include "uarts.h"
+#include "print.h"
 
 #define MAGIC_LEN 8
 const uint8_t MAGIC[MAGIC_LEN] = { 'S','N','A','P','-','P','A','D' };
@@ -182,8 +183,8 @@ OTPConfig otp_read_header() {
 }
 
 // debug proto
-void usb_debug(char*);
-void usb_debug_dec(unsigned int i);
+void print_usb_str(char*);
+void print_usb_dec(unsigned int i);
 
 /** Initialize the header block. If there's already one, erase block zero and recreate the
  * header block from scratch. Be careful! This method:
@@ -207,10 +208,10 @@ bool otp_initialize_header(bool is_A) {
 	} else {
 		bbcount = otp_scan_bad_blocks(bbl, BBL_MAX_ENTRIES);
 	}
-	usb_debug("got bbl\n");
+	print_usb_str("got bbl\n");
 	// Erase block 0
 	nand_block_erase(0);
-	usb_debug("erased block 0\n");
+	print_usb_str("erased block 0\n");
 	// Create and write header, version, bbl
 	nand_initialize_para_buffer();
 	header = (OTPHeader*)nand_para_buffer();
@@ -221,15 +222,15 @@ bool otp_initialize_header(bool is_A) {
 	header->minor_version = MINOR_VERSION;
 	header->block_count = 2048 - (1 + bbcount);
 	header->is_A = is_A?0xff:0x00;
-	usb_debug("prepared header\n");
+	print_usb_str("prepared header\n");
 	uint16_t* bbl_target = (uint16_t*)(nand_para_buffer() + BBL_START);
 	for (i = 0; i < bbcount; i++) {
 		*(bbl_target++) = bbl[i];
 	}
-	usb_debug("prepared bbl\n");
+	print_usb_str("prepared bbl\n");
 	// write header page
 	bool write_succ = nand_save_para(0,0,0);
-	usb_debug("wrote paragraph 0\n");
+	print_usb_str("wrote paragraph 0\n");
 	nand_wait_for_ready();
 
 	if (!write_succ) return false;
@@ -246,7 +247,7 @@ bool otp_initialize_header(bool is_A) {
 bool otp_randomize_boards() {
 	uint16_t block;
 	hwrng_bits_start(buffers_get_rng(),512);
-	usb_debug("BEGIN RND\n");
+	print_usb_str("BEGIN RND\n");
 	otp_set_flag(FLAG_DATA_STARTED);
 
 	for (block = 1; block < 2048; block++) {
@@ -293,7 +294,7 @@ bool otp_randomize_boards() {
 					if (rsp == UTOK_DATA_ACK) {
 						//usb_debug("OK RSP\n");
 					} else {
-						usb_debug("BAD RSP\n");
+						print_usb_str("BAD RSP\n");
 					}
 				}
 			}
@@ -323,13 +324,13 @@ bool otp_randomize_boards() {
 					needs_mark = true;
 				}
 			} else {
-				usb_debug("BAD CHKSM RSP\n");
+				print_usb_str("BAD CHKSM RSP\n");
 				needs_mark = true;
 			}
 			if (needs_mark) {
-				usb_debug("MISMATCH ON ");
-				usb_debug_dec(block);
-				usb_debug("\n\r");
+				print_usb_str("MISMATCH ON ");
+				print_usb_dec(block);
+				print_usb_str("\n\r");
 
 				uart_send_byte(UTOK_MARK_BLOCK);
 				uart_send_byte(block >> 8);
@@ -338,14 +339,14 @@ bool otp_randomize_boards() {
 				otp_mark_block(block,BU_BAD_BLOCK);
 
 				if (uart_consume() != UTOK_MARK_ACK) {
-					usb_debug("BAD MARK RSP\n");
+					print_usb_str("BAD MARK RSP\n");
 				}
 			}
 		}
 
-		usb_debug("BLOCK ");
-		usb_debug_dec(block);
-		usb_debug("\n");
+		print_usb_str("BLOCK ");
+		print_usb_dec(block);
+		print_usb_str("\n");
 	}
 	leds_set_mode(LM_DUAL_PROG_DONE);
 	otp_set_flag(FLAG_DATA_FINISHED);
@@ -448,18 +449,42 @@ uint8_t otp_get_block_status(uint16_t block) {
 	return entry;
 }
 
+static void otp_release_para(uint16_t block, uint8_t page, uint8_t para) {
+	uint8_t* buf;
+	uint16_t i;
+	// display header
+	print_usb_str("---BEGIN PARA ");
+	print_usb_dec(block); print_usb_str(",");
+	print_usb_dec(page); print_usb_str(",");
+	print_usb_dec(para); print_usb_str("---\n");
+	// read para
+	nand_load_para(block,page,para);
+	// zero para on nand
+	nand_zero_paragraph(block,page,para);
+	// emit para in base64
+	buf = nand_para_buffer();
+	print_usb_base64(buf,PARA_SIZE);
+	// null memory
+	for (i = 0; i < PARA_SIZE; i++) {
+		buf[i] = 0x00;
+	}
+	// display footer
+	print_usb_str("\n---END PARA---\n");
+}
+
 void otp_provision(uint8_t count,bool is_A) {
-	usb_debug("provisioning ");
-	usb_debug_dec(count);
-	usb_debug(is_A?"A\n":"B\n");
+	print_usb_str("provisioning ");
+	print_usb_dec(count);
+	print_usb_str(is_A?"A\n":"B\n");
 }
 
 void otp_retrieve(uint16_t block,uint8_t page,uint8_t para) {
-	usb_debug("retrieving ");
-	usb_debug_dec(block);
-	usb_debug(", ");
-	usb_debug_dec(page);
-	usb_debug(", ");
-	usb_debug_dec(para);
-	usb_debug("\n");
+	print_usb_str("retrieving ");
+	print_usb_dec(block);
+	print_usb_str(", ");
+	print_usb_dec(page);
+	print_usb_str(", ");
+	print_usb_dec(para);
+	print_usb_str("\n");
+	otp_release_para(block,page,para);
 }

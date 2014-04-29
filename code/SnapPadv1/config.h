@@ -27,10 +27,6 @@ typedef uint8_t ConnectionState;
  */
 extern ConnectionState connection_state;
 
-
-void usb_debug_dec(unsigned int i);
-void usb_debug(char* s);
-
 #define DEBUG
 
 #endif /* CONFIG_H_ */

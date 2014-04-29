@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include "buffers.h"
 #include "nand.h"
+#include "print.h"
 
 // Pins:
 // P4.4 UCA1RXD
@@ -280,17 +281,17 @@ bool uart_ping_button() {
 	while (!uart_has_data()) {}
 	uint8_t rsp = uart_consume();
 	if (rsp != UTOK_BUTTON_RSP) {
-		usb_debug("BAD PINGRSP ");
-		usb_debug_dec(rsp);
-		usb_debug("\n");
+		print_usb_str("BAD PINGRSP ");
+		print_usb_dec(rsp);
+		print_usb_str("\n");
 		return false;
 	} else {
 		while (!uart_has_data()) {}
 		rsp = uart_consume();
 		if (rsp != 0xff && rsp != 0x00) {
-			usb_debug("BAD PINGVAL ");
-			usb_debug_dec(rsp);
-			usb_debug("\n");
+			print_usb_str("BAD PINGVAL ");
+			print_usb_dec(rsp);
+			print_usb_str("\n");
 		}
 		return rsp == 0xff;
 	}

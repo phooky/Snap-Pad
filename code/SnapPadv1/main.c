@@ -54,6 +54,7 @@
 #include "leds.h"
 #include "uarts.h"
 #include "config.h"
+#include "print.h"
 #include "timer.h"
 #include "buffers.h"
 
@@ -256,30 +257,30 @@ void read_status() {
 
 void diagnostics() {
 	// Display connection state
-	if (cs == CS_TWINNED_MASTER) { usb_debug("CS_MASTER\n"); }
-	else if (cs == CS_TWINNED_SLAVE) { usb_debug("CS_SLAVE\n"); }
-	else if (cs == CS_SINGLE) { usb_debug("CS_SINGLE\n"); }
-	else { usb_debug("CS_?\n"); }
+	if (cs == CS_TWINNED_MASTER) { print_usb_str("CS_MASTER\n"); }
+	else if (cs == CS_TWINNED_SLAVE) { print_usb_str("CS_SLAVE\n"); }
+	else if (cs == CS_SINGLE) { print_usb_str("CS_SINGLE\n"); }
+	else { print_usb_str("CS_?\n"); }
 	// Check chip connection
 	if (!nand_check_ONFI()) {
-		usb_debug("ONFI FAIL\n");
+		print_usb_str("ONFI FAIL\n");
 		return;
 	}
 	// check otp
 	OTPConfig config = otp_read_header();
 	if (!config.has_header) {
-		usb_debug("NOHD\n");
+		print_usb_str("NOHD\n");
 	} else {
-		usb_debug("HD\n");
+		print_usb_str("HD\n");
 		if (config.randomization_started) {
-			usb_debug("Rstarted\n");
+			print_usb_str("Rstarted\n");
 		}
 		if (config.randomization_finished) {
-			usb_debug("Rfinished\n");
+			print_usb_str("Rfinished\n");
 		}
-		usb_debug("BCNT");
-		usb_debug_dec(config.block_count);
-		usb_debug("\n");
+		print_usb_str("BCNT");
+		print_usb_dec(config.block_count);
+		print_usb_str("\n");
 	}
 
 }
@@ -310,9 +311,9 @@ void scan_used() {
 	for (block = 1; block < 2048; block++) {
 		uint8_t r = otp_get_block_status(block);
 		if (r != BU_UNUSED_BLOCK) {
-			usb_debug("USED ");
-			usb_debug_dec(block);
-			usb_debug("\n");
+			print_usb_str("USED ");
+			print_usb_dec(block);
+			print_usb_str("\n");
 		}
 	}
 }
@@ -322,32 +323,6 @@ void read_rng() {
 	while (!hwrng_done());
 	volatile uint16_t* bits = hwrng_bits();
 	cdcSendDataWaitTilDone((BYTE*)bits, 16*4, CDC0_INTFNUM, 100);
-}
-
-void usb_debug_dec(unsigned int i) {
-	char buf[10];
-	unsigned int ip = i/10;
-	unsigned int digits = 1;
-	while (ip != 0) {
-		digits++; ip = ip/10;
-	}
-	int idx = digits;
-	buf[--idx] = '0'+(i%10);
-	i = i/10;
-	while(i != 0) {
-		buf[--idx] = '0'+(i%10);
-		i = i/10;
-	}
-	cdcSendDataWaitTilDone((BYTE*)buf, digits, CDC0_INTFNUM, 100);
-}
-
-void usb_debug(char* s) {
-	int len = 0;
-	while (s[len] != '\0') {
-		len++;
-		if (len == 64) break;
-	}
-	cdcSendDataWaitTilDone((BYTE*)s, len, CDC0_INTFNUM, 100);
 }
 
 uint16_t parseDec(uint8_t* buf, uint8_t* idx, uint8_t len) {
@@ -450,29 +425,29 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		uint8_t idx = 1;
 		uint16_t block = parseDec(cmdbuf,&idx,len);
 		struct checksum_ret sum;
-		usb_debug("Starting checksum\n");
+		print_usb_str("Starting checksum\n");
 		sum = nand_block_checksum(block);
 		if (sum.ok) {
-			usb_debug("Finished checksum ");
-			usb_debug_dec(sum.checksum);
-			usb_debug("\n");
+			print_usb_str("Finished checksum ");
+			print_usb_dec(sum.checksum);
+			print_usb_str("\n");
 		} else {
-			usb_debug("Bad checksum/read\n");
+			print_usb_str("Bad checksum/read\n");
 		}
 	} else if (cmdbuf[0] == 'M') {
 		// mark block
 		uint8_t idx = 1;
 		uint16_t block = parseDec(cmdbuf,&idx,len);
 		otp_mark_block(block,BU_USED_BLOCK);
-		usb_debug("Marked block ");
-		usb_debug_dec(block);
-		usb_debug("\n");
+		print_usb_str("Marked block ");
+		print_usb_dec(block);
+		print_usb_str("\n");
 	} else if (cmdbuf[0] == 'F') {
 		// find next available block
 		uint16_t block = otp_find_unmarked_block(false);
-		usb_debug("Next unused block ");
-		usb_debug_dec(block);
-		usb_debug("\n");
+		print_usb_str("Next unused block ");
+		print_usb_dec(block);
+		print_usb_str("\n");
 	} else if (cmdbuf[0] == 'r') {
 		// Read paragraph. Parameters are a comma separated list of decimal values: block, page, paragraph.
 		uint16_t block = 0; uint8_t page = 0; uint8_t para = 0;
@@ -484,10 +459,10 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			if (nand_load_para(block,page,para)) {
 				cdcSendDataWaitTilDone((BYTE*)buffers_get_nand(),512,CDC0_INTFNUM,100);
 			} else {
-				usb_debug("READ ERROR");
+				print_usb_str("READ ERROR");
 			}
 		} else {
-			usb_debug("PARSE ERROR");
+			print_usb_str("PARSE ERROR");
 		}
 	} else if (cmdbuf[0] == 'E') {
 		// Erase block. Parameter is a decimal block number.
