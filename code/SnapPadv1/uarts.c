@@ -118,8 +118,9 @@ ConnectionState uart_state = CS_INDETERMINATE;
  * must be run again.
  * If after a timeout passes no token has been received, the device assumes that the pad has
  * been snapped and is disconnected from its twin.
+ * @param usb_present gives the usb-connected side precedence if force_master is not set.
  */
-ConnectionState uart_play_round(bool force_master) {
+ConnectionState uart_play_round(bool force_master, bool usb_present) {
 	timer_reset();
 	uint16_t ms = 0;
 	while (timer_msec() < 1) {} // let uarts settle
@@ -127,7 +128,11 @@ ConnectionState uart_play_round(bool force_master) {
 		hwrng_start();
 		timer_reset(); while (timer_msec() < 2) {} // wait 2 ms
 		while (!hwrng_done()) {} // wait for random data to become available
-		ms = 2+(hwrng_bits()[0] & 0x3f); // additional delay of 2-66 ms
+		if (!usb_present) {
+			ms = 3+(hwrng_bits()[0] & 0x3f); // additional delay of 3-67 ms
+		} else {
+			ms = 0; // skip additional delay on usb-connected end
+		}
 	}
 	timer_reset();
 	while (timer_msec() < ms) {
@@ -171,11 +176,12 @@ void uart_factory_reset_confirm() {
  * to become master by skipping the inital delay. This is useful in certain conditions, like starting a "factory
  * reset".
  * @param force_master true if this twin should cheat to become the master
+ * @param usb_present true if usb is present (favor usb side)
  * @return the connection state
  */
-ConnectionState uart_determine_state(bool force_master) {
+ConnectionState uart_determine_state(bool force_master, bool usb_present) {
 	while (1) {
-		ConnectionState cs = uart_play_round(force_master);
+		ConnectionState cs = uart_play_round(force_master,usb_present);
 		if (cs != CS_TWINNED_COLLISION) {
 			return uart_state = cs;
 		}

@@ -79,9 +79,10 @@ bool uart_ping_button();
  * to become master by skipping the inital delay. This is useful in certain conditions, like starting a "factory
  * reset".
  * @param force_master true if this twin should cheat to become the master
+ * @param usb_present true if usb is present (favor usb side)
  * @return the connection state
  */
-ConnectionState uart_determine_state(bool force_master);
+ConnectionState uart_determine_state(bool force_master, bool usb_present);
 
 /** Process commands sent over the uart */
 void uart_process();

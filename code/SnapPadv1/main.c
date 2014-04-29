@@ -114,7 +114,7 @@ void main (void)
     	}
     }
 
-    cs = uart_determine_state(usb_attached || button_pressed_on_startup);
+    cs = uart_determine_state(usb_attached, button_pressed_on_startup);
 
 	config = otp_read_header();
 

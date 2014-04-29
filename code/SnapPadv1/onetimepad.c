@@ -244,7 +244,6 @@ bool otp_initialize_header(bool is_A) {
  * Run complete randomization process. Can take up to four hours to complete.
  */
 bool otp_randomize_boards() {
-	/** TODO: sends. */
 	uint16_t block;
 	hwrng_bits_start(buffers_get_rng(),512);
 	usb_debug("BEGIN RND\n");
