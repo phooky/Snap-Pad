@@ -380,10 +380,6 @@ bool parseBPP(uint8_t* buf, uint8_t* idx, uint8_t len, uint16_t* block, uint8_t*
  *                           maximum count is 4. will wait for user button press before continuing.
  *
  * Additional debug build commands:
- * Tr                       - time random number generation (prints "start", generates four blocks of
- *                            numbers, prints "stop")
- * Tw                       - time nand write (prints "start", writes four blocks of
- *                            numbers, prints "stop")
  * C                        - print the bad block list
  * U                        - print the used block list
  * cblock                   - print the checksum of the indicated block
@@ -445,33 +441,6 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
 #ifdef DEBUG
-	} else if (cmdbuf[0] == 'T')  {
-		if (cmdbuf[1] == 'r') {
-			// time random number production
-			uint16_t paras = 4 * 64 * 4;
-			usb_debug("start\n");
-			while (paras-- > 0) {
-				hwrng_bits_start(nand_para_buffer(), 512);
-				while(!hwrng_bits_done()) ;
-			}
-			usb_debug("stop\n");
-		} else if (cmdbuf[1] == 'w') {
-			// time write operations
-			uint8_t blocks;
-			usb_debug("start\n");
-			for (blocks = 0; blocks < 4; blocks++) {
-				nand_block_erase(blocks);
-				uint8_t page;
-				for (page = 0; page < 64; page++) {
-					uint8_t para;
-					for (para = 0; para < 4; para++) {
-						nand_save_para(blocks, page, para);
-						nand_wait_for_ready();
-					}
-				}
-			}
-			usb_debug("stop\n");
-		}
 	} else if (cmdbuf[0] == 'C') {
 		scan_bb();
 	} else if (cmdbuf[0] == 'U') {
