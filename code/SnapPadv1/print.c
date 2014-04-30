@@ -46,7 +46,7 @@ void print_usb_base64(uint8_t* buf, uint16_t sz) {
 	uint8_t line = 0;
 	uint8_t i;
 	while (sz > 0) {
-		uint8_t l = (i>3)?3:i;
+		uint8_t l = (sz>3)?3:sz;
 		for (i = 0; i < 3; i++) {
 			if (sz > 0) {
 				in[i] = *(buf++);
