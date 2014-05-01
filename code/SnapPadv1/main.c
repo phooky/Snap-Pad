@@ -444,7 +444,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		print_usb_str("\n");
 	} else if (cmdbuf[0] == 'F') {
 		// find next available block
-		uint16_t block = otp_find_unmarked_block(false);
+		uint16_t block = otp_find_unmarked_block(!config.is_A);
 		print_usb_str("Next unused block ");
 		print_usb_dec(block);
 		print_usb_str("\n");

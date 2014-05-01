@@ -407,7 +407,7 @@ static bool is_para_available(uint16_t block, uint8_t page, uint8_t para) {
 	uint32_t addr = nand_make_para_addr(block,page,para);
 	uint8_t last_byte;
 	nand_read_raw_page(addr+PARA_SIZE+PARA_SPARE_SIZE-1,&last_byte,1);
-	return last_byte = 0xff;
+	return last_byte == 0xff;
 }
 
 /**
@@ -452,6 +452,7 @@ uint8_t otp_get_block_status(uint16_t block) {
 static void otp_release_para(uint16_t block, uint8_t page, uint8_t para) {
 	uint8_t* buf;
 	uint16_t i;
+	// TODO: check for previously released paragraph
 	// display header
 	print_usb_str("---BEGIN PARA ");
 	print_usb_dec(block); print_usb_str(",");
@@ -472,19 +473,31 @@ static void otp_release_para(uint16_t block, uint8_t page, uint8_t para) {
 	print_usb_str("\n---END PARA---\n");
 }
 
+bool otp_provision_one(bool is_A) {
+	uint8_t page;
+	uint8_t para;
+	uint16_t block = otp_find_unmarked_block(!is_A);
+	if (!otp_find_unmarked_para(block,&page,&para,!is_A)) {
+		otp_mark_block(block,BU_USED_BLOCK);
+		block = otp_find_unmarked_block(!is_A);
+		if (!otp_find_unmarked_para(block,&page,&para,!is_A)) {
+			// TODO: report error, second empty block, probably exhausted!
+			return false;
+		}
+	}
+	otp_release_para(block,page,para);
+	return true;
+}
+
 void otp_provision(uint8_t count,bool is_A) {
-	print_usb_str("provisioning ");
-	print_usb_dec(count);
-	print_usb_str(is_A?"A\n":"B\n");
+	while (count > 0) {
+		count--;
+		if (!otp_provision_one(is_A)) {
+			break;
+		}
+	}
 }
 
 void otp_retrieve(uint16_t block,uint8_t page,uint8_t para) {
-	print_usb_str("retrieving ");
-	print_usb_dec(block);
-	print_usb_str(", ");
-	print_usb_dec(page);
-	print_usb_str(", ");
-	print_usb_dec(para);
-	print_usb_str("\n");
 	otp_release_para(block,page,para);
 }
