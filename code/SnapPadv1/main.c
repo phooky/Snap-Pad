@@ -257,33 +257,38 @@ void read_status() {
 
 void diagnostics() {
 	// Display connection state
-	if (cs == CS_TWINNED_MASTER) { print_usb_str("CS_MASTER\n"); }
-	else if (cs == CS_TWINNED_SLAVE) { print_usb_str("CS_SLAVE\n"); }
-	else if (cs == CS_SINGLE) { print_usb_str("CS_SINGLE\n"); }
+	print_usb_str("---BEGIN DIAGNOSTICS---\n");
+	if (cs == CS_TWINNED_MASTER) { print_usb_str("Twinned master\n"); }
+	else if (cs == CS_TWINNED_SLAVE) { print_usb_str("Twinned slave\n"); }
+	else if (cs == CS_SINGLE) { print_usb_str("Single board\n"); }
 	else { print_usb_str("CS_?\n"); }
 	// Check chip connection
 	if (!nand_check_ONFI()) {
-		print_usb_str("ONFI FAIL\n");
+		print_usb_str("ERROR: ONFI failure\n");
 		return;
 	}
 	// check otp
 	OTPConfig config = otp_read_header();
 	if (!config.has_header) {
-		print_usb_str("NOHD\n");
+		print_usb_str("ERROR: No header\n");
 	} else {
 		print_usb_str("HD\n");
-		if (config.randomization_started) {
-			print_usb_str("Rstarted\n");
-		}
 		if (config.randomization_finished) {
-			print_usb_str("Rfinished\n");
+			print_usb_str("Randomized\n");
+		} else {
+			if (config.randomization_started) {
+				print_usb_str("ERROR: Randomization incomplete\n");
+			} else {
+				print_usb_str("Not randomized");
+			}
 		}
-		print_usb_str("BCNT");
+		print_usb_str("Block count ");
 		print_usb_dec(config.block_count);
 		print_usb_str("\n");
 	}
-
+	print_usb_str("---END DIAGNOSTICS---\n");
 }
+
 void scan_bb() {
 	uint16_t bbl[10];
 	otp_scan_bad_blocks(bbl, 10);
