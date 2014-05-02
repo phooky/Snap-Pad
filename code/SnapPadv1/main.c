@@ -383,7 +383,9 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			return;
 		}
 		if (confirm_count(count)) {
+			leds_set_mode(LM_ACKNOWLEDGED);
 			otp_provision(count,config.is_A);
+			leds_set_mode(LM_READY);
 		}
 	} else if (cmdbuf[0] == 'R') {
 		// retrieve 'count' blocks starting at 'block','page','para'
@@ -414,9 +416,11 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			if (cmdbuf[idx++] != ',') break;
 		}
 		if (confirm_count(count)) {
+			leds_set_mode(LM_ACKNOWLEDGED);
 			for (i = 0; i < count; i++) {
 				otp_retrieve(bpp[i].block,bpp[i].page,bpp[i].para);
 			}
+			leds_set_mode(LM_READY);
 		}
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
