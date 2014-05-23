@@ -514,8 +514,6 @@ bool process_usb() {
 			}
 			cmdidx = cb;
 			break;
-		} else {
-			c++;
 		}
 	}
 	if (cmdidx == CMDBUFSZ) { cmdidx--; }
