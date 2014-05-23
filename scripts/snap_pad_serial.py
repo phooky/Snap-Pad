@@ -4,6 +4,7 @@ import serial
 import serial.tools.list_ports
 import logging
 import re
+from base64 import b64encode,b64decode
 
 vendor_id=0x2047
 product_id=0x03ee
@@ -30,7 +31,15 @@ end_re = re.compile("^---END PARA---$")
 
 def find_snap_pads():
     return [SnapPad(x['port'],x['iSerial']) for x in serial.tools.list_ports.list_ports_by_vid_pid(vendor_id,product_id)]
-        
+
+class Paragraph:
+    def __init__(self,block,page,para):
+        self.block = block
+        self.page = page
+        self.para = para
+        self.used = False
+        self.bits = ''
+
 class SnapPad:
     def __init__(self,port,sn):
         self.p = serial.Serial(port)
@@ -62,6 +71,31 @@ class SnapPad:
         "Return true if the snap-pad is disconnected from its twin"
         return self.diagnostics['Mode'] == 'Single board'
 
+    def read_para(self):
+        preamble = self.p.readline()
+        prematch = preamble_re.match(preamble)
+        assert prematch
+        para_type = prematch.group(1)
+        assert para_type == 'USED' or para_type == 'BEGIN'
+        block = int(prematch.group(2))
+        assert block > 0 and block < 2048
+        page = int(prematch.group(3))
+        assert page >= 0 and page < 64
+        para = int(prematch.group(4))
+        assert para >= 0 and para < 4
+        p = Paragraph(block,page,para)
+        if para_type == 'USED':
+            p.used = True
+        elif para_type == 'BEGIN':
+            data = ''
+            while True:
+                l=self.p.readline()
+                if end_re.match(l):
+                    break
+                data = data + l.strip()
+            p.bits = b64decode(data)
+        return p
+        
     def retrieve_paragraphs(self,paragraphs):
         "Retrieve and zero a specified set of paragraphs"
         assert len(paragraphs) > 0 and len(paragraphs) <= 4
@@ -77,23 +111,8 @@ class SnapPad:
         # Paragraphs begin with "---BEGIN PARA B,P,P---" and end with "---END PARA---"
         # If the block is already consumed, it emits "---USED PARA B,P,P---" instead of
         # either message
-        for _ in range(len(specifiers)):
-            preamble = self.p.readline()
-            prematch = preamble_re.match(preamble)
-            assert prematch
-            para_type = prematch.group(1)
-            if para_type == 'USED':
-                print "PARAGRAPH USED"
-            elif para_type == 'BEGIN':
-                print "PARAGRAPH RETRIEVED"
-                while True:
-                    l=self.p.readline()
-                    if end_re.match(l):
-                        break
-                    print l
-            else:
-                logging.error("Bad preamble '{0}'".format(preamble))
-            
+        paras = [self.read_para() for _ in range(len(specifiers))]
+        return paras
         
 if __name__ == '__main__':
     # enumerate pads
@@ -112,7 +131,7 @@ if __name__ == '__main__':
         if not pad.is_single():
             logging.warning("This pad is not snapped!")
         if args.retrieve > 0:
-            pad.retrieve_paragraphs([tuple(map(int,r.split(","))) for r in args.retrieve])
+            paras = pad.retrieve_paragraphs([tuple(map(int,r.split(","))) for r in args.retrieve])
             
         
             
