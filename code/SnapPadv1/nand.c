@@ -339,6 +339,24 @@ bool nand_zero_paragraph(uint16_t block, uint8_t page, uint8_t paragraph) {
 }
 
 /**
+ * Check if a 512B paragraph has been used.
+ * @param block the block number (>1024 indicates plane 1)
+ * @param page the page number
+ * @param paragraph the paragraph within the page to zero (0-3).
+ * @return true if the paragraph has been used, false otherwise.
+ */
+bool nand_used_paragraph(uint16_t block, uint8_t page, uint8_t paragraph) {
+	uint32_t address = nand_make_para_addr(block,page,paragraph);
+	uint8_t buf;
+	address += PARA_SIZE + PARA_SPARE_SIZE - 1;
+	nand_send_command(0x00);
+	nand_send_address(address);
+	nand_send_command(0x30);
+	nand_wait_for_ready();
+	nand_recv_data(&buf,1);
+	return buf == 0;
+}
+/**
  * Zero an entire page and its spare area.
  * @param adddress the address of the page start
  * @return true if the zero was successful

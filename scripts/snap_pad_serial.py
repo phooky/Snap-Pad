@@ -37,8 +37,9 @@ class SnapPad:
     def read_diagnostics(self):
         "Explicitly read diagnostics from pad"
         self.p.flushInput()
-        self.p.write("D\n\r")
+        self.p.write("D\n")
         line = self.p.readline().strip()
+        print line
         assert line == '---BEGIN DIAGNOSTICS---'
         d = {}
         while True:
@@ -47,14 +48,38 @@ class SnapPad:
                 break;
             [k,v] = line.split(":",1)
             d[k] = v
-        if d.has_key("Debug"):
-            logging.warning("Debugging build; pad {0} is not secure".format(self.sn))
+        self.insecure = d.has_key("Debug")
+        if self.insecure:
+            logging.warning("Debugging build; pad {0} is not secure!!!".format(self.sn))
         return d
 
     def is_single(self):
         "Return true if the snap-pad is disconnected from its twin"
         return self.diagnostics['Mode'] == 'Single board'
 
+    def retrieve_paragraphs(self,paragraphs):
+        "Retrieve and zero a specified set of paragraphs"
+        assert len(paragraphs) > 0 and len(paragraphs) <= 4
+        for (block,page,para) in paragraphs:
+            assert block > 0 and block < 2048
+            assert page >= 0 and page < 64
+            assert para >= 0 and para < 4
+        specifiers = ["{0},{1},{2}".format(bl,pg,pr) for (bl,pg,pr) in paragraphs]
+        command = "R"+",".join(specifiers)+"\n"
+        self.p.flushInput()
+        self.p.write(command)
+        self.p.timeout=4
+        # Paragraphs begin with "---BEGIN PARA B,P,P---" and end with "---END PARA---"
+        # If the block is already consumed, it emits "---USED PARA B,P,P---" instead of
+        # either message
+        while True:
+            r=self.p.read(256)
+            if r:
+                sys.stdout.write(r)
+            else:
+                break
+            
+        
 if __name__ == '__main__':
     # enumerate pads
     import argparse
@@ -62,13 +87,17 @@ if __name__ == '__main__':
     parser.add_argument("-v", "--verbosity", action="count",
                         default=0,
                         help="increase output verbosity")
+    parser.add_argument("-r", "--retrieve", action="append",
+                        help="retrieve a 'block,page,para' triplet")
     args = parser.parse_args()
     logging.getLogger().setLevel(logging.INFO - 10*args.verbosity)
     pads = find_snap_pads()
     for pad in pads:
         d = pad.diagnostics
-        print pad.is_single()
-
+        if not pad.is_single():
+            logging.warning("This pad is not snapped!")
+        if args.retrieve > 0:
+            pad.retrieve_paragraphs([tuple(map(int,r.split(","))) for r in args.retrieve])
             
         
             

@@ -452,12 +452,18 @@ uint8_t otp_get_block_status(uint16_t block) {
 static void otp_release_para(uint16_t block, uint8_t page, uint8_t para) {
 	uint8_t* buf;
 	uint16_t i;
-	// TODO: check for previously released paragraph
+	// check for previously released paragraph
+	bool used = nand_used_paragraph(block,page,para);
 	// display header
-	print_usb_str("---BEGIN PARA ");
+	if (used) {
+		print_usb_str("---USED PARA ");
+	} else {
+		print_usb_str("---BEGIN PARA ");
+	}
 	print_usb_dec(block); print_usb_str(",");
 	print_usb_dec(page); print_usb_str(",");
 	print_usb_dec(para); print_usb_str("---\n");
+	if (used) { return; }
 	// read para
 	nand_load_para(block,page,para);
 	// zero para on nand

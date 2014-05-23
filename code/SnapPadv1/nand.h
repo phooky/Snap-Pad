@@ -146,6 +146,15 @@ uint8_t* nand_para_buffer();
 bool nand_zero_paragraph(uint16_t block, uint8_t page, uint8_t paragraph);
 
 /**
+ * Check if a 512B paragraph has been used.
+ * @param block the block number (>1024 indicates plane 1)
+ * @param page the page number
+ * @param paragraph the paragraph within the page to zero (0-3).
+ * @return true if the paragraph has been used, false otherwise.
+ */
+bool nand_used_paragraph(uint16_t block, uint8_t page, uint8_t paragraph);
+
+/**
  * Zero an entire page and its spare area.
  * @param adddress the address of the page start
  * @return true if the zero was successful
