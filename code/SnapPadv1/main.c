@@ -258,10 +258,13 @@ void read_status() {
 void diagnostics() {
 	// Display connection state
 	print_usb_str("---BEGIN DIAGNOSTICS---\n");
-	if (cs == CS_TWINNED_MASTER) { print_usb_str("Twinned master\n"); }
-	else if (cs == CS_TWINNED_SLAVE) { print_usb_str("Twinned slave\n"); }
-	else if (cs == CS_SINGLE) { print_usb_str("Single board\n"); }
-	else { print_usb_str("CS_?\n"); }
+	{
+		print_usb_str("Mode: ");
+		if (cs == CS_TWINNED_MASTER) { print_usb_str("Twinned master\n"); }
+		else if (cs == CS_TWINNED_SLAVE) { print_usb_str("Twinned slave\n"); }
+		else if (cs == CS_SINGLE) { print_usb_str("Single board\n"); }
+		else { print_usb_str("CS_?\n"); }
+	}
 	// Check chip connection
 	if (!nand_check_ONFI()) {
 		print_usb_str("ERROR: ONFI failure\n");
@@ -272,17 +275,17 @@ void diagnostics() {
 	if (!config.has_header) {
 		print_usb_str("ERROR: No header\n");
 	} else {
-		print_usb_str("HD\n");
+		print_usb_str("Random:");
 		if (config.randomization_finished) {
-			print_usb_str("Randomized\n");
+			print_usb_str("Done\n");
 		} else {
 			if (config.randomization_started) {
-				print_usb_str("ERROR: Randomization incomplete\n");
+				print_usb_str("Incomplete\n");
 			} else {
-				print_usb_str("Not randomized");
+				print_usb_str("Not randomized\n");
 			}
 		}
-		print_usb_str("Block count ");
+		print_usb_str("Blocks:");
 		print_usb_dec(config.block_count);
 		print_usb_str("\n");
 	}

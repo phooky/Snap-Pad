@@ -27,7 +27,7 @@ GCC usage:
 
 
 Burn:
-    sudo msp430-tool bsl5.hid -S --password=password.txt -i elf -v -P ~/Repos/Snap-Pad/code/SnapPadv0/Debug/SnapPadv0.out
+    sudo msp430-tool bsl5.hid -S --password=password.txt -i elf -v -P ~/Repos/Snap-Pad/code/SnapPadv1/Debug/SnapPadv1.out
 
 Test RNG:
 rngtest <noise2.dump
