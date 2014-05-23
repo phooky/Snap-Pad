@@ -53,7 +53,6 @@ class SnapPad:
         self.p.flushInput()
         self.p.write("D\n")
         line = self.p.readline().strip()
-        print line
         assert line == '---BEGIN DIAGNOSTICS---'
         d = {}
         while True:
@@ -121,6 +120,29 @@ class SnapPad:
         self.p.write(command)
         paras = [self.read_para() for _ in range(count)]
         return paras        
+
+def add_pad_arguments(parser):
+    "Add parser arguments for finding a snap-pad"
+    parser.add_argument("-s", "--serial", type=str,
+                        help="indicate serial number of snap-pad")
+
+def find_our_pad(args):
+    "Find the snap-pad specified by the user on the command line"
+    pads = find_snap_pads()
+    if args.serial:
+        for pad in pads:
+            if pad.sn == args.serial:
+                return pad
+        logging.error("No Snap-Pad matching serial number {0} found!!!",args.serial)
+        return None
+    else:
+        if len(pads) == 0:
+            logging.error("No Snap-Pads detected")
+        elif len(pads) > 1:
+            logging.error("Multiple Snap-Pads detected; use the --serial option to choose one")
+        else:
+            return pads[0]
+        return None
 
         
 if __name__ == '__main__':
