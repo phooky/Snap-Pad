@@ -453,7 +453,7 @@ static void otp_release_para(uint16_t block, uint8_t page, uint8_t para) {
 	uint8_t* buf;
 	uint16_t i;
 	// check for previously released paragraph
-	bool used = nand_used_paragraph(block,page,para);
+	bool used = !is_para_available(block,page,para);
 	// display header
 	if (used) {
 		print_usb_str("---USED PARA ");

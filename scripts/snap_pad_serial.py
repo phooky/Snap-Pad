@@ -1,8 +1,9 @@
 #!/usr/bin/python
+
 import serial
 import serial.tools.list_ports
-
 import logging
+import re
 
 vendor_id=0x2047
 product_id=0x03ee
@@ -22,6 +23,10 @@ product_id=0x03ee
 #                           chooses next available paras. maximum count is 4.
 #                           will wait for user button press before continuing.
 #
+
+# regexps for parsing preambles
+preamble_re = re.compile("^---(BEGIN|USED) PARA ([0-9]+),([0-9]+),([0-9]+)---$")
+end_re = re.compile("^---END PARA---$")
 
 def find_snap_pads():
     return [SnapPad(x['port'],x['iSerial']) for x in serial.tools.list_ports.list_ports_by_vid_pid(vendor_id,product_id)]
@@ -72,12 +77,22 @@ class SnapPad:
         # Paragraphs begin with "---BEGIN PARA B,P,P---" and end with "---END PARA---"
         # If the block is already consumed, it emits "---USED PARA B,P,P---" instead of
         # either message
-        while True:
-            r=self.p.read(256)
-            if r:
-                sys.stdout.write(r)
+        for _ in range(len(specifiers)):
+            preamble = self.p.readline()
+            prematch = preamble_re.match(preamble)
+            assert prematch
+            para_type = prematch.group(1)
+            if para_type == 'USED':
+                print "PARAGRAPH USED"
+            elif para_type == 'BEGIN':
+                print "PARAGRAPH RETRIEVED"
+                while True:
+                    l=self.p.readline()
+                    if end_re.match(l):
+                        break
+                    print l
             else:
-                break
+                logging.error("Bad preamble '{0}'".format(preamble))
             
         
 if __name__ == '__main__':
