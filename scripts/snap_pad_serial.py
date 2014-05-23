@@ -107,12 +107,21 @@ class SnapPad:
         command = "R"+",".join(specifiers)+"\n"
         self.p.flushInput()
         self.p.write(command)
-        self.p.timeout=4
         # Paragraphs begin with "---BEGIN PARA B,P,P---" and end with "---END PARA---"
         # If the block is already consumed, it emits "---USED PARA B,P,P---" instead of
         # either message
         paras = [self.read_para() for _ in range(len(specifiers))]
         return paras
+
+    def provision_paragraphs(self,count):
+        "Provision the given count of paragraphs"
+        assert count > 0 and count <= 4
+        command = "P{0}\n".format(count)
+        self.p.flushInput()
+        self.p.write(command)
+        paras = [self.read_para() for _ in range(count)]
+        return paras        
+
         
 if __name__ == '__main__':
     # enumerate pads
@@ -123,6 +132,8 @@ if __name__ == '__main__':
                         help="increase output verbosity")
     parser.add_argument("-r", "--retrieve", action="append",
                         help="retrieve a 'block,page,para' triplet")
+    parser.add_argument("-p", "--provision", type=int,
+                        help="retrieve a 'block,page,para' triplet")
     args = parser.parse_args()
     logging.getLogger().setLevel(logging.INFO - 10*args.verbosity)
     pads = find_snap_pads()
@@ -132,6 +143,12 @@ if __name__ == '__main__':
             logging.warning("This pad is not snapped!")
         if args.retrieve > 0:
             paras = pad.retrieve_paragraphs([tuple(map(int,r.split(","))) for r in args.retrieve])
+        if args.provision:
+            paras = pad.provision_paragraphs(args.provision)
+            for p in paras:
+                print p.block,p.page,p.para,"used",p.used,"data size",len(p.bits)
+                        
+
             
         
             
