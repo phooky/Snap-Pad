@@ -258,6 +258,9 @@ void read_status() {
 void diagnostics() {
 	// Display connection state
 	print_usb_str("---BEGIN DIAGNOSTICS---\n");
+#ifdef DEBUG
+	print_usb_str("Debug: true\n");
+#endif
 	{
 		print_usb_str("Mode: ");
 		if (cs == CS_TWINNED_MASTER) { print_usb_str("Twinned master\n"); }

@@ -31,7 +31,11 @@ class SnapPad:
         self.p = serial.Serial(port)
         self.sn = sn
         logging.debug("Found snap-pad with SN {0}".format(self.sn))
-    def diagnostics(self):
+        # Read diagnostics
+        self.diagnostics = self.read_diagnostics()
+
+    def read_diagnostics(self):
+        "Explicitly read diagnostics from pad"
         self.p.flushInput()
         self.p.write("D\n\r")
         line = self.p.readline().strip()
@@ -43,7 +47,13 @@ class SnapPad:
                 break;
             [k,v] = line.split(":",1)
             d[k] = v
+        if d.has_key("Debug"):
+            logging.warning("Debugging build; pad {0} is not secure".format(self.sn))
         return d
+
+    def is_single(self):
+        "Return true if the snap-pad is disconnected from its twin"
+        return self.diagnostics['Mode'] == 'Single board'
 
 if __name__ == '__main__':
     # enumerate pads
@@ -56,7 +66,9 @@ if __name__ == '__main__':
     logging.getLogger().setLevel(logging.INFO - 10*args.verbosity)
     pads = find_snap_pads()
     for pad in pads:
-        print pad.diagnostics(),
+        d = pad.diagnostics
+        print pad.is_single()
+
             
         
             
