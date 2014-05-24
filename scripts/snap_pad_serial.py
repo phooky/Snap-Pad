@@ -63,7 +63,7 @@ class SnapPad:
             d[k] = v
         self.insecure = d.has_key("Debug")
         if self.insecure:
-            logging.warning("Debugging build; pad {0} is not secure!!!".format(self.sn))
+            logging.warning("Debug build; pad {0} is not secure!!!".format(self.sn))
         return d
 
     def is_single(self):
@@ -133,13 +133,13 @@ def find_our_pad(args):
         for pad in pads:
             if pad.sn == args.serial:
                 return pad
-        logging.error("No Snap-Pad matching serial number {0} found!!!",args.serial)
+        logging.error("No Snap-Pad matching serial number {0} found.".format(args.serial))
         return None
     else:
         if len(pads) == 0:
-            logging.error("No Snap-Pads detected")
+            logging.error("No Snap-Pads detected; check that your Snap-Pad is plugged in.")
         elif len(pads) > 1:
-            logging.error("Multiple Snap-Pads detected; use the --serial option to choose one")
+            logging.error("Multiple Snap-Pads detected; use the --serial option to choose one.")
         else:
             return pads[0]
         return None
