@@ -34,14 +34,12 @@
  */
 #include <string.h>
 
-#include "driverlib.h"
-
-#include "USB_config/descriptors.h"
-#include "USB_API/USB_Common/device.h"
-#include "USB_API/USB_Common/types.h"
-#include "USB_API/USB_Common/usb.h"
-#include "USB_API/USB_CDC_API/UsbCdc.h"
-#include "USB_app/usbConstructs.h"
+#include "USB/USB_config/descriptors.h"
+#include "USB/USB_API/USB_Common/device.h"
+#include "USB/USB_API/USB_Common/types.h"
+#include "USB/USB_API/USB_Common/usb.h"
+#include "USB/USB_API/USB_CDC_API/UsbCdc.h"
+#include "USB/usbConstructs.h"
 
 /*
  * NOTE: Modify hal.h to select a specific evaluation board and customize for
@@ -57,6 +55,7 @@
 #include "print.h"
 #include "timer.h"
 #include "buffers.h"
+#include <HAL_PMM.h>
 
 // instantiate connection_state
 uint8_t connection_state;
@@ -78,10 +77,11 @@ void main (void)
     // DCO/FLL for MCLK is recommended, instead of the crystal.  For examples 
     // of these functions, see the complete USB code examples.  Also see the 
     // Programmer's Guide for discussion on clocks/power.
-    WDT_A_hold(WDT_A_BASE); // Stop watchdog timer
-    
+    WDTCTL = WDTPW | WDTHOLD; // Stop watchdog timer
+    SFRIE1 &= ~WDTIE;
+
     // Minimum Vcore setting required for the USB API is PMM_CORE_LEVEL_2 .
-    PMM_setVCore(PMM_BASE, PMM_CORE_LEVEL_2);
+    SetVCore(PMMCOREV_2);
     
     initPorts();             // Configure all GPIOs
     nand_init();             // Set up NAND pins
@@ -89,7 +89,9 @@ void main (void)
     timer_init();			 // Set up msec timer
     hwrng_init();            // Initialize HW RNG
     initClocks(20000000);     // Configure clocks
-    USB_setup(TRUE,TRUE);    // Init USB & events; if a host is present, connect
+    //Init USB
+    USB_init();                 
+
     uart_init();			 // Initialize uarts between hosts
 
     __enable_interrupt();    // Enable interrupts globally
@@ -519,37 +521,3 @@ bool process_usb() {
 	if (cmdidx == CMDBUFSZ) { cmdidx--; }
 	return processed;
 }
-
-/*  
- * ======== UNMI_ISR ========
- */
-#pragma vector = UNMI_VECTOR
-__interrupt VOID UNMI_ISR (VOID)
-{
-    switch (__even_in_range(SYSUNIV, SYSUNIV_BUSIFG))
-    {
-        case SYSUNIV_NONE:
-            __no_operation();
-            break;
-        case SYSUNIV_NMIIFG:
-            __no_operation();
-            break;
-        case SYSUNIV_OFIFG:
-            UCS_clearAllOscFlagsWithTimeout(UCS_BASE, 0);
-            SFR_clearInterrupt(SFR_BASE, SFR_OSCILLATOR_FAULT_INTERRUPT);
-            break;
-        case SYSUNIV_ACCVIFG:
-            __no_operation();
-            break;
-        case SYSUNIV_BUSIFG:
-            // If the CPU accesses USB memory while the USB module is 
-            // suspended, a "bus error" can occur.  This generates an NMI, and
-            // execution enters this case.  This should never occur.  If USB is
-            // automatically disconnecting in your software, set a breakpoint
-            // here and see if execution hits it.  See the Programmer's
-            // Guide for more information. 
-            SYSBERRIV = 0; // Clear bus error flag
-            USB_disable(); // Disable USB -- USB must be reset after a bus error
-    }
-}
-//Released_Version_4_00_02

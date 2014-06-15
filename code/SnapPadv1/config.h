@@ -27,6 +27,6 @@ typedef uint8_t ConnectionState;
  */
 extern ConnectionState connection_state;
 
-#define DEBUG
+//#define DEBUG
 
 #endif /* CONFIG_H_ */

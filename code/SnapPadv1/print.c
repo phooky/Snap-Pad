@@ -6,12 +6,12 @@
  */
 
 #include "print.h"
-#include "USB_API/USB_Common/device.h"
-#include "USB_API/USB_Common/types.h"
-#include "USB_API/USB_Common/usb.h"
-#include "USB_API/USB_CDC_API/UsbCdc.h"
-#include "USB_app/usbConstructs.h"
-#include "USB_config/descriptors.h"
+#include "USB/USB_API/USB_Common/device.h"
+#include "USB/USB_API/USB_Common/types.h"
+#include "USB/USB_API/USB_Common/usb.h"
+#include "USB/USB_API/USB_CDC_API/UsbCdc.h"
+#include "USB/usbConstructs.h"
+#include "USB/USB_config/descriptors.h"
 #include "base64.h"
 
 void print_usb_dec(unsigned int i) {

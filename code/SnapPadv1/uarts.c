@@ -305,7 +305,7 @@ bool uart_ping_button() {
 __interrupt void USCI_A1_ISR(void)
 {
 	uint8_t rx;
-	switch(__even_in_range(UCA1IV,4))
+	switch(UCA1IV)
 	{
   	case 0:break;                             // Vector 0 - no interrupt
 	case 2:                                   // Vector 2 - RXIFG

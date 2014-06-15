@@ -2,8 +2,26 @@
 TARGET	= snap_pad
 MCU	= msp430f5508
 
+JLH_SOURCES = \
+	USB/usbEventHandling.c \
+	USB/USB_config/descriptors.c \
+	USB/USB_config/UsbIsr.c \
+	USB/USB_API/USB_HID_API/UsbHidReq.c \
+	USB/USB_API/USB_HID_API/UsbHid.c \
+	USB/USB_API/USB_MSC_API/UsbMscStateMachine.c \
+	USB/USB_API/USB_MSC_API/UsbMscReq.c \
+	USB/USB_API/USB_MSC_API/UsbMscScsi.c \
+	USB/USB_API/USB_PHDC_API/UsbPHDC.c \
+	USB/USB_API/USB_Common/usb.c \
+	USB/USB_API/USB_Common/dma.c \
+	USB/USB_API/USB_CDC_API/UsbCdc.c \
+	USB/usbConstructs.c \
+	F5xx_F6xx_Core_Lib/HAL_UCS.h \
+	F5xx_F6xx_Core_Lib/HAL_TLV.c \
+	F5xx_F6xx_Core_Lib/HAL_PMM.c \
+	F5xx_F6xx_Core_Lib/HAL_UCS.c
+
 TI_SOURCES = \
-	hal.c \
 	USB_API/USB_HID_API/UsbHidReq.c \
 	USB_API/USB_HID_API/UsbHid.c \
 	USB_API/USB_MSC_API/UsbMscStateMachine.c \
@@ -16,12 +34,12 @@ TI_SOURCES = \
 	USB_app/usbEventHandling.c \
 	USB_app/usbConstructs.c \
 	USB_config/descriptors.c \
-	USB_config/UsbIsr.c
+	USB_config/UsbIsr.c \
+
 
 SOURCES	= \
 	base64.c \
 	buffers.c \
-	ecc.c \
 	hwrng.c \
 	leds.c \
 	main.c \
@@ -30,13 +48,15 @@ SOURCES	= \
 	print.c \
 	timer.c \
 	uarts.c \
-	$(TI_SOURCES)
+	ecc.c \
+	hal.c \
+	$(JLH_SOURCES)
 
-INCLUDES = -Idriverlib/MSP430F5xx_6xx
+INCLUDES = -Idriverlib/MSP430F5xx_6xx -IF5xx_F6xx_Core_Lib -IUSB -IUSB/USB_config -I.
 
-CFLAGS   = -mmcu=$(MCU) -g -Os -Wall -Wunused $(INCLUDES)   
+CFLAGS   = -mmcu=$(MCU) -std=c99 -Os -Wall -Wunused $(INCLUDES)   
 ASFLAGS  = -mmcu=$(MCU) -x assembler-with-cpp -Wa,-gstabs
-LDFLAGS  = -mmcu=$(MCU) -Wl,-Map=$(TARGET).map
+LDFLAGS  = -mmcu=$(MCU) -std=c99 -Os -Wl,-Map=$(TARGET).map
 
 CC       = msp430-gcc
 LD       = msp430-ld
