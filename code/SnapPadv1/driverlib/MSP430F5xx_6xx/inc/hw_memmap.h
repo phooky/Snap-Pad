@@ -44,7 +44,9 @@
 #ifdef  __IAR_SYSTEMS_ICC__
 #include "../deprecated/IAR/msp430f5xx_6xxgeneric.h"
 #else
+#ifndef __GNUC__
 #include "../deprecated/CCS/msp430f5xx_6xxgeneric.h"
+#endif
 #endif
 
 #include "stdint.h"
