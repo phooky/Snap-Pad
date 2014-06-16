@@ -71,7 +71,7 @@ void do_twinned_master_mode();
 void do_twinned_slave_mode();
 void do_single_mode();
 
-void main (void)
+int main (void)
 {
     // Set up clocks/IOs.  initPorts()/initClocks() will need to be customized
     // for your application, but MCLK should be between 4-25MHz.  Using the
