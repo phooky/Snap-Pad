@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="6.5.0">
+<eagle version="7.1.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -2153,11 +2153,11 @@ Based on the following sources:
 <part name="IC2" library="TI_MSP430_v16" deviceset="F55[0/1]X---PT48" device="" value="F5508"/>
 <part name="SUPPLY1" library="supply2" deviceset="GND" device=""/>
 <part name="JP1" library="Passives" deviceset="USB" device="A-SMD-MALE" value="USBA-SMD-MALE"/>
-<part name="C1" library="Passives" deviceset="C" device="0805" value="4.7uF"/>
+<part name="C1" library="Passives" deviceset="C" device="0805" value="470nF"/>
 <part name="C2" library="Passives" deviceset="C" device="0805" value="220nF"/>
 <part name="C3" library="Passives" deviceset="C" device="0805" value="220nF"/>
-<part name="C4" library="Passives" deviceset="C" device="0805" value="10pF"/>
-<part name="C5" library="Passives" deviceset="C" device="0805" value="10pF"/>
+<part name="C4" library="Passives" deviceset="C" device="0805" value="20pF"/>
+<part name="C5" library="Passives" deviceset="C" device="0805" value="20pF"/>
 <part name="C6" library="Passives" deviceset="C" device="0805" value="20pF"/>
 <part name="C7" library="Passives" deviceset="C" device="0805" value="20pF"/>
 <part name="SUPPLY2" library="supply2" deviceset="GND" device=""/>
@@ -2175,7 +2175,7 @@ Based on the following sources:
 <part name="R3" library="Passives" deviceset="R" device="0805" value="1M"/>
 <part name="SUPPLY10" library="supply2" deviceset="GND" device=""/>
 <part name="R4" library="Passives" deviceset="R" device="0805" value="1.4K 1%"/>
-<part name="R5" library="Passives" deviceset="R" device="0805" value="100 5%"/>
+<part name="R5" library="Passives" deviceset="R" device="0805" value="130"/>
 <part name="C14" library="Passives" deviceset="C" device="0805" value="470nF"/>
 <part name="SUPPLY18" library="supply2" deviceset="GND" device=""/>
 <part name="R21" library="Passives" deviceset="R" device="0805" value="1M"/>
@@ -2183,10 +2183,10 @@ Based on the following sources:
 <part name="U$6" library="Passives" deviceset="LED" device=""/>
 <part name="U$7" library="Passives" deviceset="LED" device=""/>
 <part name="U$8" library="Passives" deviceset="LED" device=""/>
-<part name="U$4" library="Passives" deviceset="R" device="0805" value="130"/>
-<part name="U$9" library="Passives" deviceset="R" device="0805" value="130"/>
-<part name="U$10" library="Passives" deviceset="R" device="0805" value="130"/>
-<part name="U$11" library="Passives" deviceset="R" device="0805" value="130"/>
+<part name="R8" library="Passives" deviceset="R" device="0805" value="130"/>
+<part name="R9" library="Passives" deviceset="R" device="0805" value="130"/>
+<part name="R10" library="Passives" deviceset="R" device="0805" value="130"/>
+<part name="R11" library="Passives" deviceset="R" device="0805" value="130"/>
 <part name="D1" library="Passives" deviceset="D-SCHOTTKY" device=""/>
 <part name="IC4" library="74xx-us" deviceset="74*14" device="D" technology="LS"/>
 <part name="SUPPLY12" library="supply2" deviceset="GND" device=""/>
@@ -2238,10 +2238,10 @@ Based on the following sources:
 <instance part="U$6" gate="G$1" x="-12.7" y="111.76"/>
 <instance part="U$7" gate="G$1" x="-12.7" y="104.14"/>
 <instance part="U$8" gate="G$1" x="-12.7" y="96.52"/>
-<instance part="U$4" gate="G$1" x="-2.54" y="119.38"/>
-<instance part="U$9" gate="G$1" x="-2.54" y="111.76"/>
-<instance part="U$10" gate="G$1" x="-2.54" y="104.14"/>
-<instance part="U$11" gate="G$1" x="-2.54" y="96.52"/>
+<instance part="R8" gate="G$1" x="-2.54" y="119.38"/>
+<instance part="R9" gate="G$1" x="-2.54" y="111.76"/>
+<instance part="R10" gate="G$1" x="-2.54" y="104.14"/>
+<instance part="R11" gate="G$1" x="-2.54" y="96.52"/>
 <instance part="D1" gate="G$1" x="137.16" y="124.46"/>
 <instance part="SJ1" gate="1" x="149.86" y="93.98"/>
 <instance part="SUPPLY14" gate="GND" x="15.24" y="33.02" rot="R270"/>
@@ -2755,34 +2755,34 @@ Based on the following sources:
 <net name="N$22" class="0">
 <segment>
 <pinref part="U$7" gate="G$1" pin="CATHODE"/>
-<pinref part="U$10" gate="G$1" pin="1"/>
+<pinref part="R10" gate="G$1" pin="1"/>
 <wire x1="-10.16" y1="104.14" x2="-7.62" y2="104.14" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$23" class="0">
 <segment>
 <pinref part="U$6" gate="G$1" pin="CATHODE"/>
-<pinref part="U$9" gate="G$1" pin="1"/>
+<pinref part="R9" gate="G$1" pin="1"/>
 <wire x1="-10.16" y1="111.76" x2="-7.62" y2="111.76" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$24" class="0">
 <segment>
 <pinref part="U$5" gate="G$1" pin="CATHODE"/>
-<pinref part="U$4" gate="G$1" pin="1"/>
+<pinref part="R8" gate="G$1" pin="1"/>
 <wire x1="-10.16" y1="119.38" x2="-7.62" y2="119.38" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$25" class="0">
 <segment>
 <pinref part="U$8" gate="G$1" pin="CATHODE"/>
-<pinref part="U$11" gate="G$1" pin="1"/>
+<pinref part="R11" gate="G$1" pin="1"/>
 <wire x1="-10.16" y1="96.52" x2="-7.62" y2="96.52" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$19" class="0">
 <segment>
-<pinref part="U$11" gate="G$1" pin="2"/>
+<pinref part="R11" gate="G$1" pin="2"/>
 <pinref part="IC2" gate="G$1" pin="9"/>
 <wire x1="2.54" y1="96.52" x2="22.86" y2="96.52" width="0.1524" layer="91"/>
 </segment>
@@ -2792,13 +2792,13 @@ Based on the following sources:
 <pinref part="IC2" gate="G$1" pin="8"/>
 <wire x1="22.86" y1="99.06" x2="5.08" y2="99.06" width="0.1524" layer="91"/>
 <wire x1="5.08" y1="99.06" x2="5.08" y2="104.14" width="0.1524" layer="91"/>
-<pinref part="U$10" gate="G$1" pin="2"/>
+<pinref part="R10" gate="G$1" pin="2"/>
 <wire x1="5.08" y1="104.14" x2="2.54" y2="104.14" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$27" class="0">
 <segment>
-<pinref part="U$9" gate="G$1" pin="2"/>
+<pinref part="R9" gate="G$1" pin="2"/>
 <wire x1="2.54" y1="111.76" x2="7.62" y2="111.76" width="0.1524" layer="91"/>
 <wire x1="7.62" y1="111.76" x2="7.62" y2="104.14" width="0.1524" layer="91"/>
 <pinref part="IC2" gate="G$1" pin="6"/>
@@ -2807,7 +2807,7 @@ Based on the following sources:
 </net>
 <net name="N$28" class="0">
 <segment>
-<pinref part="U$4" gate="G$1" pin="2"/>
+<pinref part="R8" gate="G$1" pin="2"/>
 <wire x1="2.54" y1="119.38" x2="10.16" y2="119.38" width="0.1524" layer="91"/>
 <wire x1="10.16" y1="119.38" x2="10.16" y2="106.68" width="0.1524" layer="91"/>
 <pinref part="IC2" gate="G$1" pin="5"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="6.5.0">
+<eagle version="7.1.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
@@ -746,6 +746,9 @@ Please make sure your boards conform to these design rules.</description>
 <autorouter>
 <pass name="Default">
 <param name="RoutingGrid" value="50mil"/>
+<param name="AutoGrid" value="1"/>
+<param name="Efforts" value="0"/>
+<param name="TopRouterVariant" value="1"/>
 <param name="tpViaShape" value="round"/>
 <param name="PrefDir.1" value="|"/>
 <param name="PrefDir.2" value="0"/>
@@ -843,7 +846,7 @@ Please make sure your boards conform to these design rules.</description>
 <attribute name="NAME" x="23.52123125" y="13.595015625" size="1.016" layer="25" ratio="10" rot="R90"/>
 </element>
 <element name="JP1" library="Passives" package="USB-A-SMT-MALE" value="USBA-SMD-MALE" x="1.74625" y="11.43" smashed="yes" rot="R90"/>
-<element name="C1" library="Passives" package="R0805" value="4.7uF" x="14.605" y="18.57375" smashed="yes" rot="R270">
+<element name="C1" library="Passives" package="R0805" value="470nF" x="14.605" y="18.57375" smashed="yes" rot="R270">
 <attribute name="NAME" x="15.46375" y="19.18" size="0.8128" layer="25" font="vector" rot="R270"/>
 <attribute name="VALUE" x="16.1275" y="20.3325" size="0.6096" layer="27" rot="R270" align="top-left"/>
 </element>
@@ -855,11 +858,11 @@ Please make sure your boards conform to these design rules.</description>
 <attribute name="NAME" x="16.6975" y="13.4" size="0.8128" layer="25" font="vector"/>
 <attribute name="VALUE" x="16.65625" y="13.42875" size="0.6096" layer="27" align="top-left"/>
 </element>
-<element name="C4" library="Passives" package="R0805" value="10pF" x="13.335" y="10.95375" smashed="yes" rot="R180">
+<element name="C4" library="Passives" package="R0805" value="20pF" x="13.335" y="10.95375" smashed="yes" rot="R180">
 <attribute name="NAME" x="16.64" y="11.365" size="0.8128" layer="25" font="vector" rot="R180"/>
 <attribute name="VALUE" x="16.84" y="10.5425" size="0.6096" layer="27" rot="R180" align="top-left"/>
 </element>
-<element name="C5" library="Passives" package="R0805" value="10pF" x="13.335" y="9.04875" smashed="yes" rot="R180">
+<element name="C5" library="Passives" package="R0805" value="20pF" x="13.335" y="9.04875" smashed="yes" rot="R180">
 <attribute name="NAME" x="16.64" y="9.46" size="0.8128" layer="25" font="vector" rot="R180"/>
 <attribute name="VALUE" x="16.84" y="8.32" size="0.6096" layer="27" rot="R180" align="top-left"/>
 </element>
@@ -895,7 +898,7 @@ Please make sure your boards conform to these design rules.</description>
 <attribute name="NAME" x="10.44875" y="13.42875" size="0.8128" layer="25" font="vector" rot="R180"/>
 <attribute name="VALUE" x="10.64875" y="12.92375" size="0.6096" layer="27" rot="R180" align="top-left"/>
 </element>
-<element name="R5" library="Passives" package="R0805" value="100 5%" x="11.1125" y="17.62125" smashed="yes" rot="R180">
+<element name="R5" library="Passives" package="R0805" value="130" x="11.1125" y="17.62125" smashed="yes" rot="R180">
 <attribute name="NAME" x="12.83" y="16.7625" size="0.8128" layer="25" font="vector" rot="R180"/>
 <attribute name="VALUE" x="12.7125" y="18.32125" size="0.6096" layer="27" rot="R180" align="top-left"/>
 </element>
@@ -919,16 +922,16 @@ Please make sure your boards conform to these design rules.</description>
 <element name="U$8" library="Passives" package="LED0805" value="LED" x="49.2125" y="18.25625" smashed="yes" rot="R180">
 <attribute name="VALUE" x="50.8125" y="18.95625" size="0.6096" layer="27" rot="R180" align="top-left"/>
 </element>
-<element name="U$4" library="Passives" package="R0805" value="130" x="45.72" y="13.81125" smashed="yes">
+<element name="R8" library="Passives" package="R0805" value="130" x="45.72" y="13.81125" smashed="yes">
 <attribute name="VALUE" x="44.12" y="13.11125" size="0.6096" layer="27" align="top-left"/>
 </element>
-<element name="U$9" library="Passives" package="R0805" value="130" x="45.72" y="16.03375" smashed="yes">
+<element name="R9" library="Passives" package="R0805" value="130" x="45.72" y="16.03375" smashed="yes">
 <attribute name="VALUE" x="44.12" y="15.33375" size="0.6096" layer="27" align="top-left"/>
 </element>
-<element name="U$10" library="Passives" package="R0805" value="130" x="45.72" y="20.47875" smashed="yes">
+<element name="R10" library="Passives" package="R0805" value="130" x="45.72" y="20.47875" smashed="yes">
 <attribute name="VALUE" x="44.12" y="19.77875" size="0.6096" layer="27" align="top-left"/>
 </element>
-<element name="U$11" library="Passives" package="R0805" value="130" x="45.72" y="18.25625" smashed="yes">
+<element name="R11" library="Passives" package="R0805" value="130" x="45.72" y="18.25625" smashed="yes">
 <attribute name="VALUE" x="44.12" y="17.55625" size="0.6096" layer="27" align="top-left"/>
 </element>
 <element name="D1" library="Passives" package="SOD123" value="" x="11.1125" y="6.6675" smashed="yes" rot="R180">
@@ -1542,26 +1545,26 @@ Please make sure your boards conform to these design rules.</description>
 </signal>
 <signal name="N$22">
 <contactref element="U$7" pad="CATHODE"/>
-<contactref element="U$10" pad="P$1"/>
+<contactref element="R10" pad="P$1"/>
 <wire x1="46.82" y1="20.47875" x2="48.1125" y2="20.47875" width="0.254" layer="1"/>
 </signal>
 <signal name="N$23">
 <contactref element="U$6" pad="CATHODE"/>
-<contactref element="U$9" pad="P$1"/>
+<contactref element="R9" pad="P$1"/>
 <wire x1="46.82" y1="16.03375" x2="48.1125" y2="16.03375" width="0.254" layer="1"/>
 </signal>
 <signal name="N$24">
 <contactref element="U$5" pad="CATHODE"/>
-<contactref element="U$4" pad="P$1"/>
+<contactref element="R8" pad="P$1"/>
 <wire x1="46.82" y1="13.81125" x2="48.1125" y2="13.81125" width="0.254" layer="1"/>
 </signal>
 <signal name="N$25">
 <contactref element="U$8" pad="CATHODE"/>
-<contactref element="U$11" pad="P$1"/>
+<contactref element="R11" pad="P$1"/>
 <wire x1="46.82" y1="18.25625" x2="48.1125" y2="18.25625" width="0.254" layer="1"/>
 </signal>
 <signal name="N$19">
-<contactref element="U$11" pad="P$2"/>
+<contactref element="R11" pad="P$2"/>
 <contactref element="IC2" pad="9"/>
 <wire x1="25.45373125" y1="11.818765625" x2="25.45373125" y2="10.74126875" width="0.254" layer="1"/>
 <wire x1="25.45373125" y1="10.74126875" x2="26.035" y2="10.16" width="0.254" layer="1"/>
@@ -1574,7 +1577,7 @@ Please make sure your boards conform to these design rules.</description>
 </signal>
 <signal name="N$26">
 <contactref element="IC2" pad="8"/>
-<contactref element="U$10" pad="P$2"/>
+<contactref element="R10" pad="P$2"/>
 <wire x1="24.95373125" y1="11.818765625" x2="24.95373125" y2="10.13001875" width="0.254" layer="1"/>
 <wire x1="24.95373125" y1="10.13001875" x2="25.4" y2="9.68375" width="0.254" layer="1"/>
 <wire x1="25.4" y1="9.68375" x2="30.95625" y2="9.68375" width="0.254" layer="1"/>
@@ -1589,7 +1592,7 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="45.09625" y1="20.0025" x2="44.62" y2="20.47875" width="0.254" layer="1"/>
 </signal>
 <signal name="N$27">
-<contactref element="U$9" pad="P$2"/>
+<contactref element="R9" pad="P$2"/>
 <contactref element="IC2" pad="6"/>
 <wire x1="23.95373125" y1="11.818765625" x2="23.95373125" y2="9.86001875" width="0.254" layer="1"/>
 <wire x1="23.95373125" y1="9.86001875" x2="24.60625" y2="9.2075" width="0.254" layer="1"/>
@@ -1599,7 +1602,7 @@ Please make sure your boards conform to these design rules.</description>
 <wire x1="43.19125" y1="14.605" x2="44.62" y2="16.03375" width="0.254" layer="1"/>
 </signal>
 <signal name="N$28">
-<contactref element="U$4" pad="P$2"/>
+<contactref element="R8" pad="P$2"/>
 <contactref element="IC2" pad="5"/>
 <wire x1="23.45373125" y1="11.818765625" x2="23.45373125" y2="9.56626875" width="0.254" layer="1"/>
 <wire x1="23.45373125" y1="9.56626875" x2="24.28875" y2="8.73125" width="0.254" layer="1"/>
