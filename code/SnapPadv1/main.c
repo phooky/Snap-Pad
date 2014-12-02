@@ -243,7 +243,11 @@ void error(const char* msg) {
 	if (msg) {
 		print_usb_str(msg);
 	}
-	print_usb_str("\r\n");
+	print_usb_str("\n");
+}
+
+void timeout() {
+	print_usb_str("---TIMEOUT---\n");
 }
 
 void read_status() {
@@ -254,7 +258,7 @@ void read_status() {
 		sbuf[7-i] = ((status&0x01)==0)?'0':'1';
 	}
 	cdcSendDataWaitTilDone((BYTE*)sbuf, 8, CDC0_INTFNUM, 100);
-	print_usb_str("\r\nOK\r\n");
+	print_usb_str("\nOK\n");
 }
 
 void diagnostics() {
@@ -395,6 +399,8 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			leds_set_mode(LM_ACKNOWLEDGED);
 			otp_provision(count,config.is_A);
 			leds_set_mode(LM_READY);
+		} else {
+			timeout();
 		}
 	} else if (cmdbuf[0] == 'R') {
 		// retrieve 'count' blocks starting at 'block','page','para'
@@ -430,6 +436,8 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 				otp_retrieve(bpp[i].block,bpp[i].page,bpp[i].para);
 			}
 			leds_set_mode(LM_READY);
+		} else {
+			timeout();
 		}
 	} else if (cmdbuf[0] == '#') {
 		read_rng();
@@ -487,7 +495,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		uint8_t idx = 1;
 		uint16_t block = parseDec(cmdbuf, &idx, len);
 		nand_block_erase(block);
-		cdcSendDataWaitTilDone((BYTE*)"OK\r\n", 4, CDC0_INTFNUM, 100);
+		cdcSendDataWaitTilDone((BYTE*)"OK\n", 3, CDC0_INTFNUM, 100);
 #endif
 	} else {
 		error((const char*)cmdbuf);
