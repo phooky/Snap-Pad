@@ -16,28 +16,23 @@
 
 void print_usb_dec(unsigned int i) {
 	char buf[10];
-	unsigned int ip = i/10;
-	unsigned int digits = 1;
-	while (ip != 0) {
-		digits++; ip = ip/10;
-	}
-	int idx = digits;
-	buf[--idx] = '0'+(i%10);
-	i = i/10;
-	while(i != 0) {
-		buf[--idx] = '0'+(i%10);
-		i = i/10;
-	}
-	cdcSendDataWaitTilDone((BYTE*)buf, digits, CDC0_INTFNUM, 100);
+	unsigned int digits = 0;
+	do {
+		digits++;
+		buf[10-digits] = '0' + (i % 10);
+		i = i / 10;
+	} while(i);
+	cdcSendDataWaitTilDone((BYTE*)buf+(10-digits), digits, CDC0_INTFNUM, 100);
 }
 
 void print_usb_str(const char* s) {
 	int len = 0;
 	while (s[len] != '\0') {
 		len++;
-		if (len == 64) break;
+		if (len == 64)
+			break;
 	}
-	cdcSendDataWaitTilDone((BYTE*)s, len, CDC0_INTFNUM, 100);
+	cdcSendDataWaitTilDone((BYTE*) s, len, CDC0_INTFNUM, 100);
 }
 
 void print_usb_base64(uint8_t* buf, uint16_t sz) {
@@ -46,7 +41,7 @@ void print_usb_base64(uint8_t* buf, uint16_t sz) {
 	uint8_t line = 0;
 	uint8_t i;
 	while (sz > 0) {
-		uint8_t l = (sz>3)?3:sz;
+		uint8_t l = (sz > 3) ? 3 : sz;
 		for (i = 0; i < 3; i++) {
 			if (sz > 0) {
 				in[i] = *(buf++);
@@ -56,10 +51,10 @@ void print_usb_base64(uint8_t* buf, uint16_t sz) {
 			}
 		}
 		encode(in, out, l);
-		cdcSendDataWaitTilDone((BYTE*)out, 4, CDC0_INTFNUM, 100);
+		cdcSendDataWaitTilDone((BYTE*) out, 4, CDC0_INTFNUM, 100);
 		line += 4;
 		if (line > 76) {
-			cdcSendDataWaitTilDone((BYTE*)"\n", 1, CDC0_INTFNUM, 100);
+			cdcSendDataWaitTilDone((BYTE*) "\n", 1, CDC0_INTFNUM, 100);
 			line = 0;
 		}
 	}

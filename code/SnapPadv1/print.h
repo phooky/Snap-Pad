@@ -10,8 +10,13 @@
 
 #include <stdint.h>
 
+// Print integer to USB serial port
 void print_usb_dec(unsigned int i);
+
+// Print null-terminated string to USB serial port
 void print_usb_str(const char* s);
+
+// Print base64 encoding of passed bu
 void print_usb_base64(uint8_t* buf, uint16_t sz);
 
 #endif /* PRINT_H_ */
