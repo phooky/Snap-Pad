@@ -25,13 +25,18 @@ Standard Commands
   * Response: 64 bytes of random data directly from the RNG. Please note that this response is not encoded in any way; the bytes are written raw to the serial port.
   
 * Retrieve paragraphs
-  * Command: 'R(block#),(page#),(paragraph#),(count#)'
-  * The retrieve command is used to read specific paragraphs from the Snap-Pad, ordinarily for decrypting a message. The count parameter must be in the range 1-4; if more paragraphs are needed then a separate request should be made. When the command is issued, 1-4 LEDs will begin to blink on the Snap-Pad. The user can then push the button on the Snap-Pad to retrieve the paragraphs. They will be returned as base64 encoded data. If the user fails to push the button, a timeout message will be returned.
+  * Command: 'R(block#),(page#),(paragraph#)[,(block#),(page#),(paragraph#)]'
+  * The retrieve command is used to read specific paragraphs from the Snap-Pad, ordinarily for decrypting a message. Up to four paragraphs may be requested in a single command. When the command is issued, 1-4 LEDs will begin to blink on the Snap-Pad. The user can then push the button on the Snap-Pad to retrieve the paragraphs. They will be returned as base64 encoded data. If the user fails to push the button, a timeout message will be returned.
   * Response: one base64 encoded block for each paragraph returned, fomatted as:
   
             ---BEGIN PARA (block#),(page#),(paragraph#)---
             [base64-encoded contents of paragraph]
             ---END PARA---
+
+    or, if the requested block has already been used:
+
+            ---USED PARA (block#),(page#),(paragraph#)---
+
     or, a timeout message (ATTN: NOT YET IMPLEMENTED):
     
             ---TIMEOUT---

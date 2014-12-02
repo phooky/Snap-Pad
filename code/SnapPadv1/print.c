@@ -31,7 +31,7 @@ void print_usb_dec(unsigned int i) {
 	cdcSendDataWaitTilDone((BYTE*)buf, digits, CDC0_INTFNUM, 100);
 }
 
-void print_usb_str(char* s) {
+void print_usb_str(const char* s) {
 	int len = 0;
 	while (s[len] != '\0') {
 		len++;

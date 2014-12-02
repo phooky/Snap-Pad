@@ -238,9 +238,12 @@ uint8_t dehex(char c) {
 	return 0;
 }
 
-void error() {
-	char* rsp = "ERR\r\n";
-	cdcSendDataWaitTilDone((BYTE*)rsp, 5, CDC0_INTFNUM, 100);
+void error(const char* msg) {
+	print_usb_str("ERROR: ");
+	if (msg) {
+		print_usb_str(msg);
+	}
+	print_usb_str("\r\n");
 }
 
 void read_status() {
@@ -251,8 +254,7 @@ void read_status() {
 		sbuf[7-i] = ((status&0x01)==0)?'0':'1';
 	}
 	cdcSendDataWaitTilDone((BYTE*)sbuf, 8, CDC0_INTFNUM, 100);
-	char* rsp = "\r\nOK\r\n";
-	cdcSendDataWaitTilDone((BYTE*)rsp, 6, CDC0_INTFNUM, 100);
+	print_usb_str("\r\nOK\r\n");
 }
 
 void diagnostics() {
@@ -270,13 +272,13 @@ void diagnostics() {
 	}
 	// Check chip connection
 	if (!nand_check_ONFI()) {
-		print_usb_str("ERROR: ONFI failure\n");
+		error("ONFI failure");
 		return;
 	}
 	// check otp
 	OTPConfig config = otp_read_header();
 	if (!config.has_header) {
-		print_usb_str("ERROR: No header\n");
+		error("No header");
 	} else {
 		print_usb_str("Random:");
 		if (config.randomization_finished) {
@@ -374,6 +376,7 @@ bool parseBPP(uint8_t* buf, uint8_t* idx, uint8_t len, uint16_t* block, uint8_t*
  * rblock,page,para         - read the given block, page, and paragraph without erasing
  * Eblock                   - erase the indicated block (0xff everywhere)
  */
+
 void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	if (cmdbuf[0] == '\n' || cmdbuf[0] == '\r') {
 		// skip
@@ -385,7 +388,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		uint8_t idx = 1;
 		uint16_t count = parseDec(cmdbuf,&idx,len);
 		if (count == 0 || count > 4) {
-			// error message
+			error("bad count");
 			return;
 		}
 		if (confirm_count(count)) {
@@ -406,7 +409,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		// parse format: block# "," page# "," para# ["," block# "," page# "," para#]*
 		while (true) {
 			if (!parseBPP(cmdbuf, &idx, len, &bpp[count].block, &bpp[count].page, &bpp[count].para)) {
-				// error message
+				error("PARSE");
 				return;
 			}
 			// validate
@@ -414,7 +417,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 					bpp[count].block > 2047 ||
 					bpp[count].page > 63 ||
 					bpp[count].para > 3) {
-				// error message
+				error("RANGE");
 				return;
 			}
 			count++;
@@ -474,10 +477,10 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			if (nand_load_para(block,page,para)) {
 				cdcSendDataWaitTilDone((BYTE*)buffers_get_nand(),512,CDC0_INTFNUM,100);
 			} else {
-				print_usb_str("READ ERROR");
+				error("READ");
 			}
 		} else {
-			print_usb_str("PARSE ERROR");
+			error("PARSE");
 		}
 	} else if (cmdbuf[0] == 'E') {
 		// Erase block. Parameter is a decimal block number.
@@ -487,8 +490,8 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		cdcSendDataWaitTilDone((BYTE*)"OK\r\n", 4, CDC0_INTFNUM, 100);
 #endif
 	} else {
-		cdcSendDataWaitTilDone((BYTE*)cmdbuf, 1, CDC0_INTFNUM, 100);
-		error(); return;
+		error((const char*)cmdbuf);
+		return;
 	}
 }
 

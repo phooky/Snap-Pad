@@ -182,10 +182,6 @@ OTPConfig otp_read_header() {
 	return config;
 }
 
-// debug proto
-void print_usb_str(char*);
-void print_usb_dec(unsigned int i);
-
 /** Initialize the header block. If there's already one, erase block zero and recreate the
  * header block from scratch. Be careful! This method:
  * * Checks for and reads the bad block list
