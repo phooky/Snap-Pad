@@ -498,6 +498,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		cdcSendDataWaitTilDone((BYTE*)"OK\n", 3, CDC0_INTFNUM, 100);
 #endif
 	} else {
+		cmdbuf[len] = '\0';
 		error((const char*)cmdbuf);
 		return;
 	}
