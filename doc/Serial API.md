@@ -5,7 +5,7 @@ When a Snap-Pad is inserted into a USB port, it appears as a standard USB HID se
 
 All commands sent to the Snap-Pad are terminated with a newline character ('\n').
 
-Unrecognized commands presently yield the spectacularly unhelpful message "ERR\n".
+Unrecognized or unparsable commands return the message "ERROR: " followed by a brief explanation of the problem.
 
 Standard Commands
 -----------------
