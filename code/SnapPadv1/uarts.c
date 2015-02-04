@@ -74,7 +74,7 @@ void uart_send_buffer(uint8_t* buffer, uint16_t len) {
 }
 
 /** Check if last bulk send is complete */
-bool uart_send_complete() {
+inline bool uart_send_complete() {
 	return ready_for_send;
 }
 
