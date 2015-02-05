@@ -22,19 +22,7 @@
  *  ---------------------------------------------------------
  */
 
-/**
- * Compute the parity of the given byte.
- */
-static inline uint8_t byte_parity(uint8_t b) {
-	b ^= b>>4;
-	b ^= b>>2;
-	b ^= b>>1;
-	return b & 0x01;
-}
-
-// attempt at speedup
-// just to be clear, I am not proud of this. :_(
-
+// Compute column parities
 static inline uint8_t column_parities(uint8_t b) {
 	uint8_t p;
 	// compute bits 2 and 3
@@ -72,16 +60,7 @@ uint32_t ecc_generate(uint8_t* buffer) {
 		ecc[1] ^= ~idx & x;
         ecc[2] ^= ((idx & 0x100)?0x02:0x01) & x;
 		// compute column parities
-		#if 1
 		ecc[2] ^= column_parities(c);
-		#else
-		ecc[2] ^= byte_parity(0x55 & c) << 2;
-		ecc[2] ^= byte_parity(0xaa & c) << 3;
-		ecc[2] ^= byte_parity(0x33 & c) << 4;
-		ecc[2] ^= byte_parity(0xcc & c) << 5;
-		ecc[2] ^= byte_parity(0x0f & c) << 6;
-		ecc[2] ^= byte_parity(0xf0 & c) << 7;
-		#endif
         // compute extended bit
         ecc[3] ^= x & 0x01;
 	}
