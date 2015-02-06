@@ -287,11 +287,12 @@ VOID USB_initMemcpy (VOID);
 WORD USB_determineFreq(VOID);
 
 /* Version string to embed in executable. May need to change for ELF compiler */
-const char *VERSION = "USB_DEVELOPERS_PACKAGE_4_00_02";
-char *USB_getVersion(void)
-{
-	return ((char *)&VERSION);
-}
+// Thanks, TI, but I don't have room for this.
+//const char *VERSION = "USB_DEVELOPERS_PACKAGE_4_00_02";
+//char *USB_getVersion(void)
+//{
+//	return ((char *)&VERSION);
+//}
 
 //
 //! \endcond
@@ -323,11 +324,11 @@ BYTE USB_init (VOID)
     WORD DelayConstant_250us = ((MCLKFreq >> 6) + (MCLKFreq >> 7) + (MCLKFreq >> 9));
     volatile unsigned int i, j;
 
-    char *(*fp)(void);
+    //char *(*fp)(void);
 
 	/* force version string into executable */
-    fp = &USB_getVersion;
-    fp();
+    //fp = &USB_getVersion;
+    //fp();
 
     //atomic operation - disable interrupts
     __disable_interrupt();                                                      //Disable global interrupts
