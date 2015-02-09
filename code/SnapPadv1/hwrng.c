@@ -23,7 +23,12 @@ void hwrng_init() {
 	ADC10IE = 0x0001;
 }
 
-volatile uint16_t bits[8];
+const size_t RNG_BB_LEN = 8;
+const uint8_t IDX_TOP = 16*RNG_BB_LEN;
+// Shift must be relatively prime to 16 (odd, really)
+const size_t SHIFT = 3;
+
+volatile uint16_t bits[RNG_BB_LEN];
 volatile uint8_t idx = 0;
 volatile uint8_t* hwrng_ptr = 0;
 volatile uint16_t hwrng_len = 0;
@@ -34,7 +39,7 @@ void hwrng_start() {
 }
 
 bool hwrng_done() {
-	return idx >= 128;
+	return idx >= IDX_TOP;
 }
 
 volatile uint16_t* hwrng_bits() {
@@ -58,12 +63,12 @@ __interrupt void ADC10_ISR(void)
 	uint16_t s = ADC10MEM0;
 
 	uint16_t v = bits[idx>>4];
-	v = v<<2 | v>>14;
+	v = v<<SHIFT | v>>(16-SHIFT); // TODO: does modern c++ do rotations properly?
 	v ^= s;
 	bits[idx>>4] = v;
 	idx++;
 
-	if (idx >= 128) {
+	if (idx >= IDX_TOP) {
 		if (hwrng_len > 0) {
 			uint8_t i = 0;
 			uint8_t* p = (uint8_t*)bits;
