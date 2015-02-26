@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE eagle SYSTEM "eagle.dtd">
-<eagle version="6.5.0">
+<eagle version="7.1.0">
 <drawing>
 <settings>
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.05" unitdist="mm" unit="mm" style="lines" multiple="1" display="yes" altdistance="0.025" altunitdist="inch" altunit="inch"/>
+<grid distance="0.01" unitdist="inch" unit="inch" style="lines" multiple="1" display="yes" altdistance="0.0005" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
 <layer number="2" name="Route2" color="1" fill="3" visible="yes" active="yes"/>
@@ -303,6 +303,10 @@
 <rectangle x1="-1.9558" y1="-0.3048" x2="-1.3716" y2="0.3048" layer="51"/>
 <rectangle x1="1.3716" y1="-0.3048" x2="1.9558" y2="0.3048" layer="51"/>
 <rectangle x1="-0.4001" y1="-0.7" x2="0.4001" y2="0.7" layer="35"/>
+<wire x1="-1.778" y1="1.016" x2="1.778" y2="1.016" width="0.127" layer="21"/>
+<wire x1="1.778" y1="1.016" x2="1.778" y2="-1.016" width="0.127" layer="21"/>
+<wire x1="1.778" y1="-1.016" x2="-1.778" y2="-1.016" width="0.127" layer="21"/>
+<wire x1="-1.778" y1="-1.016" x2="-1.778" y2="1.016" width="0.127" layer="21"/>
 </package>
 <package name="SNAP-CONNECTOR">
 <pad name="P$1" x="-1.27" y="5.08" drill="0.8" shape="offset" rot="R180"/>
@@ -326,81 +330,11 @@
 <hole x="0" y="-3.81" drill="0.6"/>
 </package>
 <package name="SNAP-HALF">
-<pad name="P$1" x="-3.81" y="5.08" drill="0.8" shape="square"/>
-<pad name="P$2" x="-3.81" y="2.54" drill="0.8" shape="square"/>
-<pad name="P$3" x="-3.81" y="0" drill="0.8" shape="square"/>
-<pad name="P$4" x="-3.81" y="-2.54" drill="0.8" shape="square"/>
-<pad name="P$5" x="-3.81" y="-5.08" drill="0.8" shape="square"/>
-<polygon width="0.3048" layer="1">
-<vertex x="-5.08" y="5.715"/>
-<vertex x="-1.905" y="5.715" curve="-90"/>
-<vertex x="-1.27" y="5.08" curve="-90"/>
-<vertex x="-1.905" y="4.445"/>
-<vertex x="-5.08" y="4.445"/>
-</polygon>
-<polygon width="0.3048" layer="1">
-<vertex x="-1.27" y="2.54" curve="-90"/>
-<vertex x="-1.905" y="1.905"/>
-<vertex x="-5.08" y="1.905"/>
-<vertex x="-5.08" y="3.175"/>
-<vertex x="-1.905" y="3.175" curve="-90"/>
-</polygon>
-<polygon width="0.3048" layer="1">
-<vertex x="-1.27" y="0" curve="-90"/>
-<vertex x="-1.905" y="-0.635"/>
-<vertex x="-5.08" y="-0.635"/>
-<vertex x="-5.08" y="0.635"/>
-<vertex x="-1.905" y="0.635" curve="-90"/>
-</polygon>
-<polygon width="0.3048" layer="1">
-<vertex x="-1.27" y="-2.54" curve="-90"/>
-<vertex x="-1.905" y="-3.175"/>
-<vertex x="-5.08" y="-3.175"/>
-<vertex x="-5.08" y="-1.905"/>
-<vertex x="-1.905" y="-1.905" curve="-90"/>
-</polygon>
-<polygon width="0.3048" layer="1">
-<vertex x="-1.27" y="-5.08" curve="-90"/>
-<vertex x="-1.905" y="-5.715"/>
-<vertex x="-5.08" y="-5.715"/>
-<vertex x="-5.08" y="-4.445"/>
-<vertex x="-1.905" y="-4.445" curve="-90"/>
-</polygon>
-<polygon width="0.3048" layer="29">
-<vertex x="-1.27" y="5.08" curve="-90"/>
-<vertex x="-1.905" y="4.445"/>
-<vertex x="-5.08" y="4.445"/>
-<vertex x="-5.08" y="5.715"/>
-<vertex x="-1.905" y="5.715" curve="-90"/>
-</polygon>
-<polygon width="0.3048" layer="29">
-<vertex x="-1.27" y="2.54" curve="-90"/>
-<vertex x="-1.905" y="1.905"/>
-<vertex x="-5.08" y="1.905"/>
-<vertex x="-5.08" y="3.175"/>
-<vertex x="-1.905" y="3.175" curve="-90"/>
-</polygon>
-<polygon width="0.3048" layer="29">
-<vertex x="-1.27" y="0" curve="-90"/>
-<vertex x="-1.905" y="-0.635"/>
-<vertex x="-5.08" y="-0.635"/>
-<vertex x="-5.08" y="0.635"/>
-<vertex x="-1.905" y="0.635" curve="-90"/>
-</polygon>
-<polygon width="0.3048" layer="29">
-<vertex x="-1.27" y="-2.54" curve="-90"/>
-<vertex x="-1.905" y="-3.175"/>
-<vertex x="-5.08" y="-3.175"/>
-<vertex x="-5.08" y="-1.905"/>
-<vertex x="-1.905" y="-1.905" curve="-90"/>
-</polygon>
-<polygon width="0.3048" layer="29">
-<vertex x="-1.27" y="-5.08" curve="-90"/>
-<vertex x="-1.905" y="-5.715"/>
-<vertex x="-5.08" y="-5.715"/>
-<vertex x="-5.08" y="-4.445"/>
-<vertex x="-1.905" y="-4.445" curve="-90"/>
-</polygon>
+<pad name="P$1" x="-3.81" y="5.08" drill="0.9" shape="long"/>
+<pad name="P$2" x="-3.81" y="2.54" drill="0.9" shape="long"/>
+<pad name="P$3" x="-3.81" y="0" drill="0.9" shape="long"/>
+<pad name="P$4" x="-3.81" y="-2.54" drill="0.9" shape="long"/>
+<pad name="P$5" x="-3.81" y="-5.08" drill="0.9" shape="long"/>
 <wire x1="0" y1="6.985" x2="0" y2="-6.985" width="0.3048" layer="48" style="shortdash"/>
 </package>
 <package name="FIDUCAL">
@@ -802,6 +736,21 @@ For boards designed to be plugged directly into a USB slot. If possible, ensure 
 <text x="-1.905" y="-3.175" size="0.762" layer="27">&gt;VALUE</text>
 <smd name="P$1" x="-1.27" y="0" dx="1.9" dy="1.9" layer="1"/>
 <smd name="P$2" x="1.27" y="0" dx="1.9" dy="1.9" layer="1"/>
+</package>
+<package name="KMR-2-SWITCH">
+<smd name="PA1" x="-2.05" y="-0.8" dx="0.9" dy="1" layer="1"/>
+<smd name="PA2" x="2.05" y="-0.8" dx="0.9" dy="1" layer="1"/>
+<smd name="PB2" x="2.05" y="0.8" dx="0.9" dy="1" layer="1"/>
+<smd name="PB1" x="-2.05" y="0.8" dx="0.9" dy="1" layer="1"/>
+<wire x1="-2.3" y1="1.4" x2="2.3" y2="1.4" width="0.1" layer="21"/>
+<wire x1="2.3" y1="1.4" x2="2.3" y2="-1.4" width="0.1" layer="21"/>
+<wire x1="2.3" y1="-1.4" x2="-2.3" y2="-1.4" width="0.1" layer="21"/>
+<wire x1="-2.3" y1="-1.4" x2="-2.3" y2="1.4" width="0.1" layer="21"/>
+<wire x1="-0.8" y1="0.6" x2="0.8" y2="0.6" width="0.1" layer="21"/>
+<wire x1="0.8" y1="0.6" x2="0.8" y2="-0.6" width="0.1" layer="21"/>
+<wire x1="0.8" y1="-0.6" x2="-0.8" y2="-0.6" width="0.1" layer="21"/>
+<wire x1="-0.8" y1="-0.6" x2="-0.8" y2="0.6" width="0.1" layer="21"/>
+<text x="-1.6" y="-2.2" size="0.6096" layer="25">&gt;NAME</text>
 </package>
 </packages>
 <symbols>
@@ -1331,6 +1280,22 @@ The pads are arranged +5V, TX, GND, RX, +5V.</description>
 <connect gate="G$1" pin="D-" pad="D-1"/>
 <connect gate="G$1" pin="GND" pad="GND1"/>
 <connect gate="G$1" pin="VBUS" pad="VBUS1"/>
+</connects>
+<technologies>
+<technology name=""/>
+</technologies>
+</device>
+</devices>
+</deviceset>
+<deviceset name="KMR-2">
+<gates>
+<gate name="G$1" symbol="NORMOPEN2" x="0" y="2.54"/>
+</gates>
+<devices>
+<device name="" package="KMR-2-SWITCH">
+<connects>
+<connect gate="G$1" pin="A1" pad="PA1 PA2" route="any"/>
+<connect gate="G$1" pin="B" pad="PB1 PB2" route="any"/>
 </connects>
 <technologies>
 <technology name=""/>
