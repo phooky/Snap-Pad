@@ -7,10 +7,14 @@ Desktop="Desktop"
 
 [Globals]
 AutoSaveProject=1
+UsedLibrary="/home/phooky/opt/eagle-7.1.0/lbr/jumper.lbr"
+UsedLibrary="/home/phooky/opt/eagle-7.1.0/lbr/pinhead.lbr"
+UsedLibrary="74xx-db-us.lbr"
+UsedLibrary="/home/phooky/Repos/phooky/Snap-Pad/board/SPv0/Passives.lbr"
 
 [Win_1]
 Type="Control Panel"
-Loc="591 90 1850 813"
+Loc="628 209 1887 932"
 State=2
 Number=0
 
