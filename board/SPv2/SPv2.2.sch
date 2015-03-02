@@ -2867,7 +2867,6 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="SUPPLY14" library="supply2" deviceset="GND" device=""/>
 <part name="U$2" library="Passives" deviceset="SNAP-HALF" device=""/>
 <part name="U$3" library="Passives" deviceset="FIDUCAL" device=""/>
-<part name="U$12" library="Passives" deviceset="FIDUCAL" device=""/>
 <part name="TP1" library="testpad" deviceset="TP" device="TP13R"/>
 <part name="TP2" library="testpad" deviceset="TP" device="TP13R"/>
 <part name="TP3" library="testpad" deviceset="TP" device="TP13R"/>
@@ -3567,7 +3566,6 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <instance part="SUPPLY13" gate="GND" x="71.12" y="17.78"/>
 <instance part="U$2" gate="G$1" x="-35.56" y="38.1"/>
 <instance part="U$3" gate="G$1" x="-7.62" y="60.96"/>
-<instance part="U$12" gate="G$1" x="5.08" y="60.96"/>
 </instances>
 <busses>
 </busses>
