@@ -75,8 +75,9 @@ bool has_confirm();
 /**
  * Wait for a complete depress and release of the confirm button.
  * Handles debouncing. Returns when CONFIRM has been released.
+ * @param msecs milliseconds to wait before timing out. -1 to wait forever.
  */
-void wait_for_confirm();
+void wait_for_confirm(int16_t msecs);
 
 /**
  * Give the user ten seconds to confirm releasing blocks. The a number of LEDs

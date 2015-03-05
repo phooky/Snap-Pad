@@ -23,10 +23,10 @@ void hwrng_init() {
 	ADC10IE = 0x0001;
 }
 
-const size_t RNG_BB_LEN = 8;
-const uint8_t IDX_TOP = 16*RNG_BB_LEN;
+#define RNG_BB_LEN 8
+#define IDX_TOP (16*RNG_BB_LEN)
 // Shift must be relatively prime to 16 (odd, really)
-const size_t SHIFT = 3;
+#define SHIFT 3
 
 volatile uint16_t bits[RNG_BB_LEN];
 volatile uint8_t idx = 0;

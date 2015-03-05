@@ -101,9 +101,8 @@ bool has_confirm() {
 /**
  * Wait for a complete depress and release of the confirm button.
  * Handles debouncing. Returns when CONFIRM has been released.
- * TODO: debouncing!!!
  */
-void wait_for_confirm() {
+void wait_for_confirm(int16_t msecs) {
 	while (has_confirm());
 	while (!has_confirm());
 	while (has_confirm());
