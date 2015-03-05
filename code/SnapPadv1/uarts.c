@@ -207,7 +207,7 @@ void uart_process() {
 		if (command == UTOK_RST_PROPOSE) {
 			uint8_t i;
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_1);
-    		wait_for_confirm(-1);
+    		wait_for_confirm();
     		uart_send_byte(UTOK_RST_CONFIRM);
     		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_1:LED_FAST_0);
     		otp_factory_reset();

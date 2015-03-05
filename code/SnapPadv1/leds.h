@@ -68,16 +68,21 @@ void leds_set_mode(uint8_t mode);
 
 /**
  * Detect whether the CONFIRM button is currently being held down.
+ * Incorporates debouncing.
  * @return true if CONFIRM is depressed.
  */
 bool has_confirm();
 
+
+#define BUTTON_OPEN 0
+#define BUTTON_CLOSED 1
+#define BUTTON_TIMEOUT 2
+
 /**
  * Wait for a complete depress and release of the confirm button.
- * Handles debouncing. Returns when CONFIRM has been released.
- * @param msecs milliseconds to wait before timing out. -1 to wait forever.
+ * Handles debouncing.
  */
-void wait_for_confirm(int16_t msecs);
+void wait_for_confirm();
 
 /**
  * Give the user ten seconds to confirm releasing blocks. The a number of LEDs

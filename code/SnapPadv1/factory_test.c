@@ -272,7 +272,7 @@ void read_rng() {
  *
  * P        - run UART ping test; returns response message as received from far side of board ("RESPONSE") followed by newline
  * Lx       - set LEDs according to hex digit X (LED 1 == LSB, LED 4 == 0x08); returns "OK\n"
- * B        - return button press count within next 2 seconds; returns # of presses in hex followed by newline
+ * B        - return button press count within next 5 seconds; returns # of presses in decimal followed by newline
  * #        - produce 64 bytes of random data from the RNG
  * NO       - test the ONFI interface on the NAND chip, return "OK\n" or "ERROR: FAILED\n"
  * NI       - return the ID information of the NAND chip as a comma-separated list terminated with a newline
@@ -323,6 +323,17 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
     		error();
     	}
 	} else if (cmdbuf[0] == 'B') {
+		// * B        - return button press count within next 5 seconds; returns # of presses in decimal followed by newline
+		uint8_t presses = 0;
+		bool timeout = false;
+		timer_reset();
+		while (!timeout) {
+			while (!has_confirm()) { if (timer_msec() >= 5000) { timeout = true; break; } }
+			while (has_confirm()) { if (timer_msec() >= 5000) { timeout = true; break; } }
+			if (!timeout) presses++;
+		}
+		print_usb_dec(presses);
+		print_usb_str("\n");
 	} else {
 		error();
 		return;

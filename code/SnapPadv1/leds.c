@@ -94,18 +94,33 @@ void leds_set_mode(uint8_t mode) {
  * Detect whether the CONFIRM button is currently being held down.
  * @return true if CONFIRM is depressed.
  */
-bool has_confirm() {
+bool has_confirm_internal() {
 	return (P6IN & (1<<3)) == 0;
+}
+
+#define STABLE_MSECS 50
+
+// Caveat: make sure timer_reset() has been called recently to avoid rollovers
+bool has_confirm() {
+	bool state = has_confirm_internal();
+	int16_t last = timer_msec();
+	while (timer_msec() < STABLE_MSECS+last) {
+		if (state != has_confirm_internal()) {
+			last = timer_msec();
+			state = has_confirm_internal();
+		}
+	}
+	return state;
 }
 
 /**
  * Wait for a complete depress and release of the confirm button.
  * Handles debouncing. Returns when CONFIRM has been released.
  */
-void wait_for_confirm(int16_t msecs) {
-	while (has_confirm());
-	while (!has_confirm());
-	while (has_confirm());
+void wait_for_confirm() {
+	while (has_confirm()); // wait for button to be released
+	while (!has_confirm()); // wait for button to be pushed
+	while (has_confirm()); // wait for button to be released
 }
 
 bool confirm_count(uint8_t count) {
