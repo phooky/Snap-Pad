@@ -334,6 +334,25 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		}
 		print_usb_dec(presses);
 		print_usb_str("\n");
+	} else if (cmdbuf[0] == '#') {
+		// * #        - produce 64 bytes of random data from the RNG
+		read_rng();
+		ok();
+	} else if (cmdbuf[0] == 'N') {
+		if (cmdbuf[1] == 'O') {
+			// * NO       - test the ONFI interface on the NAND chip, return "OK\n" or "ERROR: FAILED\n"
+			if (nand_check_ONFI()) {
+				ok();
+			} else {
+				error();
+			}
+		} else if (cmdbuf[1] == 'I') {
+			// * NI       - return the ID information of the NAND chip as a comma-separated list terminated with a newline
+		} else if (cmdbuf[1] == 'T') {
+			// * NT       - write, test, and erase a block on the NAND chip, return "OK\n" or "ERROR: FAILED\n"
+		} else { error(); return; }
+	} else if (cmdbuf[0] == 'R') {
+		// * R        - write an entire block of RNG data to the NAND chip, return it to the server as a newline-terminated sequence of hex digits
 	} else {
 		error();
 		return;
