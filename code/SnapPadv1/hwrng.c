@@ -73,7 +73,7 @@ __interrupt void ADC10_ISR(void)
 			uint8_t i = 0;
 			uint8_t* p = (uint8_t*)bits;
 			// pack bits into ptr
-			while( i < 16 && hwrng_len > 0) {
+			while( i < RNG_BB_LEN*2 && hwrng_len > 0) {
 				*(hwrng_ptr++) = p[i++];
 				hwrng_len--;
 			}

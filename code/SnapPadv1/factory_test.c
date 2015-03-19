@@ -262,7 +262,7 @@ void read_rng() {
 	hwrng_start();
 	while (!hwrng_done());
 	volatile uint16_t* bits = hwrng_bits();
-	cdcSendDataWaitTilDone((BYTE*)bits, 16*4, CDC0_INTFNUM, 100);
+	cdcSendDataWaitTilDone((BYTE*)bits, 16, CDC0_INTFNUM, 100);
 }
 
 
