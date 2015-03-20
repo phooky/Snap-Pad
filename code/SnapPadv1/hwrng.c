@@ -34,6 +34,8 @@ volatile uint8_t* hwrng_ptr = 0;
 volatile uint16_t hwrng_len = 0;
 
 void hwrng_start() {
+	int i;
+	for (i = 0; i < RNG_BB_LEN; i++) bits[i]=0;
 	idx = 0;
 	ADC10CTL0 |= 0x0003;
 }

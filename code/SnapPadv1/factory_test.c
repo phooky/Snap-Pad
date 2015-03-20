@@ -262,7 +262,7 @@ void read_rng() {
 	hwrng_start();
 	while (!hwrng_done());
 	volatile uint16_t* bits = hwrng_bits();
-	cdcSendDataWaitTilDone((BYTE*)bits, 16, CDC0_INTFNUM, 100);
+	cdcSendDataWaitTilDone((BYTE*)bits, 16, CDC0_INTFNUM, 1000);
 }
 
 
@@ -273,7 +273,7 @@ void read_rng() {
  * P        - run UART ping test; returns response message as received from far side of board ("RESPONSE") followed by newline
  * Lx       - set LEDs according to hex digit X (LED 1 == LSB, LED 4 == 0x08); returns "OK\n"
  * B        - return button press count within next 5 seconds; returns # of presses in decimal followed by newline
- * #        - produce 64 bytes of random data from the RNG
+ * #        - produce 16 bytes of random data from the RNG
  * NO       - test the ONFI interface on the NAND chip, return "OK\n" or "ERROR: FAILED\n"
  * NI       - return the ID information of the NAND chip as a comma-separated list terminated with a newline
  * NT       - write, test, and erase a block on the NAND chip, return "OK\n" or "ERROR: FAILED\n"
@@ -337,7 +337,6 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == '#') {
 		// * #        - produce 64 bytes of random data from the RNG
 		read_rng();
-		ok();
 	} else if (cmdbuf[0] == 'N') {
 		if (cmdbuf[1] == 'O') {
 			// * NO       - test the ONFI interface on the NAND chip, return "OK\n" or "ERROR: FAILED\n"
