@@ -26,7 +26,7 @@ void hwrng_init() {
 #define RNG_BB_LEN 8
 #define IDX_TOP (16*RNG_BB_LEN)
 // Shift must be relatively prime to 16 (odd, really)
-#define SHIFT 3
+#define SHIFT 5
 
 volatile uint16_t bits[RNG_BB_LEN];
 volatile uint8_t idx = 0;
