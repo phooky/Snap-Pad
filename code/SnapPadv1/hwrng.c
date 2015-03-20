@@ -62,10 +62,10 @@ __interrupt void ADC10_ISR(void)
 {
 	uint16_t s = ADC10MEM0;
 
-	uint16_t v = bits[idx>>4];
+	uint16_t v = bits[idx % RNG_BB_LEN];
 	v = v<<SHIFT | v>>(16-SHIFT); // TODO: does modern c++ do rotations properly?
 	v ^= s;
-	bits[idx>>4] = v;
+	bits[idx % RNG_BB_LEN] = v;
 	idx++;
 
 	if (idx >= IDX_TOP) {
