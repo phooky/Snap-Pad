@@ -20,11 +20,15 @@ if __name__=='__main__':
     args=parser.parse_args()
     pad = Pad(args.port)
     bc = args.bytes
-    while bc > 0:
+    forever = False
+    if bc == -1:
+        forever = True
+    while forever or bc > 0:
         d = pad.get16()
-        if bc<16:
-            d = d[:bc]
-        bc = bc - 16
+        if not forever:
+            if bc<16:
+                d = d[:bc]
+            bc = bc - 16
         stdout.buffer.write(d)
 
 

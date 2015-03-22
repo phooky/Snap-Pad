@@ -155,12 +155,6 @@ void do_factory_uart_mode() {
     }
 }
 
-char hex(uint8_t v) {
-	v &= 0x0f;
-	if (v < 10) return '0'+v;
-	return 'a'+(v-10);
-}
-
 // also used to de-decimal
 uint8_t dehex(char c) {
 	if (c >= '0' && c <= '9') return c - '0';
@@ -347,6 +341,13 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			}
 		} else if (cmdbuf[1] == 'I') {
 			// * NI       - return the ID information of the NAND chip as a comma-separated list terminated with a newline
+			IdInfo id = nand_read_id();
+			uint8_t* id_ptr = (uint8_t*)&id;
+			int i;
+			for (i =0; i< sizeof(id); i++) {
+				print_usb_hex(*id_ptr); print_usb_str(","); id_ptr++;
+			}
+			print_usb_str("\n");
 		} else if (cmdbuf[1] == 'T') {
 			// * NT       - write, test, and erase a block on the NAND chip, return "OK\n" or "ERROR: FAILED\n"
 		} else { error(); return; }

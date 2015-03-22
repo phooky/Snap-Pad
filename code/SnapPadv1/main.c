@@ -224,12 +224,6 @@ void do_factory_reset_mode() {
 	while (1){} // Loop forever
 }
 
-char hex(uint8_t v) {
-	v &= 0x0f;
-	if (v < 10) return '0'+v;
-	return 'a'+(v-10);
-}
-
 // also used to de-decimal
 uint8_t dehex(char c) {
 	if (c >= '0' && c <= '9') return c - '0';

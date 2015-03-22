@@ -25,6 +25,20 @@ void print_usb_dec(unsigned int i) {
 	cdcSendDataWaitTilDone((BYTE*)buf+(10-digits), digits, CDC0_INTFNUM, 100);
 }
 
+char hex(uint8_t v) {
+	v &= 0x0f;
+	if (v < 10) return '0'+v;
+	return 'a'+(v-10);
+}
+
+// Print 1B hex digit to USB serial port
+void print_usb_hex(const uint8_t i) {
+	char buf[2];
+	buf[0] = hex(i>>4);
+	buf[1] = hex(i);
+	cdcSendDataWaitTilDone((BYTE*)buf, 2, CDC0_INTFNUM, 100);
+}
+
 void print_usb_str(const char* s) {
 	int len = 0;
 	while (s[len] != '\0') {
