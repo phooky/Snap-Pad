@@ -378,8 +378,6 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 							print_usb_dec(i);
 							print_usb_str(":");
 							print_usb_dec(j);
-							print_usb_str(":");
-							print_usb_str(buf);
 							error();
 							return;
 						}
