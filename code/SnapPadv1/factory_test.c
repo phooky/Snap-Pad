@@ -350,6 +350,44 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			print_usb_str("\n");
 		} else if (cmdbuf[1] == 'T') {
 			// * NT       - write, test, and erase a block on the NAND chip, return "OK\n" or "ERROR: FAILED\n"
+			uint16_t block;
+			uint16_t i,j,k;
+			uint8_t* buf = nand_para_buffer();
+			// 1. Select a random block in the range 2-1026
+			hwrng_start();
+			while (!hwrng_done());
+			block = ((*hwrng_bits()) & 0x3ff) + 2;
+			// 2. Erase the block
+			nand_block_erase(block);
+			// 3. Generate a test pattern
+			for (i = 0; i < PARA_SIZE; i++) { buf[i] = (i >> 1) ^ i; }
+			// 4. Write test pattern to all paragraphs and pages in block
+			for (i = 0; i < PAGE_COUNT; i++) {
+				for (j = 0; j < 4; j++) {
+					nand_save_para(block,i,j);
+				}
+			}
+			// 5. Read and verify pattern from all paragraphs and pages in block
+			for (i = 0; i < PAGE_COUNT; i++) {
+				for (j = 0; j < 4; j++) {
+					nand_load_para(block,i,j);
+					for (k = 0; k < PARA_SIZE; k++) {
+						if (buf[k] != (k>>1) ^ k) {
+							print_usb_dec(block);
+							print_usb_str(":");
+							print_usb_dec(i);
+							print_usb_str(":");
+							print_usb_dec(j);
+							print_usb_str(":");
+							print_usb_str(buf);
+							error();
+							return;
+						}
+					}
+				}
+			}
+			ok();
+
 		} else { error(); return; }
 	} else if (cmdbuf[0] == 'R') {
 		// * R        - write an entire block of RNG data to the NAND chip, return it to the server as a newline-terminated sequence of hex digits
