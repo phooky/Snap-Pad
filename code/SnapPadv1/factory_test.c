@@ -350,8 +350,8 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			print_usb_str("\n");
 		} else if (cmdbuf[1] == 'T') {
 			// * NT       - write, test, and erase a block on the NAND chip, return "OK\n" or "ERROR: FAILED\n"
-			uint16_t block;
-			uint16_t i,j,k;
+			uint16_t block,page,para;
+			uint16_t i;
 			uint8_t* buf = nand_para_buffer();
 			// 1. Select a random block in the range 2-1026
 			hwrng_start();
@@ -359,25 +359,32 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			block = ((*hwrng_bits()) & 0x3ff) + 2;
 			// 2. Erase the block
 			nand_block_erase(block);
+			nand_wait_for_ready();
 			// 3. Generate a test pattern
 			for (i = 0; i < PARA_SIZE; i++) { buf[i] = (i >> 1) ^ i; }
 			// 4. Write test pattern to all paragraphs and pages in block
-			for (i = 0; i < PAGE_COUNT; i++) {
-				for (j = 0; j < 4; j++) {
-					nand_save_para(block,i,j);
+			for (page = 0; page < PAGE_COUNT; page++) {
+				for (para = 0; para < 4; para++) {
+					if (!nand_save_para(block,page,para)) {
+						print_usb_dec(block); print_usb_str(" save error: ");
+						error();
+						return;
+					}
 				}
 			}
+			nand_wait_for_ready();
 			// 5. Read and verify pattern from all paragraphs and pages in block
-			for (i = 0; i < PAGE_COUNT; i++) {
-				for (j = 0; j < 4; j++) {
-					nand_load_para(block,i,j);
-					for (k = 0; k < PARA_SIZE; k++) {
-						if (buf[k] != (k>>1) ^ k) {
-							print_usb_dec(block);
-							print_usb_str(":");
-							print_usb_dec(i);
-							print_usb_str(":");
-							print_usb_dec(j);
+			for (page = 0; page < PAGE_COUNT; page++) {
+				for (para = 0; para < 4; para++) {
+					if (!nand_load_para(block,page,para)) {
+						print_usb_dec(block); print_usb_str(" load error: ");
+						error();
+						return;
+					}
+					nand_wait_for_ready();
+					for (i = 0; i < PARA_SIZE; i++) {
+						if (buf[i] != (((i>>1) ^ i) & 0xff)) {
+							print_usb_dec(block); print_usb_str(" data error: ");
 							error();
 							return;
 						}
