@@ -396,6 +396,44 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		} else { error(); return; }
 	} else if (cmdbuf[0] == 'R') {
 		// * R        - write an entire block of RNG data to the NAND chip, return it to the server as a newline-terminated sequence of hex digits
+		uint16_t block,page,para;
+		uint16_t i;
+		uint8_t* buf = nand_para_buffer();
+		// 1. Select a random block in the range 2-1026
+		hwrng_start();
+		while (!hwrng_done());
+		block = ((*hwrng_bits()) & 0x3ff) + 2;
+		hwrng_bits_start(buffers_get_rng(),512);
+		nand_block_erase(block);
+		nand_wait_for_ready();
+		// 2. Generate and save a block of random data
+		for (page = 0; page < PAGE_COUNT; page++) {
+			for (para = 0; para < 4; para++) {
+				// Wait for RNG to finish filling buffer
+				while (!hwrng_bits_done());
+				// swap buffers
+				buffers_swap();
+				// restart rng
+				hwrng_bits_start(buffers_get_rng(),512);
+				// write to local nand
+				nand_save_para(block,page,para);
+				// wait for write completion
+				nand_wait_for_ready();
+			}
+		}
+		// 3. Read and return the block of random data
+		for (page = 0; page < PAGE_COUNT; page++) {
+			for (para = 0; para < 4; para++) {
+				if (!nand_load_para(block,page,para)) {
+					error();
+					return;
+				}
+				for (i = 0; i < PARA_SIZE; i++) {
+					print_usb_hex(buf[i]);
+				}
+			}
+		}
+		print_usb_str("\n");
 	} else {
 		error();
 		return;
