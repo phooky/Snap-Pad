@@ -6,7 +6,7 @@
 <setting alwaysvectorfont="no"/>
 <setting verticaltext="up"/>
 </settings>
-<grid distance="0.01" unitdist="inch" unit="inch" style="lines" multiple="1" display="yes" altdistance="0.0005" altunitdist="inch" altunit="inch"/>
+<grid distance="0.05" unitdist="inch" unit="inch" style="lines" multiple="1" display="yes" altdistance="0.025" altunitdist="inch" altunit="inch"/>
 <layers>
 <layer number="1" name="Top" color="4" fill="1" visible="yes" active="yes"/>
 <layer number="2" name="Route2" color="1" fill="3" visible="yes" active="yes"/>
@@ -330,11 +330,11 @@
 <hole x="0" y="-3.81" drill="0.6"/>
 </package>
 <package name="SNAP-HALF">
-<pad name="P$1" x="-3.81" y="5.08" drill="0.9" shape="long"/>
-<pad name="P$2" x="-3.81" y="2.54" drill="0.9" shape="long"/>
-<pad name="P$3" x="-3.81" y="0" drill="0.9" shape="long"/>
-<pad name="P$4" x="-3.81" y="-2.54" drill="0.9" shape="long"/>
-<pad name="P$5" x="-3.81" y="-5.08" drill="0.9" shape="long"/>
+<pad name="P$1" x="-3.81" y="5.08" drill="0.9"/>
+<pad name="P$2" x="-3.81" y="2.54" drill="0.9"/>
+<pad name="P$3" x="-3.81" y="0" drill="0.9"/>
+<pad name="P$4" x="-3.81" y="-2.54" drill="0.9"/>
+<pad name="P$5" x="-3.81" y="-5.08" drill="0.9"/>
 <wire x1="0" y1="6.985" x2="0" y2="-6.985" width="0.3048" layer="48" style="shortdash"/>
 </package>
 <package name="FIDUCAL">

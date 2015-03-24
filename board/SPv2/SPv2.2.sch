@@ -815,11 +815,11 @@ In this library the device names are the same as the pin names of the symbols, t
 <wire x1="-1.778" y1="-1.016" x2="-1.778" y2="1.016" width="0.127" layer="21"/>
 </package>
 <package name="SNAP-HALF">
-<pad name="P$1" x="-3.81" y="5.08" drill="0.9" shape="long"/>
-<pad name="P$2" x="-3.81" y="2.54" drill="0.9" shape="long"/>
-<pad name="P$3" x="-3.81" y="0" drill="0.9" shape="long"/>
-<pad name="P$4" x="-3.81" y="-2.54" drill="0.9" shape="long"/>
-<pad name="P$5" x="-3.81" y="-5.08" drill="0.9" shape="long"/>
+<pad name="P$1" x="-3.81" y="5.08" drill="0.9"/>
+<pad name="P$2" x="-3.81" y="2.54" drill="0.9"/>
+<pad name="P$3" x="-3.81" y="0" drill="0.9"/>
+<pad name="P$4" x="-3.81" y="-2.54" drill="0.9"/>
+<pad name="P$5" x="-3.81" y="-5.08" drill="0.9"/>
 <wire x1="0" y1="6.985" x2="0" y2="-6.985" width="0.3048" layer="48" style="shortdash"/>
 </package>
 <package name="FIDUCAL">
@@ -2841,7 +2841,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <part name="R1" library="Passives" deviceset="R" device="0805" value="27 5%"/>
 <part name="R2" library="Passives" deviceset="R" device="0805" value="27 5%"/>
 <part name="Q1" library="Passives" deviceset="CRYSTAL" device="CSM-3X" value="12MHz"/>
-<part name="U$1" library="Passives" deviceset="KMR-2" device=""/>
+<part name="SW1" library="Passives" deviceset="KMR-2" device=""/>
 <part name="R3" library="Passives" deviceset="R" device="0805" value="1M"/>
 <part name="SUPPLY10" library="supply2" deviceset="GND" device=""/>
 <part name="R4" library="Passives" deviceset="R" device="0805" value="1.4K 1%"/>
@@ -2899,7 +2899,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 <instance part="R1" gate="G$1" x="121.92" y="119.38" rot="R90"/>
 <instance part="R2" gate="G$1" x="124.46" y="109.22" rot="R90"/>
 <instance part="Q1" gate="G$1" x="162.56" y="71.12"/>
-<instance part="U$1" gate="G$1" x="27.94" y="35.56"/>
+<instance part="SW1" gate="G$1" x="27.94" y="35.56"/>
 <instance part="R3" gate="G$1" x="111.76" y="93.98"/>
 <instance part="SUPPLY10" gate="GND" x="101.6" y="93.98" rot="R270"/>
 <instance part="R4" gate="G$1" x="132.08" y="93.98"/>
@@ -3014,7 +3014,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 </segment>
 <segment>
 <pinref part="SUPPLY14" gate="GND" pin="GND"/>
-<pinref part="U$1" gate="G$1" pin="A1"/>
+<pinref part="SW1" gate="G$1" pin="A1"/>
 <wire x1="17.78" y1="33.02" x2="22.86" y2="33.02" width="0.1524" layer="91"/>
 </segment>
 <segment>
@@ -3512,7 +3512,7 @@ new: Attribute TP_SIGNAL_NAME&lt;br&gt;
 </net>
 <net name="SW_A" class="0">
 <segment>
-<pinref part="U$1" gate="G$1" pin="B"/>
+<pinref part="SW1" gate="G$1" pin="B"/>
 <wire x1="35.56" y1="33.02" x2="43.18" y2="33.02" width="0.1524" layer="91"/>
 <label x="38.1" y="33.02" size="1.778" layer="95"/>
 </segment>
