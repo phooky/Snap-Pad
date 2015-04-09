@@ -10,8 +10,8 @@ AutoSaveProject=1
 UsedLibrary="/home/phooky/opt/eagle-7.1.0/lbr/jumper.lbr"
 UsedLibrary="/home/phooky/opt/eagle-7.1.0/lbr/pinhead.lbr"
 UsedLibrary="/home/phooky/opt/eagle-7.1.0/lbr/testpad.lbr"
-UsedLibrary="74xx-db-us.lbr"
-UsedLibrary="/home/phooky/Repos/phooky/Snap-Pad/board/SPv0/Passives.lbr"
+UsedLibrary="../lbr/74xx-db-us.lbr"
+UsedLibrary="../Passives.lbr"
 
 [Win_1]
 Type="Control Panel"
