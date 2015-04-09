@@ -1,18 +1,42 @@
 Snap-Pad USB Serial API
 =======================
 
-When a Snap-Pad is inserted into a USB port, it appears as a standard USB HID serial device. This document describes the interface for communicating with both unsnapped board pairs and snapped boards.
+When a Snap-Pad is plugged into a USB port, it appears as a standard USB HID serial device.
+
+[TODO: what the devices look like on Windows, OS X, Linux]
 
 All commands sent to the Snap-Pad are terminated with a newline character ('\n').
+Unrecognized or unparsable commands return a newline-terminated message starting with the string 'ERROR' and optionally containing additional information.
 
-Unrecognized or unparsable commands return the message "ERROR: " followed by a brief explanation of the problem.
+There are multiple versions of the Snap-Pad firmware available for production, debugging, and factory test use. All versions support the version ('V') command, which gives the version number and firmware variant.
 
-Standard Commands
------------------
- * Diagnostics
-   * Command: 'D'
-   * Response: A brief diagnostic message of the form
-   
+Basic Snap-Pad Commands
+-----------------------
+
+* Version
+  * Command: 'V'
+  * Works on: all versions
+  * Response: a newline-terminated string containing the version number of the firmware and an optional letter indicating the variant. For example, the string '1.1D' indicates a major version number of 1, a minor version of 1, and that the firmware in question is the debugging variant. The defined variants are:
+
+[TODO: ADD VARIANT LETTERS, REFACTOR VERSION COMMAND OUT]
+
+ Letter |   Variant
+--------|-----------------------
+ _None_ |  Production version
+ D      |  Debug version; do not use in the wild!
+ F      |  Factory test firmware
+
+
+* Random bits
+  * Command: '#'
+  * Works on: all versions
+  * Response: 16 bytes of random data directly from the hardware random number generator. Please note that this response is not encoded in any way; the bytes are written raw to the serial port.
+
+* Get diagnostics
+  * Command: 'D'
+  * Works on: debug and production
+  * Response: A brief diagnostic message of the form
+  [TODO: REFACTOR DIAGNOSTICS] 
             ---BEGIN DIAGNOSTICS---
             Debug: true
             Mode: Single board
@@ -20,13 +44,10 @@ Standard Commands
             Blocks:2047
             ---END DIAGNOSTICS---
             
-* Random bits
-  * Command: '#'
-  * Response: 64 bytes of random data directly from the RNG. Please note that this response is not encoded in any way; the bytes are written raw to the serial port.
-  
 * Retrieve paragraphs
   * Command: 'R(block#),(page#),(paragraph#)[,(block#),(page#),(paragraph#)]'
-  * The retrieve command is used to read specific paragraphs from the Snap-Pad, ordinarily for decrypting a message. Up to four paragraphs may be requested in a single command. When the command is issued, 1-4 LEDs will begin to blink on the Snap-Pad. The user can then push the button on the Snap-Pad to retrieve the paragraphs. They will be returned as base64 encoded data. If the user fails to push the button, a timeout message will be returned.
+  * Works on: debug and production
+  * The retrieve command is used to read and zero specific paragraphs from the Snap-Pad, ordinarily for decrypting a message. Up to four paragraphs may be requested in a single command. When the command is issued, 1-4 LEDs will begin to blink on the Snap-Pad. The user can then push the button on the Snap-Pad to retrieve the paragraphs. They will be returned as base64 encoded data. If the user fails to push the button, a timeout message will be returned. After the data has been returned, the paragraph will be zeroed on the NAND flash.
   * Response: one base64 encoded block for each paragraph returned, fomatted as:
   
             ---BEGIN PARA (block#),(page#),(paragraph#)---

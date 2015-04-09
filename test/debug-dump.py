@@ -14,12 +14,16 @@ class Pad:
         self.port.flushInput()
         time.sleep(0.5)
         self.port.flush()
+        self.port.timeout = 5
     def get(self,block,page,para):
-        self.port.flushInput()
-        self.port.flush()
-        self.port.write(('r{0},{1},{2}\n').format(block,page,para).encode())
-        self.port.flush()
-        return self.port.read(512)
+        data = ''
+        while len(data) < 512:
+            self.port.flushInput()
+            self.port.flush()
+            self.port.write(('r{0},{1},{2}\n').format(block,page,para).encode())
+            self.port.flush()
+            data = self.port.read(512)
+        return data
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Retrieve all data from debug mode snap-pad.')
