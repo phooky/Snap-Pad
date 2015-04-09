@@ -1,4 +1,6 @@
 These are the Eagle CAD board files and libraries for the Snap-Pad.
+The files in this directory are published under the CERN Open Hardware License.
+See the file "cern_ohl_v_1_2.txt" in the parent directory for more information.
 
 The libraries are in the "lbr" directory; the schematics and boards are in the "Snap-Pad" directory.
 
