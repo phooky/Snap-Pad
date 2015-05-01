@@ -2,6 +2,7 @@
 
 import serial
 import argparse
+import select
 from sys import stdin
 
 class PadTest:
@@ -14,9 +15,12 @@ class PadTest:
         self.port.write((command+'\n').encode())
         if rawb > 0:
             self.raw = self.port.read(rawb)
+            self.rsp = self.raw
+            dat = b''
         #print(self.port.readline())
-        dat = self.port.readline().strip()
-        self.rsp = dat
+        else:
+            dat = self.port.readline().strip()
+            self.rsp = dat
         return dat
     def instructions(self,message):
         "Instructions for interactive tests"
@@ -25,6 +29,14 @@ class PadTest:
         "Ask a question of the user"
         print(message)
         self.rsp=stdin.readline().strip().encode()
+    def q_timeout(self,timeout):
+        "Check for a response w/ given timeout"
+        rfds,_,_ = select.select( [stdin], [], [], timeout)
+        if len(rfds) > 0:
+            self.rsp = stdin.readline().strip().encode()
+            return True
+        else:
+            return False 
     def expect(self,value):
         if value.encode() == self.rsp:
             self.ok(value)
@@ -63,9 +75,20 @@ class ButtonInteractiveTest(PadTest):
     def __init__(self):
         self.name='Button test (interactive)'
     def run_test(self):
-        self.instructions('Press the button exactly twice within the next five seconds')
-        self.run_command('B',timeout=5.5)
+        self.instructions('Press the button exactly twice within the next ten seconds')
+        self.run_command('B',timeout=10.5)
         self.expect('2')
+
+class LEDAttractTest(PadTest):
+    def __init__(self):
+        self.name='LED test (interactive)'
+    def run_test(self):
+        self.instructions('Are the LEDs couting up? (y/n)')
+        ledv = 0
+        while not self.q_timeout(0.1):
+            self.run_command('L{0:x}'.format(ledv))
+            ledv = (ledv+1)%16
+        self.expect('y')
 
 class LEDInteractiveTest(PadTest):
     def __init__(self,pattern):
@@ -97,8 +120,9 @@ class RandomTest(PadTest):
 
 all_tests = [
         VersionTest(), PingTest(), ONFITest(),
-        RandomTest(1024)
+        #LEDAttractTest(),
         #ButtonInteractiveTest(),
+        RandomTest(256),
         #LEDInteractiveTest(0x5),
         #LEDInteractiveTest(0xa)
         ]
