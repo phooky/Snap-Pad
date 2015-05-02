@@ -13,8 +13,16 @@
 // DEBUG -- debugging build
 // FACTORY_TEST -- factory test build
 
-#define MAJOR_VERSION 0x01
-#define MINOR_VERSION 0x01
+#define MAJOR_VERSION 1
+#define MINOR_VERSION 1
+
+#if defined(DEBUG)
+#define VARIANT "D"
+#elif defined(FACTORY_TEST)
+#define VARIANT "F"
+#else
+#define VARIANT ""
+#endif
 
 enum {
 	CS_INDETERMINATE = 0,

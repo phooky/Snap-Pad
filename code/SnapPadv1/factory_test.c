@@ -289,7 +289,11 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		// skip
 	} else if (cmdbuf[0] == 'V') {
 		// return version number
-		print_usb_dec(MAJOR_VERSION); print_usb_str("."); print_usb_dec(MINOR_VERSION); print_usb_str("\n");
+		print_usb_dec(MAJOR_VERSION); print_usb_str("."); print_usb_dec(MINOR_VERSION);
+#if defined(VARIANT)
+		print_usb_str(VARIANT);
+#endif
+		print_usb_str("\n");
 	} else if (cmdbuf[0] == 'L') {
 		// turn on LEDs
 		uint8_t leds = dehex(cmdbuf[1]);

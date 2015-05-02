@@ -358,6 +358,7 @@ bool parseBPP(uint8_t* buf, uint8_t* idx, uint8_t len, uint16_t* block, uint8_t*
  * All commands are terminated by a newline character.
  * Standard command summary:
  *
+ * V                       - return a string describing the version of the firmware
  * D                       - diagnostics
  * #                       - produce 64 bytes of random data from the RNG
  * Rblock,page,para,count  - retrieve (and zero) count paragraphs starting at block,page,para.
@@ -381,6 +382,12 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == 'D') {
 		// run diagnostics
 		diagnostics();
+	} else if (cmdbuf[0] == 'V') {
+		print_usb_dec(MAJOR_VERSION); print_usb_str("."); print_usb_dec(MINOR_VERSION);
+#if defined(VARIANT)
+		print_usb_str(VARIANT);
+#endif
+		print_usb_str("\n");
 	} else if (cmdbuf[0] == 'P') {
 		// provision 'count' blocks.
 		uint8_t idx = 1;
