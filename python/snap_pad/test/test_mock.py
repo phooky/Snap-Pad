@@ -21,7 +21,7 @@ class MockTest(unittest.TestCase):
         while True:
             v = self.sp.readline().strip()
             self.assertNotEqual(v,'')
-            if self.sp.readline().strip() == '---END DIAGNOSTICS---':
+            if v == '---END DIAGNOSTICS---':
                 break
 
     def testRNG(self):

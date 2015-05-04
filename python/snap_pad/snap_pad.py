@@ -46,12 +46,13 @@ def open_serial(port_name):
     port = serial.Serial(port_name)
     # Clean up any trash left behind by modemmanager or other tools that
     # automatically attempt to communicate with serial devices.
-    self.p.flushInput()
-    self.p.write('\n')
-    self.p.flush()
+    port.flushInput()
+    port.write('\n')
+    port.flush()
     time.sleep(0.1)
-    self.p.timeout=1
-    self.p.flushInput()
+    port.timeout=1
+    port.flushInput()
+    return port
 
 class SnapPad:
     def __init__(self,port,sn):
@@ -70,8 +71,8 @@ class SnapPad:
 
     def read_version(self):
         'Read the version number from the pad and warn on variant builds.'
-        self.p.write('V\n')
-        m = re.match('([0-9]+)\\.([0-9]+)([A-Z]?)$',self.p.readline())
+        self.sp.write('V\n')
+        m = re.match('([0-9]+)\\.([0-9]+)([A-Z]?)$',self.sp.readline())
         if not m:
             raise Error("Could not retrieve version from Snap-Pad")
         self.major = int(m.group(1))
@@ -90,12 +91,12 @@ class SnapPad:
 
     def read_diagnostics(self):
         'Explicitly read diagnostics from pad'
-        self.p.write("D\n")
-        line = self.p.readline().strip()
+        self.sp.write("D\n")
+        line = self.sp.readline().strip()
         assert line == '---BEGIN DIAGNOSTICS---'
         d = {}
         while True:
-            line = self.p.readline().strip()
+            line = self.sp.readline().strip()
             if line == '---END DIAGNOSTICS---':
                 break;
             try:

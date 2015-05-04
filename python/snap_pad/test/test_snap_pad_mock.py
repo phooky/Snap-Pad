@@ -24,6 +24,7 @@ class SnapPadHWMock(serial.FileLike):
         self.variant = variant 
         self.mode = mode 
         self.kwargs = kwargs
+        self.diagnostics = { 'Debug':'true', 'Mode':'Single board', 'Random':'Done', 'Blocks':'2047' }
         self.buffer = ''
         self.outbuf = ''
 
@@ -32,7 +33,11 @@ class SnapPadHWMock(serial.FileLike):
 
     def do_diagnostics(self):
         self.outbuf += '---BEGIN DIAGNOSTICS---\n'
-        self.outbuf += 'Test mockup; no diagnostics.\n'
+        if self.diagnostics:
+            for k,v in self.diagnostics.items():
+                self.outbuf += '{0}:{1}\n'.format(k,v)
+        else:
+            self.outbuf += 'Error: Test mockup; no diagnostics.\n'
         self.outbuf += '---END DIAGNOSTICS---\n'
 
     def release_para(self,block,page,para):

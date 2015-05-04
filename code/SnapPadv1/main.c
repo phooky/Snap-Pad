@@ -233,7 +233,7 @@ uint8_t dehex(char c) {
 }
 
 void error(const char* msg) {
-	print_usb_str("ERROR: ");
+	print_usb_str("ERROR:");
 	if (msg) {
 		print_usb_str(msg);
 	}
@@ -259,10 +259,10 @@ void diagnostics() {
 	// Display connection state
 	print_usb_str("---BEGIN DIAGNOSTICS---\n");
 #ifdef DEBUG
-	print_usb_str("Debug: true\n");
+	print_usb_str("Debug:true\n");
 #endif
 	{
-		print_usb_str("Mode: ");
+		print_usb_str("Mode:");
 		if (cs == CS_TWINNED_MASTER) { print_usb_str("Twinned master\n"); }
 		else if (cs == CS_TWINNED_SLAVE) { print_usb_str("Twinned slave\n"); }
 		else if (cs == CS_SINGLE) { print_usb_str("Single board\n"); }
