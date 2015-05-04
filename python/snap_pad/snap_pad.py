@@ -4,6 +4,7 @@ import serial
 import serial.tools.list_ports
 import logging
 import re
+import time
 from base64 import b64encode,b64decode
 
 vendor_id=0x2047
@@ -26,11 +27,9 @@ product_id=0x03ee
 #
 
 # regexps for parsing preambles
-preamble_re = re.compile("^---(BEGIN|USED) PARA ([0-9]+),([0-9]+),([0-9]+)---$")
-end_re = re.compile("^---END PARA---$")
+preamble_re = re.compile('^---(BEGIN|USED) PARA ([0-9]+),([0-9]+),([0-9]+)---$')
+end_re = re.compile('^---END PARA---$')
 
-def find_snap_pads():
-    return [SnapPad(x['port'],x['iSerial']) for x in serial.tools.list_ports.list_ports_by_vid_pid(vendor_id,product_id)]
 
 class Paragraph:
     def __init__(self,block,page,para):
@@ -40,17 +39,55 @@ class Paragraph:
         self.used = False
         self.bits = ''
 
+def open_serial(port_name):
+    'Convenience method for opening a serial port and flushing any noise.'
+    port = serial.Serial(port_name)
+    # Clean up any trash left behind by modemmanager or other tools that
+    # automatically attempt to communicate with serial devices.
+    self.p.flushInput()
+    self.p.write('\n')
+    self.p.flush()
+    time.sleep(0.1)
+    self.p.timeout=1
+    self.p.flushInput()
+
 class SnapPad:
     def __init__(self,port,sn):
-        self.p = serial.Serial(port)
+        if type(port) == str:
+            self.sp = open_serial(port)
+        else:
+            self.sp = port
         self.sn = sn
         logging.debug("Found snap-pad with SN {0}".format(self.sn))
+        # Read version
+        self.read_version()
         # Read diagnostics
         self.diagnostics = self.read_diagnostics()
 
+
+
+    def read_version(self):
+        'Read the version number from the pad and warn on variant builds.'
+        self.p.write('V\n')
+        m = re.match('([0-9]+)\\.([0-9]+)([A-Z]?)$',self.p.readline())
+        if not m:
+            raise Error("Could not retrieve version from Snap-Pad")
+        self.major = int(m.group(1))
+        self.minor = int(m.group(2))
+        self.variant = m.group(3)
+        if self.variant == 'F':
+            raise Error('This Snap-Pad is loaded with the factory test firmware.')
+        elif self.variant == 'D':
+            logging.warning('This Snap-Pad is running the debug firmware; this is not safe!')
+        elif self.variant == 'M':
+            logging.error('This Snap-Pad is a test mockup and is not suitable for use for any purpose!')
+        elif self.variant == '':
+            pass # no variant, just fine
+        else:
+            raise Error('This Snap-Pad is running an unknown firmware variant.')
+
     def read_diagnostics(self):
-        "Explicitly read diagnostics from pad"
-        self.p.flushInput()
+        'Explicitly read diagnostics from pad'
         self.p.write("D\n")
         line = self.p.readline().strip()
         assert line == '---BEGIN DIAGNOSTICS---'
@@ -59,11 +96,14 @@ class SnapPad:
             line = self.p.readline().strip()
             if line == '---END DIAGNOSTICS---':
                 break;
-            [k,v] = line.split(":",1)
-            d[k] = v
-        self.insecure = d.has_key("Debug")
-        if self.insecure:
-            logging.warning("Debug build; pad {0} is not secure!!!".format(self.sn))
+            try:
+                [k,v] = line.split(":",1)
+                if k == 'ERROR':
+                    logging.error('Diagnostic error: {0}'.format(v))
+                else:
+                    d[k] = v
+            except ValueError:
+                logging.error('Unrecognized diagnostic: {0}'.format(line))
         return d
 
     def is_single(self):
@@ -121,25 +161,29 @@ class SnapPad:
         paras = [self.read_para() for _ in range(count)]
         return paras        
 
+
 def add_pad_arguments(parser):
-    "Add parser arguments for finding a snap-pad"
+    'Add parser arguments for finding a snap-pad'
     parser.add_argument("-s", "--serial", type=str,
                         help="indicate serial number of snap-pad")
 
+def list_snap_pads():
+    return [(x['port'],x['iSerial']) for x in serial.tools.list_ports.list_ports_by_vid_pid(vendor_id,product_id)]
+
 def find_our_pad(args):
-    "Find the snap-pad specified by the user on the command line"
-    pads = find_snap_pads()
+    'Find the snap-pad specified by the user on the command line'
+    pads = list_snap_pads()
     if args.serial:
-        for pad in pads:
-            if pad.sn == args.serial:
-                return pad
-        logging.error("No Snap-Pad matching serial number {0} found.".format(args.serial))
+        for (port,serial) in pads:
+            if serial == args.serial:
+                return SnapPad(port)
+        logging.error('No Snap-Pad matching serial number {0} found.'.format(args.serial))
         return None
     else:
         if len(pads) == 0:
-            logging.error("No Snap-Pads detected; check that your Snap-Pad is plugged in.")
+            logging.error('No Snap-Pads detected; check that your Snap-Pad is plugged in.')
         elif len(pads) > 1:
-            logging.error("Multiple Snap-Pads detected; use the --serial option to choose one.")
+            logging.error('Multiple Snap-Pads detected; use the --serial option to choose one.')
         else:
             return pads[0]
         return None
