@@ -54,9 +54,10 @@ extern "C"
 // Refer to Sec. 6 of the MSP430 USB CDC API Programmer's Guide for descriptions of these constants.
 
 // Configuration Constants that can change
-// #define that relates to Device Descriptor
-#define USB_VID               0x2047        // Vendor ID (VID)
-#define USB_PID               0x03ee        // Product ID (PID)
+// Snap-Pad USB VID is 0x1209, PID is 0x2400
+// This VID:PID pair courtesy http://pid.codes/1209/2400/
+#define USB_VID               0x1209        // Vendor ID (VID)
+#define USB_PID               0x2400        // Product ID (PID)
 /*----------------------------------------------------------------------------+
 | Firmware Version                                                            |
 | How to detect version number of the FW running on MSP430?                   |
