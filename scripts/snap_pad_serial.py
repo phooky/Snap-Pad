@@ -6,8 +6,10 @@ import logging
 import re
 from base64 import b64encode,b64decode
 
-vendor_id=0x2047
-product_id=0x03ee
+# Vendor and product ID from http://pid.codes/1209/2400/
+# Thanks to the people behind pid.codes!
+vendor_id=0x1209
+product_id=0x2400
 
 
 #
