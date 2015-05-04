@@ -3,6 +3,7 @@ import sys
 import random
 import time
 import serial
+import base64
 
 sys.stderr.write("*** WARNING: You are importing a test module. This is not for production use!\n")
 
@@ -35,7 +36,7 @@ class SnapPadHWMock(serial.FileLike):
         self.outbuf += '---END DIAGNOSTICS---\n'
 
     def release_para(self,block,page,para):
-        self.outbuf += '---BEGIN PARA {0},{1},{2}---\n'
+        self.outbuf += '---BEGIN PARA {0},{1},{2}---\n'.format(block,page,para)
         # reseed rng?
         rng = self.rng
         parasz = 512
@@ -46,7 +47,12 @@ class SnapPadHWMock(serial.FileLike):
         self.outbuf += '---END PARA---\n'
 
     def provision_one(self):
-        release_para(1,1,1)
+        self.release_para(1,1,1)
+
+    def do_error(self,msg):
+        self.outbuf += 'ERROR: '
+        self.outbuf += msg
+        self.outbuf += '\n'
 
     def do_provision(self,command):
         count = int(command[1:])
@@ -57,7 +63,10 @@ class SnapPadHWMock(serial.FileLike):
             self.provision_one()
 
     def do_retrieve(self,command):
-        pass
+        spec = command[1:].split(',')
+        while len(spec)>0:
+            addr, spec = spec[:3], spec[3:]
+            self.release_para(addr[0],addr[1],addr[2])
 
     def do_rng(self):
         self.outbuf += bytearray([self.rng.randint(0,255) for x in range(64)])
