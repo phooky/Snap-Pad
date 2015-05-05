@@ -162,6 +162,10 @@ class SnapPad:
         paras = [self.__read_para() for _ in range(count)]
         return paras        
 
+    def hwrng(self):
+        'Return 64 bytes of random data from the hardware RNG'
+        self.sp.write('#\n')
+        return self.sp.read(64)
 
 def add_pad_arguments(parser):
     'Add parser arguments for finding a snap-pad'

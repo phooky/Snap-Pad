@@ -50,4 +50,7 @@ class SnapPadTest(unittest.TestCase):
     def testProvisionFour(self):
         self.doProvision(4)
 
+    def testRandom(self):
+        r = self.sp.hwrng()
+        self.assertEqual(len(r),64)
 
