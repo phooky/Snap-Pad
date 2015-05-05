@@ -193,34 +193,3 @@ def find_our_pad(args):
             return pads[0]
         return None
 
-        
-if __name__ == '__main__':
-    # enumerate pads
-    import argparse
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-v", "--verbosity", action="count",
-                        default=0,
-                        help="increase output verbosity")
-    parser.add_argument("-r", "--retrieve", action="append",
-                        help="retrieve a 'block,page,para' triplet")
-    parser.add_argument("-p", "--provision", type=int,
-                        help="retrieve a 'block,page,para' triplet")
-    args = parser.parse_args()
-    logging.getLogger().setLevel(logging.INFO - 10*args.verbosity)
-    pads = find_snap_pads()
-    for pad in pads:
-        d = pad.diagnostics
-        if not pad.is_single():
-            logging.warning("This pad is not snapped!")
-        if args.retrieve > 0:
-            paras = pad.retrieve_paragraphs([tuple(map(int,r.split(","))) for r in args.retrieve])
-        if args.provision:
-            paras = pad.provision_paragraphs(args.provision)
-            for p in paras:
-                print p.block,p.page,p.para,"used",p.used,"data size",len(p.bits)
-                        
-
-            
-        
-            
-            
