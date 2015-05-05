@@ -63,13 +63,12 @@ class SnapPad:
         self.sn = sn
         logging.debug("Found snap-pad with SN {0}".format(self.sn))
         # Read version
-        self.read_version()
+        self.__read_version()
         # Read diagnostics
-        self.diagnostics = self.read_diagnostics()
+        self.diagnostics = self.__read_diagnostics()
 
 
-
-    def read_version(self):
+    def __read_version(self):
         'Read the version number from the pad and warn on variant builds.'
         self.sp.write('V\n')
         m = re.match('([0-9]+)\\.([0-9]+)([A-Z]?)$',self.sp.readline())
@@ -89,7 +88,7 @@ class SnapPad:
         else:
             raise Error('This Snap-Pad is running an unknown firmware variant.')
 
-    def read_diagnostics(self):
+    def __read_diagnostics(self):
         'Explicitly read diagnostics from pad'
         self.sp.write("D\n")
         line = self.sp.readline().strip()
@@ -109,12 +108,13 @@ class SnapPad:
                 logging.error('Unrecognized diagnostic: {0}'.format(line))
         return d
 
-    def is_single(self):
+    def __is_single(self):
         "Return true if the snap-pad is disconnected from its twin"
         return self.diagnostics['Mode'] == 'Single board'
 
-    def read_para(self):
-        preamble = self.p.readline()
+    def __read_para(self):
+        'Helper for reading a paragraph from the device.'
+        preamble = self.sp.readline()
         prematch = preamble_re.match(preamble)
         assert prematch
         para_type = prematch.group(1)
@@ -131,7 +131,7 @@ class SnapPad:
         elif para_type == 'BEGIN':
             data = ''
             while True:
-                l=self.p.readline()
+                l=self.sp.readline()
                 if end_re.match(l):
                     break
                 data = data + l.strip()
@@ -147,21 +147,19 @@ class SnapPad:
             assert para >= 0 and para < 4
         specifiers = ["{0},{1},{2}".format(bl,pg,pr) for (bl,pg,pr) in paragraphs]
         command = "R"+",".join(specifiers)+"\n"
-        self.p.flushInput()
-        self.p.write(command)
+        self.sp.write(command)
         # Paragraphs begin with "---BEGIN PARA B,P,P---" and end with "---END PARA---"
         # If the block is already consumed, it emits "---USED PARA B,P,P---" instead of
         # either message
-        paras = [self.read_para() for _ in range(len(specifiers))]
+        paras = [self.__read_para() for _ in range(len(specifiers))]
         return paras
 
     def provision_paragraphs(self,count):
         "Provision the given count of paragraphs"
         assert count > 0 and count <= 4
         command = "P{0}\n".format(count)
-        self.p.flushInput()
-        self.p.write(command)
-        paras = [self.read_para() for _ in range(count)]
+        self.sp.write(command)
+        paras = [self.__read_para() for _ in range(count)]
         return paras        
 
 
