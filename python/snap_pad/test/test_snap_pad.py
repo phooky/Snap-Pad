@@ -1,6 +1,6 @@
 import unittest
 import re
-from test_snap_pad_mock import SnapPadHWMock, MAJOR, MINOR
+from .test_snap_pad_mock import SnapPadHWMock, MAJOR, MINOR
 from snap_pad import SnapPad
 
 class SnapPadTest(unittest.TestCase):
