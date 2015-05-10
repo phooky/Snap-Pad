@@ -169,8 +169,10 @@ class SnapPad:
 
 def add_pad_arguments(parser):
     'Add parser arguments for finding a snap-pad'
-    parser.add_argument("-s", "--serial", type=str,
-                        help="indicate serial number of snap-pad")
+    parser.add_argument('--sn', type=str,
+            help='use the Snap-Pad with the specified serial number')
+    parser.add_argument('--port', type=str,
+            help='use the Snap-Pad attached to the specified port')
 
 def list_snap_pads():
     return [(x['port'],x['iSerial']) for x in serial.tools.list_ports.list_ports_by_vid_pid(vendor_id,product_id)]
@@ -178,17 +180,19 @@ def list_snap_pads():
 def find_our_pad(args):
     'Find the snap-pad specified by the user on the command line'
     pads = list_snap_pads()
-    if args.serial:
-        for (port,serial) in pads:
-            if serial == args.serial:
+    if args.sn:
+        for (port,sn) in pads:
+            if sn == args.sn:
                 return SnapPad(port)
         logging.error('No Snap-Pad matching serial number {0} found.'.format(args.serial))
         return None
+    elif args.port:
+        return SnapPad(args.port)
     else:
         if len(pads) == 0:
             logging.error('No Snap-Pads detected; check that your Snap-Pad is plugged in.')
         elif len(pads) > 1:
-            logging.error('Multiple Snap-Pads detected; use the --serial option to choose one.')
+            logging.error('Multiple Snap-Pads detected; use the --sn or --port option to choose one.')
         else:
             return pads[0]
         return None
