@@ -12,6 +12,11 @@
 #include <stdbool.h>
 #include "config.h"
 
+/** The uart connection state indicates whether this Snap-Pad half is connected to
+	another board via the UART, and if so, which role it plays. A Snap-Pad that is
+	connected to an active USB connection should always be in the "Master" role. */
+typedef uint8_t ConnectionState;
+
 enum {
 	CS_INDETERMINATE = 0,
 	CS_SINGLE,
@@ -21,12 +26,6 @@ enum {
 
 	CS_LAST
 };
-
-typedef uint8_t ConnectionState;
-/**
- * Current connection state of snap-pad. Instantiated in main.c.
- */
-extern ConnectionState connection_state;
 
 /**
  * Packet format:
@@ -63,14 +62,18 @@ enum {
 };
 
 
-/**
- * Init the UART for cross-chip communication.
- */
+/** Initialize the hardware UART. */
 void uart_init();
 
-
+/** Retrieve one byte of data from the hardware uart. Will block perpetually
+	until a byte of data is available. */
 uint8_t uart_consume();
-uint8_t uart_consume_timeout(uint16_t msec);
+/** Attempt to retrieve one byte of data from the uart. If no data is available,
+	wait for data until the given timeout, specified in milliseconds, passes.
+	Data is returned in the one-character buffer. Returns true if data is valid,
+	or false if the timeout has expired. */
+bool uart_consume_timeout(uint8_t* buffer, uint16_t msec);
+
 void uart_send_byte(uint8_t b);
 
 /*

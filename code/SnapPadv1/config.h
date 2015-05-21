@@ -25,11 +25,11 @@
 /** The firmware variant is defined based on the values of the
 	DEBUG and FACTORY_TEST flags. */
 #if defined(DEBUG)
-#define VARIANT "D"
+	#define VARIANT "D"
 #elif defined(FACTORY_TEST)
-#define VARIANT "F"
+	#define VARIANT "F"
 #else
-#define VARIANT ""
+	#define VARIANT ""
 #endif
 
 /** Define exactly one of options below to indicate which NAND

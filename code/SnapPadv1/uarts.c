@@ -96,14 +96,14 @@ uint8_t uart_consume() {
 }
 
 
-uint8_t uart_consume_timeout(uint16_t timeout) {
+bool uart_consume_timeout(uint8_t* buffer, uint16_t timeout) {
 	timer_reset();
 	while (uart_rx_start == uart_rx_end) {
-		if (timer_msec() >= timeout) { return 0xff; }
+		if (timer_msec() >= timeout) { return false; }
 	}
-	uint8_t c = uart_rx_buf[uart_rx_start];
+	*buffer = uart_rx_buf[uart_rx_start];
 	uart_rx_start = (uart_rx_start +1) % UART_RING_LEN;
-	return c;
+	return true;
 }
 
 /**
