@@ -206,13 +206,13 @@ void uart_process() {
 		// UTOK_RST_PROPOSE, UTOK_RST_CONFIRM, UTOK_RST_COMMIT
 		if (command == UTOK_RST_PROPOSE) {
 			uint8_t i;
-    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_1);
-    		wait_for_confirm();
-    		uart_send_byte(UTOK_RST_CONFIRM);
-    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_1:LED_FAST_0);
-    		otp_factory_reset();
-    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
-    		while(1){} // Loop forever
+			for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_1);
+			wait_for_confirm();
+			uart_send_byte(UTOK_RST_CONFIRM);
+			for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_1:LED_FAST_0);
+			otp_factory_reset();
+			for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
+			while(1){} // Loop forever
 		} else if (command == UTOK_BUTTON_QUERY) {
 			uart_send_byte(UTOK_BUTTON_RSP);
 			uart_send_byte(has_confirm()?0xff:0x00);
@@ -307,17 +307,17 @@ __interrupt void USCI_A1_ISR(void)
 	uint8_t rx;
 	switch(__even_in_range(UCA1IV,4))
 	{
-  	case 0:break;                             // Vector 0 - no interrupt
+	case 0:break;                             // Vector 0 - no interrupt
 	case 2:                                   // Vector 2 - RXIFG
 		// check for errors
 		//if ((UCA1STAT & (UCOE|UCPE|UCBRK|UCRXERR)) != 0) {
-	  	//	uart_rx_buf[uart_rx_end] = UCA1STAT;
-	  	//	uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
+		//	uart_rx_buf[uart_rx_end] = UCA1STAT;
+		//	uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
 		//}
-  		rx = UCA1RXBUF;
-  		uart_rx_buf[uart_rx_end] = rx;
-  		uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
-  		break;
+		rx = UCA1RXBUF;
+		uart_rx_buf[uart_rx_end] = rx;
+		uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
+		break;
 	case 4:                                  // Vector 4 - TXIFG
 		if (uart_tx_len == 0) {
 			ready_for_send = true;
