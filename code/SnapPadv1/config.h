@@ -36,20 +36,4 @@
 	chip the target board is using. */
 #define NAND_CHIP_S34ML01G2			// 2Gb Samsung SLC flash
 
-enum {
-	CS_INDETERMINATE = 0,
-	CS_SINGLE,
-	CS_TWINNED_MASTER,
-	CS_TWINNED_SLAVE,
-	CS_TWINNED_COLLISION,
-
-	CS_LAST
-};
-
-typedef uint8_t ConnectionState;
-/**
- * Current connection state of snap-pad. Instantiated in main.c.
- */
-extern ConnectionState connection_state;
-
 #endif /* CONFIG_H_ */

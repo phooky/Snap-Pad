@@ -12,6 +12,22 @@
 #include <stdbool.h>
 #include "config.h"
 
+enum {
+	CS_INDETERMINATE = 0,
+	CS_SINGLE,
+	CS_TWINNED_MASTER,
+	CS_TWINNED_SLAVE,
+	CS_TWINNED_COLLISION,
+
+	CS_LAST
+};
+
+typedef uint8_t ConnectionState;
+/**
+ * Current connection state of snap-pad. Instantiated in main.c.
+ */
+extern ConnectionState connection_state;
+
 /**
  * Packet format:
  * TOK DAT*
