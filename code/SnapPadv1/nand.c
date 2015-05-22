@@ -277,7 +277,7 @@ struct checksum_ret nand_block_checksum(uint16_t block) {
 	struct checksum_ret rv = {0,true};
 	uint8_t page, para;
 	uint8_t* para_buffer = buffers_get_nand();
-	for (page = 0; page < 64; page++) {
+	for (page = 0; page < PAGE_COUNT; page++) {
 		for (para = 0; para < 4; para++) {
 			if (nand_load_para(block,page,para)) {
 				uint16_t idx;

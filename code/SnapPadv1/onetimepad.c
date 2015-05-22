@@ -253,7 +253,7 @@ bool otp_randomize_boards() {
 		leds_set_led(1,(block>512)?LED_FAST_0:LED_OFF);
 		leds_set_led(2,(block>1024)?LED_FAST_0:LED_OFF);
 		leds_set_led(3,(block>1536)?LED_FAST_0:LED_OFF);
-		for (page = 0; page < 64; page++) {
+		for (page = 0; page < PAGE_COUNT; page++) {
 			uint8_t para;
 			for (para = 0; para < 4; para++) {
 				// Wait for RNG to finish filling buffer
@@ -411,7 +411,7 @@ static bool is_para_available(uint16_t block, uint8_t page, uint8_t para) {
  */
 bool otp_find_unmarked_para(uint16_t block, uint8_t* page, uint8_t* para, bool backwards) {
 	uint8_t cpage, cpara;
-	for (cpage = 0; cpage < 64; cpage++) {
+	for (cpage = 0; cpage < PAGE_COUNT; cpage++) {
 		for (cpara = 0; cpara < 4; cpara++) {
 			if (backwards) {
 				*page = 63-cpage;
