@@ -254,7 +254,7 @@ void nand_initialize_para_buffer() {
 
 /**
  * Load an entire paragraph into the paragraph buffer. Uses a Huffman code for SEC-DED on each 512B paragraph.
- * @param block the block number (>1024 indicates plane 1)
+ * @param block the block index
  * @param page the page number
  * @param paragraph the paragraph within the page to zero (0-3).
  * @return true if the read was successful; false if there was a multibit error.
@@ -296,7 +296,7 @@ struct checksum_ret nand_block_checksum(uint16_t block) {
 /**
  * Write an entire page from the page buffer into NAND with SEC-DED error correction.
  * At present, blocks until entire page write is complete.
- * @param block the block number (>1024 indicates plane 1)
+ * @param block the block index
  * @param page the page number
  * @param paragraph the paragraph within the page to zero (0-3).
  * @return true if the write was successful; false if there was a write error.
@@ -321,7 +321,7 @@ uint8_t* nand_para_buffer() {
 /**
  * Zero a 512B paragraph and its associated spare area. This should be done immediately
  * after using a paragraph.
- * @param block the block number (>1024 indicates plane 1)
+ * @param block the block index
  * @param page the page number
  * @param paragraph the paragraph within the page to zero (0-3).
  * @return true if the zero was successful
