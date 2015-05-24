@@ -37,6 +37,7 @@ bool otp_write_bad_blocks(uint16_t* bad_block_list, uint8_t bad_block_count);
  */
 void otp_factory_reset();
 
+/** In-memory representation of OTP configuration. */
 typedef struct {
 	bool has_header;
 	bool randomization_finished;
@@ -92,14 +93,13 @@ void otp_mark_block(uint16_t block, uint8_t usage);
 uint16_t otp_find_unmarked_block(bool backwards);
 
 /**
- * Find the first/last usable page/para in the given block
- * @return true if a valid page/para is found
+ * Find the first/last usable page in the given block
+ * @return true if a valid page is found
  * @param block the block to scan
- * @param page pointer to page value
- * @param para pointer to para value
+ * @param page pointer to page index within block
  * @param backwards search backwards from the last block
  */
-bool otp_find_unmarked_para(uint16_t block, uint8_t* page, uint8_t* para, bool backwards);
+bool otp_find_unmarked_page(uint16_t block, uint16_t* page, bool backwards);
 
 /**
  * Debug function: check usage status of a block
@@ -109,19 +109,17 @@ bool otp_find_unmarked_para(uint16_t block, uint8_t* page, uint8_t* para, bool b
 uint8_t otp_get_block_status(uint16_t block);
 
 /**
- * Provision a number of blocks for use.
- * @param count The number of blocks to provision, where 0 < count <= 4
+ * Provision a number of pages for use.
+ * @param count The number of pages to provision, where 0 < count <= 4
  * @param is_A True if is this the A board half; false if B.
  */
 void otp_provision(uint8_t count,bool is_A);
 
 /**
- * Retrieve a particular block for decoding.
- * @param block Block number, where 0 < block < 2048
- * @param page Page number, where 0 <= page < 64
- * @param para Paragraph number, where 0 <= para < 4
+ * Retrieve a particular page for decoding.
+ * @param page page index
  */
-void otp_retrieve(uint16_t block,uint8_t page,uint8_t para);
+void otp_retrieve(uint32_t page);
 
 enum {
 	FLAG_HEADER_WRITTEN,
