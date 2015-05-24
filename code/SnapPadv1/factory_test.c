@@ -305,11 +305,11 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == 'P') {
 		char buf[10];
 		uint8_t idx = 0;
-		char data = 0;
+		uint8_t data = 0;
 		uart_send_buffer("PING\n",5);
 		while (data != '\n' && idx < 9) {
 			if (uart_consume_timeout(&data,100)) {
-				buf[idx++] = data;
+				buf[idx++] = (char)data;
 			} else {
 				data = 0;
 				break;
