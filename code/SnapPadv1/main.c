@@ -336,13 +336,14 @@ void read_rng() {
 	cdcSendDataWaitTilDone((BYTE*)bits, 16*4, CDC0_INTFNUM, 100);
 }
 
-uint16_t parseDec(uint8_t* buf, uint8_t* idx, uint8_t len) {
-	uint16_t val = 0;
+uint32_t parseDec(uint8_t* buf, uint8_t* idx, uint8_t len) {
+	uint32_t val = 0;
 	for (; (*idx < len) && (buf[*idx] >= '0') && (buf[*idx] <= '9'); (*idx)++) {
 		val = val * 10 + (buf[*idx] - '0');
 	}
 	return val;
 }
+/*
 // Read paragraph. Parameters are a comma separated list: block, page, paragraph.
 bool parseBPP(uint8_t* buf, uint8_t* idx, uint8_t len, uint16_t* block, uint8_t* page, uint8_t* para) {
 	*block = parseDec(buf,idx,len);
@@ -351,7 +352,7 @@ bool parseBPP(uint8_t* buf, uint8_t* idx, uint8_t len, uint16_t* block, uint8_t*
 	if (buf[*idx] != ',') return false; (*idx)++;
 	*para = parseDec(buf,idx,len);
 	return true;
-}
+}*/
 
 
 /**
@@ -406,24 +407,15 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == 'R') {
 		// retrieve 'count' blocks starting at 'block','page','para'
 		uint8_t idx = 1;
-		struct {
-			uint16_t block;
-			uint8_t page;
-			uint8_t para;
-		} bpp[4];
+		uint32_t page[4];
 		uint8_t count = 0;
 		uint8_t i;
-		// parse format: block# "," page# "," para# ["," block# "," page# "," para#]*
+		// parse format: page#\ ["," page#]*
 		while (true) {
-			if (!parseBPP(cmdbuf, &idx, len, &bpp[count].block, &bpp[count].page, &bpp[count].para)) {
-				error("PARSE");
-				return;
-			}
+			page[count] = parseDec(cmdbuf,&idx,len);
 			// validate
-			if (bpp[count].block == 0 ||
-					bpp[count].block > 2047 ||
-					bpp[count].page > 63 ||
-					bpp[count].para > 3) {
+			if (page[count] < PAGE_COUNT ||
+				page[count] >= BLOCK_COUNT * PAGE_COUNT) {
 				error("RANGE");
 				return;
 			}
@@ -434,7 +426,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		if (confirm_count(count)) {
 			leds_set_mode(LM_ACKNOWLEDGED);
 			for (i = 0; i < count; i++) {
-				otp_retrieve(bpp[i].block,bpp[i].page,bpp[i].para);
+				otp_retrieve(page[count]);
 			}
 			leds_set_mode(LM_READY);
 		} else {
@@ -476,20 +468,17 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		print_usb_dec(block);
 		print_usb_str("\n");
 	} else if (cmdbuf[0] == 'r') {
-		// Read paragraph. Parameters are a comma separated list of decimal values: block, page, paragraph.
-		uint16_t block = 0; uint8_t page = 0; uint8_t para = 0;
+		// Read paragraph. Parameter is the page index.
+		uint32_t page = 0;
+		uint8_t para;
 		uint8_t idx = 1;
-		if (parseBPP(cmdbuf,&idx,len,&block,&page,&para)) {
-			//usb_debug_dec(block); usb_debug(":");
-			//usb_debug_dec(page); usb_debug(":");
-			//usb_debug_dec(para); usb_debug("\n");
-			if (nand_load_para(block,page,para)) {
+		page = parseDec(cmdbuf,&idx,len);
+		for (para = 0; para < 3; para++) {
+			if (nand_load_para(page/PAGE_COUNT,page%PAGE_COUNT,para)) {
 				cdcSendDataWaitTilDone((BYTE*)buffers_get_nand(),512,CDC0_INTFNUM,100);
 			} else {
 				error("READ");
 			}
-		} else {
-			error("PARSE");
 		}
 	} else if (cmdbuf[0] == 'E') {
 		// Erase block. Parameter is a decimal block number.
