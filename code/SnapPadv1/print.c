@@ -14,7 +14,7 @@
 #include "USB_config/descriptors.h"
 #include "base64.h"
 
-void print_usb_dec(unsigned int i) {
+void print_usb_dec(uint32_t i) {
 	char buf[10];
 	unsigned int digits = 0;
 	do {

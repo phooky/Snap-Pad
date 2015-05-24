@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 // Print integer to USB serial port
-void print_usb_dec(unsigned int i);
+void print_usb_dec(uint32_t i);
 
 // Hex conversion convenience fn
 char hex(uint8_t v);

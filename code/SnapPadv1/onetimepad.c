@@ -394,35 +394,36 @@ uint16_t otp_find_unmarked_block(bool backwards) {
 	return 0xffff;
 }
 
-static bool is_para_available(uint16_t block, uint8_t page, uint8_t para) {
-	uint32_t addr = nand_make_para_addr(block,page,para);
+/** The page is marked as available if the last byte of the last paragraph
+	of the page's spare area is 0xFF.
+	@param block the index of the block the page resides in
+	@param page the index of the page within the block
+	@return true if the page is available for use; false otherwise.
+	*/
+static bool is_page_available(uint16_t block, uint16_t page) {
+	uint32_t addr = nand_make_para_addr(block,page,3);
 	uint8_t last_byte;
 	nand_read_raw_page(addr+PARA_SIZE+PARA_SPARE_SIZE-1,&last_byte,1);
 	return last_byte == 0xff;
 }
 
 /**
- * Find the first/last usable page/para in the given block
- * @return true if a valid page/para is found
+ * Find the first/last usable page in the given block
+ * @return true if a valid page is found
  * @param block the block to scan
- * @param page pointer to page value
- * @param para pointer to para value
+ * @param page pointer to page index within block
  * @param backwards search backwards from the last block
  */
-bool otp_find_unmarked_para(uint16_t block, uint8_t* page, uint8_t* para, bool backwards) {
-	uint8_t cpage, cpara;
+bool otp_find_unmarked_page(uint16_t block, uint16_t* page, bool backwards) {
+	uint8_t cpage;
 	for (cpage = 0; cpage < PAGE_COUNT; cpage++) {
-		for (cpara = 0; cpara < 4; cpara++) {
-			if (backwards) {
-				*page = 63-cpage;
-				*para = 3-cpara;
-			} else {
-				*page = cpage;
-				*para = cpara;
-			}
-			if (is_para_available(block,*page,*para)) {
+		if (backwards) {
+			*page = 63-cpage;
+		} else {
+			*page = cpage;
+		}
+		if (is_page_available(block,*page)) {
 				return true;
-			}
 		}
 	}
 	return false;
@@ -440,49 +441,50 @@ uint8_t otp_get_block_status(uint16_t block) {
 	return entry;
 }
 
-static void otp_release_para(uint16_t block, uint8_t page, uint8_t para) {
+static void otp_release_page(uint16_t block, uint16_t page) {
 	uint8_t* buf;
-	uint16_t i;
+	const uint32_t full_page_num = (block*PAGE_COUNT)+page;
+	uint16_t i, para;
 	// check for previously released paragraph
-	bool used = !is_para_available(block,page,para);
+	bool used = !is_page_available(block,page);
 	// display header
 	if (used) {
-		print_usb_str("---USED PARA ");
+		print_usb_str("---USED PAGE ");
 	} else {
-		print_usb_str("---BEGIN PARA ");
+		print_usb_str("---BEGIN PAGE ");
 	}
-	print_usb_dec(block); print_usb_str(",");
-	print_usb_dec(page); print_usb_str(",");
-	print_usb_dec(para); print_usb_str("---\n");
+	print_usb_dec(full_page_num); 
+	print_usb_str("---\n");
 	if (used) { return; }
-	// read para
-	nand_load_para(block,page,para);
-	// zero para on nand
-	nand_zero_paragraph(block,page,para);
-	// emit para in base64
-	buf = nand_para_buffer();
-	print_usb_base64(buf,PARA_SIZE);
-	// null memory
-	for (i = 0; i < PARA_SIZE; i++) {
-		buf[i] = 0x00;
+	for (para = 0; para < 4; para++) {
+		// read para
+		nand_load_para(block,page,para);
+		// zero para on nand
+		nand_zero_paragraph(block,page,para);
+		// emit para in base64
+		buf = nand_para_buffer();
+		print_usb_base64(buf,PARA_SIZE);
+		// null memory
+		for (i = 0; i < PARA_SIZE; i++) {
+			buf[i] = 0x00;
+		}
 	}
 	// display footer
-	print_usb_str("\n---END PARA---\n");
+	print_usb_str("\n---END PAGE---\n");
 }
 
 bool otp_provision_one(bool is_A) {
-	uint8_t page;
-	uint8_t para;
+	uint16_t page_idx;
 	uint16_t block = otp_find_unmarked_block(!is_A);
-	if (!otp_find_unmarked_para(block,&page,&para,!is_A)) {
+	if (!otp_find_unmarked_page(block,&page_idx,!is_A)) {
 		otp_mark_block(block,BU_USED_BLOCK);
 		block = otp_find_unmarked_block(!is_A);
-		if (!otp_find_unmarked_para(block,&page,&para,!is_A)) {
+		if (!otp_find_unmarked_page(block,&page_idx,!is_A)) {
 			// TODO: report error, second empty block, probably exhausted!
 			return false;
 		}
 	}
-	otp_release_para(block,page,para);
+	otp_release_page(block,page_idx);
 	return true;
 }
 
@@ -495,6 +497,8 @@ void otp_provision(uint8_t count,bool is_A) {
 	}
 }
 
-void otp_retrieve(uint16_t block,uint8_t page,uint8_t para) {
-	otp_release_para(block,page,para);
+void otp_retrieve(uint32_t page) {
+	const uint16_t block = page/PAGE_COUNT;
+	const uint16_t page_idx = page%PAGE_COUNT;
+	otp_release_page(block,page_idx);
 }
