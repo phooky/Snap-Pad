@@ -307,12 +307,18 @@ bool otp_randomize_boards() {
 
 			rsp = uart_consume();
 			if (rsp == UTOK_RSP_CHKSM_BAD) {
+				print_usb_str("MM RSP CHKSM BAD\n");
 				needs_mark = true;
 			} else if (rsp == UTOK_RSP_CHKSM) {
 				checksum_remote = uart_consume() << 8;
 				checksum_remote |= uart_consume() & 0xff;
 				if (checksum_local.checksum != checksum_remote) {
 					needs_mark = true;
+					print_usb_str("MM ");
+					print_usb_dec(checksum_local.checksum);
+					print_usb_str(" ");
+					print_usb_dec(checksum_remote);
+					print_usb_str("\n");
 				}
 			} else {
 				print_usb_str("BAD CHKSM RSP\n");

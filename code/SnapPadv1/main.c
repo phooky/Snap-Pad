@@ -322,7 +322,11 @@ void scan_used() {
 	for (block = 1; block < 2048; block++) {
 		uint8_t r = otp_get_block_status(block);
 		if (r != BU_UNUSED_BLOCK) {
-			print_usb_str("USED ");
+			if (r == BU_BAD_BLOCK) {
+				print_usb_str("BAD ");
+			} else {
+				print_usb_str("USED ");
+			}
 			print_usb_dec(block);
 			print_usb_str("\n");
 		}
@@ -405,7 +409,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 			timeout();
 		}
 	} else if (cmdbuf[0] == 'R') {
-		// retrieve 'count' blocks starting at 'block','page','para'
+		// retrieve the specified pages
 		uint8_t idx = 1;
 		uint32_t page[4];
 		uint8_t count = 0;
