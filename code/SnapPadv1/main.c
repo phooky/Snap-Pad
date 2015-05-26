@@ -477,7 +477,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		uint8_t para;
 		uint8_t idx = 1;
 		page = parseDec(cmdbuf,&idx,len);
-		for (para = 0; para < 3; para++) {
+		for (para = 0; para < 4; para++) {
 			if (nand_load_para(page/PAGE_COUNT,page%PAGE_COUNT,para)) {
 				cdcSendDataWaitTilDone((BYTE*)buffers_get_nand(),512,CDC0_INTFNUM,100);
 			} else {
