@@ -45,7 +45,7 @@ typedef struct {
 	the block index, the page index, and the column (byte offset). */
 inline uint32_t nand_make_addr(const uint32_t block,const uint32_t page,const uint32_t column) {
 	// On the S34ML01G2 the A18 line is the plane; we map the high bit of the block address to the plane.
-	uint32_t addr = (column << 0) | (page << 12) | ( (block / 1024) << 18) | ( (block % 1024) << 19);
+	uint32_t addr = (column << 0) | (page << 12) | ( ((block / 1024)&0x01) << 18) | ( (block % 1024) << 19);
 	return addr;
 }
 

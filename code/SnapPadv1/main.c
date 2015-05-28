@@ -472,7 +472,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		print_usb_dec(block);
 		print_usb_str("\n");
 	} else if (cmdbuf[0] == 'r') {
-		// Read paragraph. Parameter is the page index.
+		// Read page. Parameter is the page index.
 		uint32_t page = 0;
 		uint8_t para;
 		uint8_t idx = 1;
