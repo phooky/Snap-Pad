@@ -40,16 +40,17 @@ class SnapPadHWMock(serial.FileLike):
             self.outbuf += 'Error: Test mockup; no diagnostics.\n'
         self.outbuf += '---END DIAGNOSTICS---\n'
 
-    def release_para(self,block,page,para):
-        self.outbuf += '---BEGIN PARA {0},{1},{2}---\n'.format(block,page,para)
+    def release_para(self,page):
+        self.outbuf += '---BEGIN PAGE {0}---\n'.format(page)
         # reseed rng?
         rng = self.rng
         parasz = 512
-        o = base64.b64encode(bytearray([rng.randint(0,255) for x in range(parasz)]))
-        while o:
-            self.outbuf += o[:80] + '\n'
-            o = o[80:]
-        self.outbuf += '---END PARA---\n'
+        for p in range(4):
+            o = base64.b64encode(bytearray([rng.randint(0,255) for x in range(parasz)]))
+            while o:
+                self.outbuf += o[:80] + '\n'
+                o = o[80:]
+        self.outbuf += '---END PAGE---\n'
 
     def provision_one(self):
         self.release_para(1,1,1)

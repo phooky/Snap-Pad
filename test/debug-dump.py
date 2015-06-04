@@ -15,7 +15,7 @@ class Pad:
         time.sleep(0.5)
         self.port.flush()
         self.port.timeout = 0.5
-        self.top = (2048 * 64) - 64 # top of page space
+        self.top = (2048 * 64) # top of page space
     def get(self,page):
         self.port.write(('r{0}\n').format(page).encode())
         #self.port.flush()
