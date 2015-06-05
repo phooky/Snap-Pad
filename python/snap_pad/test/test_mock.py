@@ -36,17 +36,17 @@ class MockTest(unittest.TestCase):
         self.assertEqual(r[:len(prefix)],prefix)
         self.assertEqual(r[len(prefix):],msg)
 
-    def parsePara(self):
+    def parsePage(self):
         first = self.sp.readline().strip()
-        m = re.match('---BEGIN PARA ([0-9]+),([0-9]+),([0-9]+)---',first)
+        m = re.match('---BEGIN PAGE ([0-9]+)---',first)
         self.assertIsNotNone(m)
         while True:
             l = self.sp.readline().strip()
             self.assertNotEqual(l,'')
-            if re.match('---END PARA---',l):
+            if re.match('---END PAGE---',l):
                 break
             self.assertIsNotNone(re.match('[A-Za-z0-9+/]+=?=?$',l))
-        return map(int,m.groups()) 
+        return int(m.groups()[0])
 
     def doProvisionTest(self,count):
         self.sp.write('P{0}\n'.format(count))
@@ -56,7 +56,7 @@ class MockTest(unittest.TestCase):
         else:
             # check for random data
             for _ in range(count):
-                self.parsePara()
+                self.parsePage()
 
     def testProvision(self):
         for i in range(0,6):
@@ -65,17 +65,17 @@ class MockTest(unittest.TestCase):
     def doRetrievalTest(self,addresses):
         self.assertGreater(len(addresses),0)
         self.assertLessEqual(len(addresses),4)
-        cmd = 'R' + ','.join([','.join(map(str,x)) for x in addresses]) + '\n'
+        cmd = 'R' + ','.join(map(str,addresses)) + '\n'
         self.sp.write(cmd)
         for a in addresses:
-            r = self.parsePara()
+            r = self.parsePage()
             self.assertEqual(r,a)
 
     def testSingleRetrieval(self):
-        self.doRetrievalTest([[1,2,3]])
+        self.doRetrievalTest([64])
     
     def testMultipleRetrieval(self):
-        self.doRetrievalTest([[1,2,3],[2,3,4],[3,4,5],[4,5,6]])
+        self.doRetrievalTest([64,65,66,67])
 
 
 

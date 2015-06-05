@@ -22,27 +22,27 @@ class SnapPadTest(unittest.TestCase):
         self.assertEqual(self.sp.diagnostics['testkey'],'testval')
 
     def doProvision(self,count):
-        paras = self.sp.provision_paragraphs(count)        
-        self.assertEqual(len(paras),count)
-        for para in paras:
-            self.assertEqual(para.used, False)
-            self.assertEqual(len(para.bits),512)
+        pages = self.sp.provision_pages(count)        
+        self.assertEqual(len(pages),count)
+        for page in pages:
+            self.assertEqual(page.used, False)
+            self.assertEqual(len(page.bits),2048)
 
     def doRetrieval(self, addrs):
-        paras = self.sp.retrieve_paragraphs(addrs)
-        self.assertEqual(len(paras),len(addrs))
+        pages = self.sp.retrieve_pages(addrs)
+        self.assertEqual(len(pages),len(addrs))
         i=0
-        for para in paras:
-            self.assertEqual((para.block,para.page,para.para),addrs[i])
-            self.assertEqual(para.used, False)
-            self.assertEqual(len(para.bits),512)
+        for page in pages:
+            self.assertEqual(page.page,addrs[i])
+            self.assertEqual(page.used, False)
+            self.assertEqual(len(page.bits),2048)
             i = i+1
 
     def testRetrievalOne(self):
-        self.doRetrieval([(1,2,3)])
+        self.doRetrieval([64])
 
     def testRetrievalFour(self):
-        self.doRetrieval([(1,2,3),(2,3,2),(3,4,1),(4,5,0)])
+        self.doRetrieval([64,65,66,67])
 
     def testProvisionOne(self):
         self.doProvision(1)
