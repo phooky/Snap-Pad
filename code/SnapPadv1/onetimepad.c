@@ -462,6 +462,7 @@ static void otp_release_page(uint16_t block, uint16_t page) {
 	print_usb_dec(full_page_num); 
 	print_usb_str("---\n");
 	if (used) { return; }
+	b64_print_init();
 	for (para = 0; para < 4; para++) {
 		// read para
 		nand_load_para(block,page,para);
@@ -469,12 +470,13 @@ static void otp_release_page(uint16_t block, uint16_t page) {
 		nand_zero_paragraph(block,page,para);
 		// emit para in base64
 		buf = nand_para_buffer();
-		print_usb_base64(buf,PARA_SIZE);
+		b64_print_buffer(buf,PARA_SIZE);
 		// null memory
 		for (i = 0; i < PARA_SIZE; i++) {
 			buf[i] = 0x00;
 		}
 	}
+	b64_print_finish();
 	// display footer
 	print_usb_str("\n---END PAGE---\n");
 }

@@ -49,6 +49,44 @@ void print_usb_str(const char* s) {
 	cdcSendDataWaitTilDone((BYTE*) s, len, CDC0_INTFNUM, 100);
 }
 
+// Incremental base64 printer
+uint8_t in[3];
+uint8_t out[4];
+uint8_t line;
+uint8_t count;
+
+void b64_print_init() {
+	line = 0; count = 0;
+}
+
+void b64_print_buffer(uint8_t* buf, uint16_t sz) {
+	while (sz > 0) {
+		while ((count < 3) && (sz>0)) {
+			in[count++] = *(buf++);
+			sz--;
+		}
+		if (count == 3) {
+			encode(in,out,3);
+			cdcSendDataWaitTilDone((BYTE*) out, 4, CDC0_INTFNUM, 100);
+			line += 4;
+			if (line > 76) {
+				cdcSendDataWaitTilDone((BYTE*) "\n", 1, CDC0_INTFNUM, 100);
+				line = 0;
+			}
+			count = 0;
+		}
+	}
+}
+
+void b64_print_finish() {
+	if (count > 0) {
+		int l = count;
+		while (l < 3) { in[l++] = 0; }
+	}
+	encode(in,out,count);
+	cdcSendDataWaitTilDone((BYTE*) out, 4, CDC0_INTFNUM, 100);
+}
+
 void print_usb_base64(uint8_t* buf, uint16_t sz) {
 	uint8_t in[3];
 	uint8_t out[4];
