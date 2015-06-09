@@ -400,14 +400,14 @@ uint16_t otp_find_unmarked_block(bool backwards) {
 	return 0xffff;
 }
 
-/** The page is marked as available if the last byte of the last paragraph
+/** The page is marked as available if the last byte of the first paragraph
 	of the page's spare area is 0xFF.
 	@param block the index of the block the page resides in
 	@param page the index of the page within the block
 	@return true if the page is available for use; false otherwise.
 	*/
 static bool is_page_available(uint16_t block, uint16_t page) {
-	uint32_t addr = nand_make_para_addr(block,page,3);
+	uint32_t addr = nand_make_para_addr(block,page,0);
 	uint8_t last_byte;
 	nand_read_raw_page(addr+PARA_SIZE+PARA_SPARE_SIZE-1,&last_byte,1);
 	return last_byte == 0xff;
