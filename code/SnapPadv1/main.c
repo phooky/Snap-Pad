@@ -366,7 +366,7 @@ bool parseBPP(uint8_t* buf, uint8_t* idx, uint8_t len, uint16_t* block, uint8_t*
  * V                       - return a string describing the version of the firmware
  * D                       - diagnostics
  * #                       - produce 64 bytes of random data from the RNG
- * Rblock,page,para,count  - retrieve (and zero) count paragraphs starting at block,page,para.
+ * Rpage,[page,page,page]  - retrieve (and zero) the page(s) specified by "page".
  *                           maximum count is 4. will wait for user button press before continuing.
  * Pcount                  - provision (and zero) count paragraphs. snap-pad chooses next available paras.
  *                           maximum count is 4. will wait for user button press before continuing.
@@ -414,7 +414,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		uint32_t page[4];
 		uint8_t count = 0;
 		uint8_t i;
-		// parse format: page#\ ["," page#]*
+		// parse format: page# ["," page#]*
 		while (true) {
 			page[count] = parseDec(cmdbuf,&idx,len);
 			// validate
@@ -430,7 +430,7 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 		if (confirm_count(count)) {
 			leds_set_mode(LM_ACKNOWLEDGED);
 			for (i = 0; i < count; i++) {
-				otp_retrieve(page[count]);
+				otp_retrieve(page[i]);
 			}
 			leds_set_mode(LM_READY);
 		} else {
