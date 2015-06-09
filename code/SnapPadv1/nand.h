@@ -51,7 +51,7 @@ inline uint32_t nand_make_addr(const uint32_t block,const uint32_t page,const ui
 
 /** Construct an address in NAND to produce a packed address as per the NAND chip's addressing scheme, using
 	the block index, the page index, and the paragraph index (4 paras per page). */
-inline uint32_t nand_make_para_addr(const uint16_t block,const uint8_t page,const uint8_t para) {
+inline uint32_t nand_make_para_addr(const uint32_t block,const uint32_t page,const uint32_t para) {
 	return nand_make_addr(block,page,para*(PARA_SIZE+PARA_SPARE_SIZE));
 }
 

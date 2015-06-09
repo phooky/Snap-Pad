@@ -262,6 +262,8 @@ void uart_process() {
 				nand_block_erase(block);
 				nand_wait_for_ready();
 			}
+			// ensure that local page is not accidentally marked!
+			buffers_get_nand()[PARA_SIZE+PARA_SPARE_SIZE-1] = 0xff;
 			nand_save_para(block,page,para);
 			nand_wait_for_ready();
 			uart_send_byte(UTOK_DATA_ACK);

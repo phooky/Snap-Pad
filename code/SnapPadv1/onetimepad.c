@@ -271,6 +271,8 @@ bool otp_randomize_boards() {
 				uart_send_byte(page);
 				uart_send_byte(para);
 				uart_send_buffer(buffers_get_nand(),PARA_SIZE);
+				// ensure that local page is not accidentally marked!
+				buffers_get_nand()[PARA_SIZE+PARA_SPARE_SIZE-1] = 0xff;
 				// write to local nand
 				nand_save_para(block,page,para);
 				// wait for write completion
@@ -449,7 +451,7 @@ uint8_t otp_get_block_status(uint16_t block) {
 
 static void otp_release_page(uint16_t block, uint16_t page) {
 	uint8_t* buf;
-	const uint32_t full_page_num = (block*PAGE_COUNT)+page;
+	const uint32_t full_page_num = (((uint32_t)block)*PAGE_COUNT)+page;
 	uint16_t i, para;
 	// check for previously released paragraph
 	bool used = !is_page_available(block,page);
@@ -486,6 +488,7 @@ bool otp_provision_one(bool is_A) {
 	uint16_t block = otp_find_unmarked_block(!is_A);
 	if (!otp_find_unmarked_page(block,&page_idx,!is_A)) {
 		otp_mark_block(block,BU_USED_BLOCK);
+		//print_usb_str("Marked block "); print_usb_dec(block); print_usb_str("; trying next\n");
 		block = otp_find_unmarked_block(!is_A);
 		if (!otp_find_unmarked_page(block,&page_idx,!is_A)) {
 			// TODO: report error, second empty block, probably exhausted!
@@ -500,6 +503,7 @@ void otp_provision(uint8_t count,bool is_A) {
 	while (count > 0) {
 		count--;
 		if (!otp_provision_one(is_A)) {
+			print_usb_str("No provisionable pages\n");
 			break;
 		}
 	}
