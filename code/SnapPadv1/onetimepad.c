@@ -27,36 +27,35 @@ typedef struct {
 #define BBL_START 0x10
 
 /** Check if a given block is marked as bad.
- * @param plane the plane the block is in (0-1)
- * @param block the block number (0-1023)
+ * @param block the block index
  * @return true if the block is marked bad; false otherwise
  */
-bool check_bad_block(uint32_t plane, uint32_t block) {
+bool check_bad_block(uint32_t block) {
 	uint32_t addr;
 	uint8_t check;
-	addr = nand_make_addr(plane,block,0,SPARE_START);
+	addr = nand_make_addr(block,0,SPARE_START);
 	nand_read_raw_page(addr,&check,1);
 	if (check != 0xff) return true;
-	addr = nand_make_addr(plane,block,1,SPARE_START);
+	addr = nand_make_addr(block,1,SPARE_START);
 	nand_read_raw_page(addr,&check,1);
 	if (check != 0xff) return true;
-	addr = nand_make_addr(plane,block,PAGE_COUNT-1,SPARE_START);
+	addr = nand_make_addr(block,PAGE_COUNT-1,SPARE_START);
 	nand_read_raw_page(addr,&check,1);
 	if (check != 0xff) return true;
 	return false;
 }
 
 /** Mark a block as bad (for future scans). Presumes the block has been erased. */
-void mark_bad_block(uint32_t plane, uint32_t block) {
+void mark_bad_block(uint32_t block) {
 	uint32_t addr;
 	uint8_t check = 0;
-	addr = nand_make_addr(plane,block,0,SPARE_START);
+	addr = nand_make_addr(block,0,SPARE_START);
 	nand_program_raw_page(addr,&check,1);
 	nand_wait_for_ready();
-	addr = nand_make_addr(plane,block,1,SPARE_START);
+	addr = nand_make_addr(block,1,SPARE_START);
 	nand_program_raw_page(addr,&check,1);
 	nand_wait_for_ready();
-	addr = nand_make_addr(plane,block,PAGE_COUNT-1,SPARE_START);
+	addr = nand_make_addr(block,PAGE_COUNT-1,SPARE_START);
 	nand_program_raw_page(addr,&check,1);
 }
 
@@ -69,14 +68,12 @@ void mark_bad_block(uint32_t plane, uint32_t block) {
  * @return the number of bad blocks found
  */
 uint8_t otp_scan_bad_blocks(uint16_t* bad_block_list, uint8_t block_list_len) {
-	uint32_t plane, block;
+	uint16_t block;
 	uint8_t bbl_idx = 0;
-	for (plane = 0; plane < PLANE_COUNT; plane++) {
-		for (block = 0; block < BLOCK_COUNT; block++) {
-			if (check_bad_block(plane,block)) {
-				bad_block_list[bbl_idx++] = (plane << 10) | block;
-				if (bbl_idx >= block_list_len) return bbl_idx;
-			}
+	for (block = 0; block < BLOCK_COUNT; block++) {
+		if (check_bad_block(block)) {
+			bad_block_list[bbl_idx++] = block;
+			if (bbl_idx >= block_list_len) return bbl_idx;
 		}
 	}
 	bad_block_list[bbl_idx] = 0xFFFF;
@@ -97,13 +94,11 @@ void otp_factory_reset() {
 	} else {
 		bbcount = otp_scan_bad_blocks(bbl, BBL_MAX_ENTRIES);
 	}
-	for (block = 0; block < BLOCK_COUNT*PLANE_COUNT; block++) {
+	for (block = 0; block < BLOCK_COUNT; block++) {
 		nand_block_erase(block);
 	}
 	for (bbidx = 0; bbidx < bbcount; bbidx++) {
-		uint16_t plane = bbl[bbidx] >> 10;
-		block = bbl[bbidx] & 0x3ff;
-		mark_bad_block(plane,block);
+		mark_bad_block(bbl[bbidx]);
 	}
 }
 
@@ -114,7 +109,7 @@ void otp_factory_reset() {
  * @return the number of bad blocks loaded
  */
 uint8_t otp_fetch_bad_blocks(uint16_t* bad_block_list, uint8_t block_list_len) {
-	uint32_t addr = nand_make_addr(0,0,0,BBL_START);
+	uint32_t addr = nand_make_addr(0,0,BBL_START);
 	nand_read_raw_page(addr,(uint8_t*)bad_block_list,block_list_len*2);
 	uint8_t i;
 	for (i = 0; i < block_list_len; i++) {
@@ -130,7 +125,7 @@ uint8_t otp_fetch_bad_blocks(uint16_t* bad_block_list, uint8_t block_list_len) {
  * @return true if list successfully written
  */
 bool otp_write_bad_blocks(uint16_t* bad_block_list, uint8_t bad_block_count) {
-	uint32_t addr = nand_make_addr(0,0,0,BBL_START);
+	uint32_t addr = nand_make_addr(0,0,BBL_START);
 	nand_program_raw_page(addr,(uint8_t*)bad_block_list,bad_block_count*2);
 	// if count is less than max, white 0xFF to end
 	if (bad_block_count < BBL_MAX_ENTRIES) {
@@ -176,7 +171,7 @@ OTPConfig otp_read_header() {
 	config.is_A = header->is_A != 0x00;
 
 	OTPFlags flags;
-	nand_read_raw_page(nand_make_addr(0,0,FLAGS_PAGE,0),(uint8_t*)&flags,sizeof(flags));
+	nand_read_raw_page(nand_make_addr(0,FLAGS_PAGE,0),(uint8_t*)&flags,sizeof(flags));
 	config.randomization_started = flags.random_data_started != 0x03;
 	config.randomization_finished = flags.random_data_written != 0x03;
 	return config;
@@ -198,7 +193,7 @@ bool otp_initialize_header(bool is_A) {
 	uint16_t bbl[BBL_MAX_ENTRIES];
 	uint8_t bbcount;
 	// Check for existing header with BBL
-	OTPConfig config = otp_read_header();\
+	OTPConfig config = otp_read_header();
 	if (config.has_header) {
 		bbcount = otp_fetch_bad_blocks(bbl, BBL_MAX_ENTRIES);
 	} else {
@@ -216,7 +211,7 @@ bool otp_initialize_header(bool is_A) {
 	}
 	header->major_version = MAJOR_VERSION;
 	header->minor_version = MINOR_VERSION;
-	header->block_count = 2048 - (1 + bbcount);
+	header->block_count = BLOCK_COUNT - (1 + bbcount);
 	header->is_A = is_A?0xff:0x00;
 	print_usb_str("prepared header\n");
 	uint16_t* bbl_target = (uint16_t*)(nand_para_buffer() + BBL_START);
@@ -246,7 +241,7 @@ bool otp_randomize_boards() {
 	print_usb_str("BEGIN RND\n");
 	otp_set_flag(FLAG_DATA_STARTED);
 
-	for (block = 1; block < 2048; block++) {
+	for (block = 1; block < BLOCK_COUNT; block++) {
 		uint8_t page;
 		//bool hwrngblock = false;
 		//bool uartblock = false;
@@ -258,7 +253,7 @@ bool otp_randomize_boards() {
 		leds_set_led(1,(block>512)?LED_FAST_0:LED_OFF);
 		leds_set_led(2,(block>1024)?LED_FAST_0:LED_OFF);
 		leds_set_led(3,(block>1536)?LED_FAST_0:LED_OFF);
-		for (page = 0; page < 64; page++) {
+		for (page = 0; page < PAGE_COUNT; page++) {
 			uint8_t para;
 			for (para = 0; para < 4; para++) {
 				// Wait for RNG to finish filling buffer
@@ -276,6 +271,8 @@ bool otp_randomize_boards() {
 				uart_send_byte(page);
 				uart_send_byte(para);
 				uart_send_buffer(buffers_get_nand(),PARA_SIZE);
+				// ensure that local page is not accidentally marked!
+				buffers_get_nand()[PARA_SIZE+PARA_SPARE_SIZE-1] = 0xff;
 				// write to local nand
 				nand_save_para(block,page,para);
 				// wait for write completion
@@ -312,12 +309,18 @@ bool otp_randomize_boards() {
 
 			rsp = uart_consume();
 			if (rsp == UTOK_RSP_CHKSM_BAD) {
+				print_usb_str("MM RSP CHKSM BAD\n");
 				needs_mark = true;
 			} else if (rsp == UTOK_RSP_CHKSM) {
 				checksum_remote = uart_consume() << 8;
 				checksum_remote |= uart_consume() & 0xff;
 				if (checksum_local.checksum != checksum_remote) {
 					needs_mark = true;
+					print_usb_str("MM ");
+					print_usb_dec(checksum_local.checksum);
+					print_usb_str(" ");
+					print_usb_dec(checksum_remote);
+					print_usb_str("\n");
 				}
 			} else {
 				print_usb_str("BAD CHKSM RSP\n");
@@ -352,7 +355,7 @@ bool otp_randomize_boards() {
 void otp_set_flag(uint8_t flag) {
 	// write finished flag
 	OTPFlags flags;
-	uint32_t flagaddr = nand_make_addr(0,0,FLAGS_PAGE,0);
+	uint32_t flagaddr = nand_make_addr(0,FLAGS_PAGE,0);
 	nand_read_raw_page(flagaddr,(uint8_t*)&flags,sizeof(flags));
 	nand_wait_for_ready();
 	if (flag == FLAG_DATA_FINISHED) {
@@ -386,7 +389,7 @@ uint16_t otp_find_unmarked_block(bool backwards) {
 	uint8_t entry;
 	uint16_t i;
 	if (!backwards) {
-		for (i = 1; i < 2048; i++) {
+		for (i = 1; i < BLOCK_COUNT; i++) {
 			nand_read_raw_page(addr+i,&entry,1);
 			if (entry == BU_UNUSED_BLOCK) { return i; }
 		}
@@ -399,35 +402,36 @@ uint16_t otp_find_unmarked_block(bool backwards) {
 	return 0xffff;
 }
 
-static bool is_para_available(uint16_t block, uint8_t page, uint8_t para) {
-	uint32_t addr = nand_make_para_addr(block,page,para);
+/** The page is marked as available if the last byte of the first paragraph
+	of the page's spare area is 0xFF.
+	@param block the index of the block the page resides in
+	@param page the index of the page within the block
+	@return true if the page is available for use; false otherwise.
+	*/
+static bool is_page_available(uint16_t block, uint16_t page) {
+	uint32_t addr = nand_make_para_addr(block,page,0);
 	uint8_t last_byte;
 	nand_read_raw_page(addr+PARA_SIZE+PARA_SPARE_SIZE-1,&last_byte,1);
 	return last_byte == 0xff;
 }
 
 /**
- * Find the first/last usable page/para in the given block
- * @return true if a valid page/para is found
+ * Find the first/last usable page in the given block
+ * @return true if a valid page is found
  * @param block the block to scan
- * @param page pointer to page value
- * @param para pointer to para value
+ * @param page pointer to page index within block
  * @param backwards search backwards from the last block
  */
-bool otp_find_unmarked_para(uint16_t block, uint8_t* page, uint8_t* para, bool backwards) {
-	uint8_t cpage, cpara;
-	for (cpage = 0; cpage < 64; cpage++) {
-		for (cpara = 0; cpara < 4; cpara++) {
-			if (backwards) {
-				*page = 63-cpage;
-				*para = 3-cpara;
-			} else {
-				*page = cpage;
-				*para = cpara;
-			}
-			if (is_para_available(block,*page,*para)) {
+bool otp_find_unmarked_page(uint16_t block, uint16_t* page, bool backwards) {
+	uint8_t cpage;
+	for (cpage = 0; cpage < PAGE_COUNT; cpage++) {
+		if (backwards) {
+			*page = 63-cpage;
+		} else {
+			*page = cpage;
+		}
+		if (is_page_available(block,*page)) {
 				return true;
-			}
 		}
 	}
 	return false;
@@ -445,49 +449,53 @@ uint8_t otp_get_block_status(uint16_t block) {
 	return entry;
 }
 
-static void otp_release_para(uint16_t block, uint8_t page, uint8_t para) {
+static void otp_release_page(uint16_t block, uint16_t page) {
 	uint8_t* buf;
-	uint16_t i;
+	const uint32_t full_page_num = (((uint32_t)block)*PAGE_COUNT)+page;
+	uint16_t i, para;
 	// check for previously released paragraph
-	bool used = !is_para_available(block,page,para);
+	bool used = !is_page_available(block,page);
 	// display header
 	if (used) {
-		print_usb_str("---USED PARA ");
+		print_usb_str("---USED PAGE ");
 	} else {
-		print_usb_str("---BEGIN PARA ");
+		print_usb_str("---BEGIN PAGE ");
 	}
-	print_usb_dec(block); print_usb_str(",");
-	print_usb_dec(page); print_usb_str(",");
-	print_usb_dec(para); print_usb_str("---\n");
+	print_usb_dec(full_page_num); 
+	print_usb_str("---\n");
 	if (used) { return; }
-	// read para
-	nand_load_para(block,page,para);
-	// zero para on nand
-	nand_zero_paragraph(block,page,para);
-	// emit para in base64
-	buf = nand_para_buffer();
-	print_usb_base64(buf,PARA_SIZE);
-	// null memory
-	for (i = 0; i < PARA_SIZE; i++) {
-		buf[i] = 0x00;
+	b64_print_init();
+	for (para = 0; para < 4; para++) {
+		// read para
+		nand_load_para(block,page,para);
+		// zero para on nand
+		nand_zero_paragraph(block,page,para);
+		// emit para in base64
+		buf = nand_para_buffer();
+		b64_print_buffer(buf,PARA_SIZE);
+		// null memory
+		for (i = 0; i < PARA_SIZE; i++) {
+			buf[i] = 0x00;
+		}
 	}
+	b64_print_finish();
 	// display footer
-	print_usb_str("\n---END PARA---\n");
+	print_usb_str("\n---END PAGE---\n");
 }
 
 bool otp_provision_one(bool is_A) {
-	uint8_t page;
-	uint8_t para;
+	uint16_t page_idx;
 	uint16_t block = otp_find_unmarked_block(!is_A);
-	if (!otp_find_unmarked_para(block,&page,&para,!is_A)) {
+	if (!otp_find_unmarked_page(block,&page_idx,!is_A)) {
 		otp_mark_block(block,BU_USED_BLOCK);
+		//print_usb_str("Marked block "); print_usb_dec(block); print_usb_str("; trying next\n");
 		block = otp_find_unmarked_block(!is_A);
-		if (!otp_find_unmarked_para(block,&page,&para,!is_A)) {
+		if (!otp_find_unmarked_page(block,&page_idx,!is_A)) {
 			// TODO: report error, second empty block, probably exhausted!
 			return false;
 		}
 	}
-	otp_release_para(block,page,para);
+	otp_release_page(block,page_idx);
 	return true;
 }
 
@@ -495,11 +503,14 @@ void otp_provision(uint8_t count,bool is_A) {
 	while (count > 0) {
 		count--;
 		if (!otp_provision_one(is_A)) {
+			print_usb_str("No provisionable pages\n");
 			break;
 		}
 	}
 }
 
-void otp_retrieve(uint16_t block,uint8_t page,uint8_t para) {
-	otp_release_para(block,page,para);
+void otp_retrieve(uint32_t page) {
+	const uint16_t block = page/PAGE_COUNT;
+	const uint16_t page_idx = page%PAGE_COUNT;
+	otp_release_page(block,page_idx);
 }

@@ -40,19 +40,19 @@ class SnapPadHWMock(serial.FileLike):
             self.outbuf += 'Error: Test mockup; no diagnostics.\n'
         self.outbuf += '---END DIAGNOSTICS---\n'
 
-    def release_para(self,block,page,para):
-        self.outbuf += '---BEGIN PARA {0},{1},{2}---\n'.format(block,page,para)
+    def release_page(self,page):
+        self.outbuf += '---BEGIN PAGE {0}---\n'.format(page)
         # reseed rng?
         rng = self.rng
-        parasz = 512
-        o = base64.b64encode(bytearray([rng.randint(0,255) for x in range(parasz)]))
+        pagesz = 2048
+        o = base64.b64encode(bytearray([rng.randint(0,255) for x in range(pagesz)]))
         while o:
             self.outbuf += o[:80] + '\n'
             o = o[80:]
-        self.outbuf += '---END PARA---\n'
+        self.outbuf += '---END PAGE---\n'
 
-    def provision_one(self):
-        self.release_para(1,1,1)
+    def provision_one(self,page=1):
+        self.release_page(page)
 
     def do_error(self,msg):
         self.outbuf += 'ERROR: '
@@ -64,14 +64,13 @@ class SnapPadHWMock(serial.FileLike):
         if count < 1 or count > 4:
             self.do_error('bad count')
             return
-        for _ in range(count):
-            self.provision_one()
+        for page in range(count):
+            self.provision_one(page+64)
 
     def do_retrieve(self,command):
         spec = command[1:].split(',')
-        while len(spec)>0:
-            addr, spec = spec[:3], spec[3:]
-            self.release_para(addr[0],addr[1],addr[2])
+        for page in spec:
+            self.release_page(page)
 
     def do_rng(self):
         self.outbuf += bytearray([self.rng.randint(0,255) for x in range(64)])

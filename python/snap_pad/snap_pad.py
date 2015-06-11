@@ -19,25 +19,22 @@ product_id=0x2400
 #
 # D                       - diagnostics
 # #                       - produce 64 bytes of random data from the RNG
-# Rblock,page,para,count  - retrieve (and zero) count paragraphs 
-#                           starting at block,page,para.
-#                           maximum count is 4. will wait for user button
+# Rpage[,page,page,page]  - retrieve (and zero) specified pages up to a
+#                           maximum of 4 pages. will wait for user button
 #                           press before continuing.
-# Pcount                  - provision (and zero) count paragraphs. snap-pad
-#                           chooses next available paras. maximum count is 4.
+# Pcount                  - provision (and zero) count pages. snap-pad
+#                           chooses next available pages. maximum count is 4.
 #                           will wait for user button press before continuing.
 #
 
 # regexps for parsing preambles
-preamble_re = re.compile('^---(BEGIN|USED) PARA ([0-9]+),([0-9]+),([0-9]+)---$')
-end_re = re.compile('^---END PARA---$')
+preamble_re = re.compile('^---(BEGIN|USED) PAGE ([0-9]+)---$')
+end_re = re.compile('^---END PAGE---$')
 
 
-class Paragraph:
-    def __init__(self,block,page,para):
-        self.block = block
+class Page:
+    def __init__(self,page):
         self.page = page
-        self.para = para
         self.used = False
         self.bits = ''
 
@@ -112,23 +109,19 @@ class SnapPad:
         "Return true if the snap-pad is disconnected from its twin"
         return self.diagnostics['Mode'] == 'Single board'
 
-    def __read_para(self):
-        'Helper for reading a paragraph from the device.'
+    def __read_page(self):
+        'Helper for reading a page from the device.'
         preamble = self.sp.readline()
         prematch = preamble_re.match(preamble)
         assert prematch
-        para_type = prematch.group(1)
-        assert para_type == 'USED' or para_type == 'BEGIN'
-        block = int(prematch.group(2))
-        assert block > 0 and block < 2048
-        page = int(prematch.group(3))
-        assert page >= 0 and page < 64
-        para = int(prematch.group(4))
-        assert para >= 0 and para < 4
-        p = Paragraph(block,page,para)
-        if para_type == 'USED':
+        page_type = prematch.group(1)
+        assert page_type == 'USED' or page_type == 'BEGIN'
+        page = int(prematch.group(2))
+        assert page > 0 and page < (2048*64)
+        p = Page(page)
+        if page_type == 'USED':
             p.used = True
-        elif para_type == 'BEGIN':
+        elif page_type == 'BEGIN':
             data = ''
             while True:
                 l=self.sp.readline()
@@ -136,31 +129,25 @@ class SnapPad:
                     break
                 data = data + l.strip()
             p.bits = b64decode(data)
+            assert len(p.bits) == 2048
         return p
         
-    def retrieve_paragraphs(self,paragraphs):
-        "Retrieve and zero a specified set of paragraphs"
-        assert len(paragraphs) > 0 and len(paragraphs) <= 4
-        for (block,page,para) in paragraphs:
-            assert block > 0 and block < 2048
-            assert page >= 0 and page < 64
-            assert para >= 0 and para < 4
-        specifiers = ["{0},{1},{2}".format(bl,pg,pr) for (bl,pg,pr) in paragraphs]
-        command = "R"+",".join(specifiers)+"\n"
+    def retrieve_pages(self,pages):
+        "Retrieve and zero a specified set of pages"
+        assert len(pages) > 0 and len(pages) <= 4
+        for page in pages:
+            assert page > 0 and page < (2048*64)
+        command = "R"+",".join(map(str,pages))+"\n"
         self.sp.write(command)
-        # Paragraphs begin with "---BEGIN PARA B,P,P---" and end with "---END PARA---"
-        # If the block is already consumed, it emits "---USED PARA B,P,P---" instead of
-        # either message
-        paras = [self.__read_para() for _ in range(len(specifiers))]
-        return paras
+        return [self.__read_page() for _ in range(len(pages))]
 
-    def provision_paragraphs(self,count):
-        "Provision the given count of paragraphs"
+    def provision_pages(self,count):
+        "Provision the given count of pages"
         assert count > 0 and count <= 4
         command = "P{0}\n".format(count)
         self.sp.write(command)
-        paras = [self.__read_para() for _ in range(count)]
-        return paras        
+        pages = [self.__read_page() for _ in range(count)]
+        return pages        
 
     def hwrng(self):
         'Return 64 bytes of random data from the hardware RNG'

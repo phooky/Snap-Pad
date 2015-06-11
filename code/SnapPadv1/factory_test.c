@@ -73,60 +73,60 @@ void error();
 
 int main (void)
 {
-    // Set up clocks/IOs.  initPorts()/initClocks() will need to be customized
-    // for your application, but MCLK should be between 4-25MHz.  Using the
-    // DCO/FLL for MCLK is recommended, instead of the crystal.  For examples
-    // of these functions, see the complete USB code examples.  Also see the
-    // Programmer's Guide for discussion on clocks/power.
-    WDT_A_hold(WDT_A_BASE); // Stop watchdog timer
+	// Set up clocks/IOs.  initPorts()/initClocks() will need to be customized
+	// for your application, but MCLK should be between 4-25MHz.  Using the
+	// DCO/FLL for MCLK is recommended, instead of the crystal.  For examples
+	// of these functions, see the complete USB code examples.  Also see the
+	// Programmer's Guide for discussion on clocks/power.
+	WDT_A_hold(WDT_A_BASE); // Stop watchdog timer
 
-    // Minimum Vcore setting required for the USB API is PMM_CORE_LEVEL_2 .
-    PMM_setVCore(PMM_BASE, PMM_CORE_LEVEL_2);
+	// Minimum Vcore setting required for the USB API is PMM_CORE_LEVEL_2 .
+	PMM_setVCore(PMM_BASE, PMM_CORE_LEVEL_2);
 
-    initPorts();             // Configure all GPIOs
-    nand_init();             // Set up NAND pins
-    leds_init();			 // Set up LED pins
-    timer_init();			 // Set up msec timer
-    hwrng_init();            // Initialize HW RNG
-    initClocks(20000000);     // Configure clocks
-    USB_setup(TRUE,TRUE);    // Init USB & events; if a host is present, connect
-    uart_init();			 // Initialize uarts between hosts
+	initPorts();             // Configure all GPIOs
+	nand_init();             // Set up NAND pins
+	leds_init();			 // Set up LED pins
+	timer_init();			 // Set up msec timer
+	hwrng_init();            // Initialize HW RNG
+	initClocks(20000000);     // Configure clocks
+	USB_setup(TRUE,TRUE);    // Init USB & events; if a host is present, connect
+	uart_init();			 // Initialize uarts between hosts
 
-    __enable_interrupt();    // Enable interrupts globally
+	__enable_interrupt();    // Enable interrupts globally
 
-    //bool button_pressed_on_startup = has_confirm();
+	//bool button_pressed_on_startup = has_confirm();
 
-    bool usb_attached = false;
-    timer_reset();
-    while (timer_msec() < 600) {
-    	uint8_t s = USB_connectionState();
-        if (s == ST_ENUM_ACTIVE || s == ST_ENUM_SUSPENDED)  {
-    		usb_attached = true;
-    		break;
-    	}
-    }
-    if (usb_attached) {
-    	do_factory_test_mode();
-    } else {
-    	do_factory_uart_mode();
-    }
+	bool usb_attached = false;
+	timer_reset();
+	while (timer_msec() < 600) {
+		uint8_t s = USB_connectionState();
+		if (s == ST_ENUM_ACTIVE || s == ST_ENUM_SUSPENDED)  {
+			usb_attached = true;
+			break;
+		}
+	}
+	if (usb_attached) {
+		do_factory_test_mode();
+	} else {
+		do_factory_uart_mode();
+	}
 }
 
 void do_factory_test_mode() {
-    while (1)  // main loop
-    {
-        switch(USB_connectionState())
-        {
-            case ST_ENUM_ACTIVE:
-            	process_usb();
-            	break;
-            case ST_USB_DISCONNECTED: // physically disconnected from the host
-            case ST_ENUM_SUSPENDED:   // connecte d/enumerated, but suspended
-            case ST_NOENUM_SUSPENDED: // connected, enum started, but the host is unresponsive
-            case ST_ENUM_IN_PROGRESS:
-            default:;
-        }
-    }
+	while (1)  // main loop
+	{
+		switch(USB_connectionState())
+		{
+			case ST_ENUM_ACTIVE:
+				process_usb();
+				break;
+			case ST_USB_DISCONNECTED: // physically disconnected from the host
+			case ST_ENUM_SUSPENDED:   // connecte d/enumerated, but suspended
+			case ST_NOENUM_SUSPENDED: // connected, enum started, but the host is unresponsive
+			case ST_ENUM_IN_PROGRESS:
+			default:;
+		}
+	}
 }
 
 bool checkStr(const char* expected, const char* v) {
@@ -141,18 +141,18 @@ bool checkStr(const char* expected, const char* v) {
 void do_factory_uart_mode() {
 	char buf[10];
 	uint8_t idx = 0;
-    while (1)  // main loop
-    {
-    	uint8_t data = uart_consume();
-    	buf[idx++] = data;
-    	if (data == '\n') {
-    		if (checkStr("PING\n",buf)) {
-    			uart_send_buffer("RESP\n",5);
-    		} else {
-    			uart_send_buffer("FAIL\n",5);
-    		}
-    	}
-    }
+	while (1)  // main loop
+	{
+		uint8_t data = uart_consume();
+		buf[idx++] = data;
+		if (data == '\n') {
+			if (checkStr("PING\n",buf)) {
+				uart_send_buffer("RESP\n",5);
+			} else {
+				uart_send_buffer("FAIL\n",5);
+			}
+		}
+	}
 }
 
 // also used to de-decimal
@@ -305,21 +305,25 @@ void do_usb_command(uint8_t* cmdbuf, uint16_t len) {
 	} else if (cmdbuf[0] == 'P') {
 		char buf[10];
 		uint8_t idx = 0;
-		char data = 0;
+		uint8_t data = 0;
 		uart_send_buffer("PING\n",5);
 		while (data != '\n' && idx < 9) {
-			data = uart_consume_timeout(100);
-    		buf[idx++] = data;
+			if (uart_consume_timeout(&data,100)) {
+				buf[idx++] = (char)data;
+			} else {
+				data = 0;
+				break;
+			}
 		}
-    	if (data == '\n' && checkStr("RESP\n",buf)) {
-    		ok();
-    	} else {
-    		buf[idx] = '\0';
-    		print_usb_dec(idx);
-    		print_usb_str(":");
-    		print_usb_str(buf);
-    		error();
-    	}
+		if (data == '\n' && checkStr("RESP\n",buf)) {
+			ok();
+		} else {
+			buf[idx] = '\0';
+			print_usb_dec(idx);
+			print_usb_str(":");
+			print_usb_str(buf);
+			error();
+		}
 	} else if (cmdbuf[0] == 'B') {
 		// * B        - return button press count within next 5 seconds; returns # of presses in decimal followed by newline
 		uint8_t presses = 0;
@@ -478,30 +482,30 @@ bool process_usb() {
 #pragma vector = UNMI_VECTOR
 __interrupt VOID UNMI_ISR (VOID)
 {
-    switch (__even_in_range(SYSUNIV, SYSUNIV_BUSIFG))
-    {
-        case SYSUNIV_NONE:
-            __no_operation();
-            break;
-        case SYSUNIV_NMIIFG:
-            __no_operation();
-            break;
-        case SYSUNIV_OFIFG:
-            UCS_clearAllOscFlagsWithTimeout(UCS_BASE, 0);
-            SFR_clearInterrupt(SFR_BASE, SFR_OSCILLATOR_FAULT_INTERRUPT);
-            break;
-        case SYSUNIV_ACCVIFG:
-            __no_operation();
-            break;
-        case SYSUNIV_BUSIFG:
-            // If the CPU accesses USB memory while the USB module is
-            // suspended, a "bus error" can occur.  This generates an NMI, and
-            // execution enters this case.  This should never occur.  If USB is
-            // automatically disconnecting in your software, set a breakpoint
-            // here and see if execution hits it.  See the Programmer's
-            // Guide for more information.
-            SYSBERRIV = 0; // Clear bus error flag
-            USB_disable(); // Disable USB -- USB must be reset after a bus error
-    }
+	switch (__even_in_range(SYSUNIV, SYSUNIV_BUSIFG))
+	{
+		case SYSUNIV_NONE:
+			__no_operation();
+			break;
+		case SYSUNIV_NMIIFG:
+			__no_operation();
+			break;
+		case SYSUNIV_OFIFG:
+			UCS_clearAllOscFlagsWithTimeout(UCS_BASE, 0);
+			SFR_clearInterrupt(SFR_BASE, SFR_OSCILLATOR_FAULT_INTERRUPT);
+			break;
+		case SYSUNIV_ACCVIFG:
+			__no_operation();
+			break;
+		case SYSUNIV_BUSIFG:
+			// If the CPU accesses USB memory while the USB module is
+			// suspended, a "bus error" can occur.  This generates an NMI, and
+			// execution enters this case.  This should never occur.  If USB is
+			// automatically disconnecting in your software, set a breakpoint
+			// here and see if execution hits it.  See the Programmer's
+			// Guide for more information.
+			SYSBERRIV = 0; // Clear bus error flag
+			USB_disable(); // Disable USB -- USB must be reset after a bus error
+	}
 }
 //Released_Version_4_00_02

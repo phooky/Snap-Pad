@@ -96,14 +96,14 @@ uint8_t uart_consume() {
 }
 
 
-uint8_t uart_consume_timeout(uint16_t timeout) {
+bool uart_consume_timeout(uint8_t* buffer, uint16_t timeout) {
 	timer_reset();
 	while (uart_rx_start == uart_rx_end) {
-		if (timer_msec() >= timeout) { return 0xff; }
+		if (timer_msec() >= timeout) { return false; }
 	}
-	uint8_t c = uart_rx_buf[uart_rx_start];
+	*buffer = uart_rx_buf[uart_rx_start];
 	uart_rx_start = (uart_rx_start +1) % UART_RING_LEN;
-	return c;
+	return true;
 }
 
 /**
@@ -206,13 +206,13 @@ void uart_process() {
 		// UTOK_RST_PROPOSE, UTOK_RST_CONFIRM, UTOK_RST_COMMIT
 		if (command == UTOK_RST_PROPOSE) {
 			uint8_t i;
-    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_1);
-    		wait_for_confirm();
-    		uart_send_byte(UTOK_RST_CONFIRM);
-    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_1:LED_FAST_0);
-    		otp_factory_reset();
-    		for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
-    		while(1){} // Loop forever
+			for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_SLOW_1);
+			wait_for_confirm();
+			uart_send_byte(UTOK_RST_CONFIRM);
+			for (i = 0; i < LED_COUNT; i++) leds_set_led(i,(i%2 == 0)?LED_FAST_1:LED_FAST_0);
+			otp_factory_reset();
+			for (i = 0; i < LED_COUNT; i++) leds_set_led(i,LED_OFF);
+			while(1){} // Loop forever
 		} else if (command == UTOK_BUTTON_QUERY) {
 			uart_send_byte(UTOK_BUTTON_RSP);
 			uart_send_byte(has_confirm()?0xff:0x00);
@@ -262,6 +262,8 @@ void uart_process() {
 				nand_block_erase(block);
 				nand_wait_for_ready();
 			}
+			// ensure that local page is not accidentally marked!
+			buffers_get_nand()[PARA_SIZE+PARA_SPARE_SIZE-1] = 0xff;
 			nand_save_para(block,page,para);
 			nand_wait_for_ready();
 			uart_send_byte(UTOK_DATA_ACK);
@@ -307,17 +309,17 @@ __interrupt void USCI_A1_ISR(void)
 	uint8_t rx;
 	switch(__even_in_range(UCA1IV,4))
 	{
-  	case 0:break;                             // Vector 0 - no interrupt
+	case 0:break;                             // Vector 0 - no interrupt
 	case 2:                                   // Vector 2 - RXIFG
 		// check for errors
 		//if ((UCA1STAT & (UCOE|UCPE|UCBRK|UCRXERR)) != 0) {
-	  	//	uart_rx_buf[uart_rx_end] = UCA1STAT;
-	  	//	uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
+		//	uart_rx_buf[uart_rx_end] = UCA1STAT;
+		//	uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
 		//}
-  		rx = UCA1RXBUF;
-  		uart_rx_buf[uart_rx_end] = rx;
-  		uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
-  		break;
+		rx = UCA1RXBUF;
+		uart_rx_buf[uart_rx_end] = rx;
+		uart_rx_end = (uart_rx_end+1) % UART_RING_LEN;
+		break;
 	case 4:                                  // Vector 4 - TXIFG
 		if (uart_tx_len == 0) {
 			ready_for_send = true;
