@@ -249,7 +249,7 @@ void nand_read_parameter_page(uint8_t* buffer, uint16_t count) {
 void nand_initialize_para_buffer() {
 	uint16_t idx;
 	uint8_t* para_buffer = buffers_get_nand();
-	for (idx = 0; idx < PARA_SIZE; idx++) para_buffer[idx] = 0xff;
+	for (idx = 0; idx < PARA_SIZE + PARA_SPARE_SIZE; idx++) para_buffer[idx] = 0xff;
 }
 
 /**

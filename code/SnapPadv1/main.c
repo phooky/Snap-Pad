@@ -98,6 +98,8 @@ int main (void)
     // start factory reset mode.
     bool button_pressed_on_startup = has_confirm();
 
+    buffers_init();          // Initialize buffers to 0xff
+    
     // Work out our configuration state. We can be:
     // Half pad and USB connected - SINGLE
     // Half pad and USB disconnected - SINGLE (don't care)

@@ -13,6 +13,7 @@
 uint8_t* buffers_get_nand();
 uint8_t* buffers_get_rng();
 
+void buffers_init();
 void buffers_swap();
 
 #endif /* BUFFERS_H_ */
