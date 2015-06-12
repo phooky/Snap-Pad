@@ -6,12 +6,8 @@ import logging
 import re
 import time
 from base64 import b64encode,b64decode
-
-# Vendor and product ID from http://pid.codes/1209/2400/
-# Thanks to the people behind pid.codes!
-vendor_id=0x1209
-product_id=0x2400
-
+from snap_pad_vid_pid import vendor_id, product_id
+from serial_util import find_snap_pads
 
 #
 # All commands are terminated by a newline character.
@@ -162,8 +158,8 @@ def add_pad_arguments(parser):
             help='use the Snap-Pad attached to the specified port')
 
 def list_snap_pads():
-    return [(x['port'],x['iSerial']) for x in serial.tools.list_ports.list_ports_by_vid_pid(vendor_id,product_id)]
-
+    return find_snap_pads()
+    
 def find_our_pad(args):
     'Find the snap-pad specified by the user on the command line'
     pads = list_snap_pads()
