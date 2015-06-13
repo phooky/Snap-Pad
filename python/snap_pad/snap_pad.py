@@ -8,6 +8,12 @@ import time
 from base64 import b64encode,b64decode
 from snap_pad_vid_pid import vendor_id, product_id
 from serial_util import find_snap_pads
+import array
+import hmac
+import math
+from hashlib import sha256
+
+PAGESIZE = 2000
 
 #
 # All commands are terminated by a newline character.
@@ -27,12 +33,50 @@ from serial_util import find_snap_pads
 preamble_re = re.compile('^---(BEGIN|USED) PAGE ([0-9]+)---$')
 end_re = re.compile('^---END PAGE---$')
 
+# Exceptions
+class SnapPadTimeoutException(Exception):
+    'Indicates a pad timeout, usually because the user has not pressed the button'
+    pass
+
 
 class Page:
+    "One 2048-byte page of random data from a pad"
     def __init__(self,page):
         self.page = page
+        self.used = True
+        self.bits = None
+
+    def set_bits(self, bits_as_str):
         self.used = False
-        self.bits = ''
+        self.bits = array('B',bits_as_str)
+
+    def crypt(self,data):
+        'en/decrypt data'
+        assert len(data) <= PAGESIZE
+        assert self.used == False
+        assert len(self.bits) == 2048
+        inb = array.array('B',data)
+        outb = array.array('B')
+        for i in range(len(inb)):
+            outb.append( b[i] ^ self.bits[i] )
+        return outb.tostring()
+
+    def sign(self,data):
+        'compute signature of data'
+        salt_bytes = self.bits[PAGESIZE:PAGESIZE+16]
+        mac_crypt_bytes = self.bits[PAGESIZE+16:]
+        assert len(salt_bytes) == 16
+        assert len(mac_crypt_bytes) == 32
+        mac = array.array('B',hmac.hmac(salt_bytes.tostring(),data,sha256).digest())
+        assert len(mac) <= len(mac_crypt_bytes)
+        outmac = array.array('B')
+        for i in range(len(mac)):
+            outmap.append(mac_crypt_bytes[i] ^ mac[i])
+        return outmac.tostring()
+
+    def verify(self,data,sig):
+        computed = self.sign(data)
+        return computed == sig
 
 def open_serial(port_name):
     'Convenience method for opening a serial port and flushing any noise.'
@@ -107,8 +151,16 @@ class SnapPad:
 
     def __read_page(self):
         'Helper for reading a page from the device.'
+        # Timeout for this read is longer
+        old_timeout, self.sp.timeout = self.sp.timeout, 11
         preamble = self.sp.readline()
+        self.sp.timeout = old_timeout
         prematch = preamble_re.match(preamble)
+        if not prematch:
+            if preamble.strip() == '---TIMEOUT---':
+                raise SnapPadTimeoutException
+            else:
+                print("WHAT? {0}".format(preamble))
         assert prematch
         page_type = prematch.group(1)
         assert page_type == 'USED' or page_type == 'BEGIN'
@@ -124,7 +176,7 @@ class SnapPad:
                 if end_re.match(l):
                     break
                 data = data + l.strip()
-            p.bits = b64decode(data)
+            p.set_bits(b64decode(data))
             assert len(p.bits) == 2048
         return p
         
@@ -143,8 +195,37 @@ class SnapPad:
         command = "P{0}\n".format(count)
         self.sp.write(command)
         pages = [self.__read_page() for _ in range(count)]
-        return pages        
+        # TODO: Handle timeouts, other failures
+        return pages 
 
+    def encrypt_and_sign(self,data):
+        "Encrypt and sign a block of data"
+        assert len(data) <= PAGESIZE*4
+        page_count = int(math.ceil(len(data)/float(PAGESIZE)))
+        pages = self.provision_pages[page_count]
+        pages.reverse()
+        blocks = []
+        while len(data) > PAGESIZE:
+            chunk,data = data[:PAGESIZE],data[PAGESIZE:]
+            page = pages.pop()
+            enc_data = page.crypt(data)
+            enc_sig = page.sign(enc_data)
+            blocks.append((page.page,enc_data,enc_sig))
+        return blocks
+
+    def decrypt_and_verify(self,blocks):
+        "Decrypt and verify encoded data"
+        assert len(blocks) <= 4
+        page_numbers = [x[0] for x in blocks]
+        pages = self.retrieve_pages(page_numbers)
+        for i in range(len(blocks)):
+            (_,enc_data,enc_sig) = blocks[i]
+            page = pages[i]
+            if not page.verify(enc_data):
+                # TODO: ruh roh
+                print('Page verification mismatch')
+                pass
+            # TODO finish
     def hwrng(self):
         'Return 64 bytes of random data from the hardware RNG'
         self.sp.write('#\n')
@@ -159,7 +240,7 @@ def add_pad_arguments(parser):
 
 def list_snap_pads():
     return find_snap_pads()
-    
+
 def find_our_pad(args):
     'Find the snap-pad specified by the user on the command line'
     pads = list_snap_pads()
@@ -177,6 +258,6 @@ def find_our_pad(args):
         elif len(pads) > 1:
             logging.error('Multiple Snap-Pads detected; use the --sn or --port option to choose one.')
         else:
-            return pads[0]
+            return SnapPad(pads[0][0],pads[0][1])
         return None
 

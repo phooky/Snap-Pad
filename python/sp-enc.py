@@ -1,5 +1,6 @@
 #!/usr/bin/python
-from snap_pad_serial import add_pad_arguments, find_our_pad
+from snap_pad import add_pad_arguments, find_our_pad, PAGESIZE
+import snap_pad
 import logging
 import argparse
 import sys
@@ -7,9 +8,11 @@ import os
 import hashlib
 
 # sn-enc.py encrypts a message with a snap-pad.
-
 def create_mac():
+    pass
+
 def encrypt(pad,inf,outf):
+    pad.provision_pages(2)
     pass
 
 if __name__ == '__main__':
@@ -26,7 +29,7 @@ if __name__ == '__main__':
                         help="do not sign message with MAC")
     parser.add_argument("-c", "--count", type=int,
                         default=0,
-                        help="pad input to the given number of 512B blocks")
+                        help="pad input to the given number of 2000B pages")
     parser.add_argument("--hash", type=str, default="SHA-256",
                         help="hash algorithm for MAC")
     parser.add_argument('FILE',nargs='*',
@@ -45,7 +48,7 @@ if __name__ == '__main__':
     if args.FILE:
         for path in args.FILE:
             fsize = os.stat(path).st_size
-            if fsize < 512*4:
+            if fsize < PAGESIZE*4:
                 f = open(path,'r')
                 encrypt(pad,f,output)
     else:
