@@ -38,6 +38,23 @@ class SnapPadTimeoutException(Exception):
     'Indicates a pad timeout, usually because the user has not pressed the button'
     pass
 
+class BadSignatureException(Exception):
+    'Indicates that at least one part of the signature could not be verified'
+    pass
+
+class EncryptedBlock:
+    "One block of encrypted data"
+    def __init__(self, page_idx, data,sig):
+        self.data = data
+        self.sig = sig
+        self.page_idx = page_idx
+
+class DecryptedBlock:
+    "One block of decrypted data"
+    def __init__(self, data):
+        self.data = data
+        self.signed = False
+        self.sig_good = False
 
 class Page:
     "One 2048-byte page of random data from a pad"
@@ -48,7 +65,7 @@ class Page:
 
     def set_bits(self, bits_as_str):
         self.used = False
-        self.bits = array('B',bits_as_str)
+        self.bits = array.array('B',bits_as_str)
 
     def crypt(self,data):
         'en/decrypt data'
@@ -67,11 +84,11 @@ class Page:
         mac_crypt_bytes = self.bits[PAGESIZE+16:]
         assert len(salt_bytes) == 16
         assert len(mac_crypt_bytes) == 32
-        mac = array.array('B',hmac.hmac(salt_bytes.tostring(),data,sha256).digest())
+        mac = array.array('B',hmac.new(salt_bytes.tostring(),data,sha256).digest())
         assert len(mac) <= len(mac_crypt_bytes)
         outmac = array.array('B')
         for i in range(len(mac)):
-            outmap.append(mac_crypt_bytes[i] ^ mac[i])
+            outmac.append(mac_crypt_bytes[i] ^ mac[i])
         return outmac.tostring()
 
     def verify(self,data,sig):
@@ -199,33 +216,39 @@ class SnapPad:
         return pages 
 
     def encrypt_and_sign(self,data):
-        "Encrypt and sign a block of data"
+        "Encrypt and sign data and return an array of encrypted blocks"
         assert len(data) <= PAGESIZE*4
         page_count = int(math.ceil(len(data)/float(PAGESIZE)))
-        pages = self.provision_pages[page_count]
+        pages = self.provision_pages(page_count)
         pages.reverse()
         blocks = []
-        while len(data) > PAGESIZE:
+        while len(data) > 0:
+            print "Encoding {}".format(data[:2000])
             chunk,data = data[:PAGESIZE],data[PAGESIZE:]
             page = pages.pop()
             enc_data = page.crypt(data)
             enc_sig = page.sign(enc_data)
-            blocks.append((page.page,enc_data,enc_sig))
+            blocks.append(EncryptedBlock(page.page,enc_data,enc_sig))
         return blocks
 
     def decrypt_and_verify(self,blocks):
-        "Decrypt and verify encoded data"
+        "Decrypt and verify an array of encrypted blocks, returns array of decrypted blocks"
         assert len(blocks) <= 4
-        page_numbers = [x[0] for x in blocks]
-        pages = self.retrieve_pages(page_numbers)
-        for i in range(len(blocks)):
-            (_,enc_data,enc_sig) = blocks[i]
-            page = pages[i]
-            if not page.verify(enc_data):
+        page_numbers = [x.page_idx for x in blocks]
+        pages = { p.page_idx:p for p in self.retrieve_pages(page_numbers) }
+        decrypted = []
+        for block in blocks:
+            page = pages[block.page_idx]
+            d = DecryptedBlock(page.crypt(block.data))
+            decrypted.append(d)
+            d.signed = True
+            d.sig_good = page.verify(block.data, block.sig)
+            if not d.sig_good:
                 # TODO: ruh roh
                 print('Page verification mismatch')
                 pass
-            # TODO finish
+        return decrypted
+
     def hwrng(self):
         'Return 64 bytes of random data from the hardware RNG'
         self.sp.write('#\n')

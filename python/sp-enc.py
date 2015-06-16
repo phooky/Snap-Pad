@@ -6,14 +6,22 @@ import argparse
 import sys
 import os
 import hashlib
+import base64
 
 # sn-enc.py encrypts a message with a snap-pad.
 def create_mac():
     pass
 
 def encrypt(pad,inf,outf):
-    pad.provision_pages(2)
-    pass
+    indata = inf.read((PAGESIZE*4)+1)
+    if len(indata) > PAGESIZE*4:
+        # TODO: too big!
+        pass
+    blocks = pad.encrypt_and_sign(indata)
+    for block in blocks:
+        print block.page_idx
+        print base64.b64encode(block.data)
+        print base64.b64encode(block.sig)
 
 if __name__ == '__main__':
     # enumerate pads
