@@ -12,8 +12,10 @@ import array
 import hmac
 import math
 from hashlib import sha256
+import textwrap
 
 PAGESIZE = 2000
+VERSION="1.0"
 
 #
 # All commands are terminated by a newline character.
@@ -48,6 +50,16 @@ class EncryptedBlock:
         self.data = data
         self.sig = sig
         self.page_idx = page_idx
+    def ascii_armor(self):
+        templ = """-----BEGIN OTP MESSAGE-----
+Version: {version}
+Page: {page}
+Signature: {sig}
+
+{data}
+-----END OTP MESSAGE-----"""
+        return templ.format(version=VERSION,page=self.page_idx,
+            sig=b64encode(self.sig), data=textwrap.fill(b64encode(self.data)))
 
 class DecryptedBlock:
     "One block of decrypted data"

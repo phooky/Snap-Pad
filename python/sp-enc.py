@@ -19,9 +19,7 @@ def encrypt(pad,inf,outf):
         pass
     blocks = pad.encrypt_and_sign(indata)
     for block in blocks:
-        print block.page_idx
-        print base64.b64encode(block.data)
-        print base64.b64encode(block.sig)
+        print block.ascii_armor()
 
 if __name__ == '__main__':
     # enumerate pads
