@@ -75,7 +75,7 @@ class Page:
         inb = array.array('B',data)
         outb = array.array('B')
         for i in range(len(inb)):
-            outb.append( b[i] ^ self.bits[i] )
+            outb.append( inb[i] ^ self.bits[i] )
         return outb.tostring()
 
     def sign(self,data):
@@ -223,10 +223,9 @@ class SnapPad:
         pages.reverse()
         blocks = []
         while len(data) > 0:
-            print "Encoding {}".format(data[:2000])
             chunk,data = data[:PAGESIZE],data[PAGESIZE:]
             page = pages.pop()
-            enc_data = page.crypt(data)
+            enc_data = page.crypt(chunk)
             enc_sig = page.sign(enc_data)
             blocks.append(EncryptedBlock(page.page,enc_data,enc_sig))
         return blocks
