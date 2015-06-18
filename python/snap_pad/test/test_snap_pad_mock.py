@@ -44,6 +44,7 @@ class SnapPadHWMock(serial.FileLike):
         self.outbuf += '---BEGIN PAGE {0}---\n'.format(page)
         # reseed rng?
         rng = self.rng
+        rng.seed(page)
         pagesz = 2048
         o = base64.b64encode(bytearray([rng.randint(0,255) for x in range(pagesz)]))
         while o:
@@ -70,7 +71,7 @@ class SnapPadHWMock(serial.FileLike):
     def do_retrieve(self,command):
         spec = command[1:].split(',')
         for page in spec:
-            self.release_page(page)
+            self.release_page(int(page))
 
     def do_rng(self):
         self.outbuf += bytearray([self.rng.randint(0,255) for x in range(64)])

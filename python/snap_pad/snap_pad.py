@@ -246,7 +246,7 @@ class SnapPad:
         "Decrypt and verify an array of encrypted blocks, returns array of decrypted blocks"
         assert len(blocks) <= 4
         page_numbers = [x.page_idx for x in blocks]
-        pages = { p.page_idx:p for p in self.retrieve_pages(page_numbers) }
+        pages = { p.page:p for p in self.retrieve_pages(page_numbers) }
         decrypted = []
         for block in blocks:
             page = pages[block.page_idx]
