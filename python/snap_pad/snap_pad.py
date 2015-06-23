@@ -44,12 +44,28 @@ class BadSignatureException(Exception):
     'Indicates that at least one part of the signature could not be verified'
     pass
 
-class EncryptedBlock:
-    "One block of encrypted data"
-    def __init__(self, page_idx, data,sig):
+
+# Representations:
+# Plaintext data
+#  (may contain information about signature)
+# Encrypted data
+#  (contains signatures, block numbers)
+
+class Plaintext:
+    def __init__(self,data,sig_good = None):
         self.data = data
-        self.sig = sig
-        self.page_idx = page_idx
+        assert len(data) <= PAGESIZE * 4
+        self.signed = sig_good != None
+        self.sig_good = self.signed and sig_good
+
+
+class EncryptedMessage:
+    'An entire encrypted message.'
+    def __init__(self):
+        self.blocks = []
+    def add_block(self, page_idx, data, sig):
+        self.blocks.append( (page_idx, data, sig) )
+
     def ascii_armor(self):
         templ = """-----BEGIN OTP MESSAGE-----
 Version: {version}
@@ -61,17 +77,10 @@ Signature: {sig}
         return templ.format(version=VERSION,page=self.page_idx,
             sig=b64encode(self.sig), data=textwrap.fill(b64encode(self.data)))
 
-class DecryptedBlock:
-    "One block of decrypted data"
-    def __init__(self, data):
-        self.data = data
-        self.signed = False
-        self.sig_good = False
-
 class Page:
     "One 2048-byte page of random data from a pad"
-    def __init__(self,page):
-        self.page = page
+    def __init__(self,page_idx):
+        self.page_idx = page_idx
         self.used = True
         self.bits = None
 
@@ -209,14 +218,14 @@ class SnapPad:
             assert len(p.bits) == 2048
         return p
         
-    def retrieve_pages(self,pages):
+    def retrieve_pages(self,page_idxs):
         "Retrieve and zero a specified set of pages"
-        assert len(pages) > 0 and len(pages) <= 4
-        for page in pages:
-            assert page > 0 and page < (2048*64)
-        command = "R"+",".join(map(str,pages))+"\n"
+        assert len(page_idxs) > 0 and len(page_idxs) <= 4
+        for page_idx in page_idxs:
+            assert page_idx > 0 and page_idx < (2048*64)
+        command = "R"+",".join(map(str,page_idxs))+"\n"
         self.sp.write(command)
-        return [self.__read_page() for _ in range(len(pages))]
+        return [self.__read_page() for _ in range(len(page_idxs))]
 
     def provision_pages(self,count):
         "Provision the given count of pages"
@@ -228,37 +237,36 @@ class SnapPad:
         return pages 
 
     def encrypt_and_sign(self,data):
-        "Encrypt and sign data and return an array of encrypted blocks"
+        "Encrypt and sign plaintext and return an encrypted message"
         assert len(data) <= PAGESIZE*4
         page_count = int(math.ceil(len(data)/float(PAGESIZE)))
         pages = self.provision_pages(page_count)
         pages.reverse()
-        blocks = []
+        msg = EncryptedMessage()
         while len(data) > 0:
             chunk,data = data[:PAGESIZE],data[PAGESIZE:]
             page = pages.pop()
             enc_data = page.crypt(chunk)
             enc_sig = page.sign(enc_data)
-            blocks.append(EncryptedBlock(page.page,enc_data,enc_sig))
-        return blocks
+            msg.add_block(page.page_idx,enc_data,enc_sig)
+        return msg
 
-    def decrypt_and_verify(self,blocks):
-        "Decrypt and verify an array of encrypted blocks, returns array of decrypted blocks"
-        assert len(blocks) <= 4
-        page_numbers = [x.page_idx for x in blocks]
-        pages = { p.page:p for p in self.retrieve_pages(page_numbers) }
-        decrypted = []
-        for block in blocks:
-            page = pages[block.page_idx]
-            d = DecryptedBlock(page.crypt(block.data))
-            decrypted.append(d)
-            d.signed = True
-            d.sig_good = page.verify(block.data, block.sig)
-            if not d.sig_good:
+    def decrypt_and_verify(self,msg):
+        "Decrypt and verify an encrypted message, and return a plaintext object"
+        assert len(msg.blocks) <= 4
+        page_numbers = [x[0] for x in msg.blocks]
+        pages = { p.page_idx:p for p in self.retrieve_pages(page_numbers) }
+        decrypted = b''
+        sig_good = True
+        for (page_idx, data, sig) in msg.blocks:
+            page = pages[page_idx]
+            decrypted = decrypted + page.crypt(data)
+            sig_good = sig_good and page.verify(data, sig)
+            if not sig_good:
                 # TODO: ruh roh
                 print('Page verification mismatch')
                 pass
-        return decrypted
+        return Plaintext(decrypted,sig_good)
 
     def hwrng(self):
         'Return 64 bytes of random data from the hardware RNG'

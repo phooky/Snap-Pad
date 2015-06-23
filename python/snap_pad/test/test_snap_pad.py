@@ -37,7 +37,7 @@ class SnapPadTest(unittest.TestCase):
         self.assertEqual(len(pages),len(addrs))
         i=0
         for page in pages:
-            self.assertEqual(page.page,addrs[i])
+            self.assertEqual(page.page_idx,addrs[i])
             self.assertEqual(page.used, False)
             self.assertEqual(len(page.bits),2048)
             i = i+1
@@ -84,7 +84,7 @@ class SnapPadTest(unittest.TestCase):
         def teasSize(self,msgsz):
             blocks = math.floor(float(msgsz-1)/PAGESIZE) + 1
             testmsg = self.makeTestMsg(msgsz)
-            self.assertEqual( len(self.sp.encrypt_and_sign(testmsg)), blocks)
+            self.assertEqual( len(self.sp.encrypt_and_sign(testmsg).blocks), blocks)
             self.assertGreater(blocks,0)
             self.assertLessEqual(blocks,4)
         for testsz in [PAGESIZE-1,PAGESIZE,PAGESIZE+1,PAGESIZE*2+1,PAGESIZE*3+1,PAGESIZE*4]:
@@ -99,12 +99,11 @@ class SnapPadTest(unittest.TestCase):
             blocks = math.floor(float(msgsz-1)/PAGESIZE) + 1
             testmsg = self.makeTestMsg(msgsz)
             enc = self.sp.encrypt_and_sign(testmsg)
-            dec = self.sp.decrypt_and_verify(enc)
-            self.assertEqual( len(dec), blocks)
-            for d in dec:
-                self.assertTrue(d.signed)
-                self.assertTrue(d.sig_good)
-            self.assertEqual(b''.join([d.data for d in dec]),testmsg)
+            pt = self.sp.decrypt_and_verify(enc)
+            self.assertEqual( len(pt.data), msgsz)
+            self.assertTrue(pt.signed)
+            self.assertTrue(pt.sig_good)
+            self.assertEqual(pt.data,testmsg)
         tdavSize(self,100)
         for testsz in [PAGESIZE-1,PAGESIZE,PAGESIZE+1,PAGESIZE*2+1,PAGESIZE*3+1,PAGESIZE*4]:
             tdavSize(self,testsz)
