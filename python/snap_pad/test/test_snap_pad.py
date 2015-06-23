@@ -1,7 +1,7 @@
 import unittest
 import re
 from .test_snap_pad_mock import SnapPadHWMock, MAJOR, MINOR
-from snap_pad import SnapPad, PAGESIZE
+from snap_pad import SnapPad, PAGESIZE, Plaintext
 from snap_pad.snap_pad import Page
 import array
 import random
@@ -112,3 +112,16 @@ class SnapPadTest(unittest.TestCase):
         r = self.sp.hwrng()
         self.assertEqual(len(r),64)
 
+
+    def testPadMsg(self):
+        def tpm(self,msgsz):
+            msg = self.makeTestMsg(msgsz)
+            blocks = math.floor(float(msgsz-1)/PAGESIZE) + 1
+            pt = Plaintext(msg)
+            self.assertEqual(len(pt.data),msgsz)
+            pt.pad_text(self.sp)
+            self.assertEqual(len(pt.data),blocks*PAGESIZE)
+            pt.unpad_text()
+            self.assertEqual(len(pt.data),msgsz)
+        for testsz in [PAGESIZE-1,PAGESIZE,PAGESIZE+1,PAGESIZE*2+1,PAGESIZE*3+1,PAGESIZE*4]:
+            tpm(self,testsz)

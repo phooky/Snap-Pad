@@ -44,6 +44,8 @@ class BadSignatureException(Exception):
     'Indicates that at least one part of the signature could not be verified'
     pass
 
+def pages_needed_for(data):
+    return int(math.ceil(len(data)/float(PAGESIZE)))
 
 # Representations:
 # Plaintext data
@@ -57,7 +59,19 @@ class Plaintext:
         assert len(data) <= PAGESIZE * 4
         self.signed = sig_good != None
         self.sig_good = self.signed and sig_good
-
+    def pad_text(self,sp,pad_to=None):
+        if pad_to == None:
+            pad_to = pages_needed_for(self.data) * PAGESIZE
+        if pad_to > len(self.data):
+            self.data += b'\x00' # add a null to text
+        while pad_to > len(self.data):
+            sz = pad_to - len(self.data)
+            pad_bytes = sp.hwrng()
+            self.data += pad_bytes[:sz]
+    def unpad_text(self):
+        null_idx = self.data.find('\x00')
+        if null_idx >= 0:
+            self.data = self.data[:null_idx]
 
 class EncryptedMessage:
     'An entire encrypted message.'
@@ -65,7 +79,6 @@ class EncryptedMessage:
         self.blocks = []
     def add_block(self, page_idx, data, sig):
         self.blocks.append( (page_idx, data, sig) )
-
     def ascii_armor(self):
         templ = """-----BEGIN OTP MESSAGE-----
 Version: {version}
@@ -239,7 +252,7 @@ class SnapPad:
     def encrypt_and_sign(self,data):
         "Encrypt and sign plaintext and return an encrypted message"
         assert len(data) <= PAGESIZE*4
-        page_count = int(math.ceil(len(data)/float(PAGESIZE)))
+        page_count = pages_needed_for(data)
         pages = self.provision_pages(page_count)
         pages.reverse()
         msg = EncryptedMessage()
