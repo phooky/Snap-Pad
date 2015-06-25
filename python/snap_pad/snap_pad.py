@@ -5,17 +5,14 @@ import serial.tools.list_ports
 import logging
 import re
 import time
-from base64 import b64encode,b64decode
-from snap_pad_vid_pid import vendor_id, product_id
+from containers import EncryptedMessage
+from base64 import b64decode
+from snap_pad_config import vendor_id, product_id, PAGESIZE, VERSION
 from serial_util import find_snap_pads
 import array
 import hmac
 import math
 from hashlib import sha256
-import textwrap
-
-PAGESIZE = 2000
-VERSION="1.0"
 
 #
 # All commands are terminated by a newline character.
@@ -72,23 +69,6 @@ class Plaintext:
         null_idx = self.data.find('\x00')
         if null_idx >= 0:
             self.data = self.data[:null_idx]
-
-class EncryptedMessage:
-    'An entire encrypted message.'
-    def __init__(self):
-        self.blocks = []
-    def add_block(self, page_idx, data, sig):
-        self.blocks.append( (page_idx, data, sig) )
-    def ascii_armor(self):
-        templ = """-----BEGIN OTP MESSAGE-----
-Version: {version}
-Page: {page}
-Signature: {sig}
-
-{data}
------END OTP MESSAGE-----"""
-        return templ.format(version=VERSION,page=self.page_idx,
-            sig=b64encode(self.sig), data=textwrap.fill(b64encode(self.data)))
 
 class Page:
     "One 2048-byte page of random data from a pad"
