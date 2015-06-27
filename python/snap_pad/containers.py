@@ -25,6 +25,12 @@ class EncryptedMessage:
     def __init__(self):
         self.blocks = []
 
+    def __eq__(self,other):
+        if not len(self.blocks) == len(other.blocks): return False
+        for i in range(len(self.blocks)):
+            if not self.blocks[i] == other.blocks[i]: return False
+        return True
+
     def add_block(self, page_idx, data, sig):
         self.blocks.append( (page_idx, data, sig))
 
@@ -35,7 +41,7 @@ class EncryptedMessage:
         return json.dump(msg_obj,f)
 
     def read_ascii(self,f):
-        msg_obj = json.read(f)
+        msg_obj = json.load(f)
         try:
             assert msg_obj['Magic'] == JSON_MAGIC
         except:
@@ -81,12 +87,18 @@ class EncryptedMessage:
         s.close()
         return rv
 
+    @staticmethod
     def from_ascii(f):
+        if type(f) == str:
+            f = StringIO(f)
         e = EncryptedMessage()
         e.read_ascii(f)
         return e
 
+    @staticmethod
     def from_binary(f):
+        if type(f) == str:
+            f = StringIO(f)
         e = EncryptedMessage()
         e.read_binary(f)
         return e
