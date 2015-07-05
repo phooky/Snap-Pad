@@ -45,3 +45,6 @@ class EncryptedMessageTest(unittest.TestCase):
         e3 = EncryptedMessage.from_binary(b)
         self.assertEqual(e3, self.enc)
 
+    def makeTestMsg(self,len):
+        return b''.join([chr(random.randint(0x20,0x5a)) for i in range(len)])
+

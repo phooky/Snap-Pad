@@ -12,6 +12,7 @@ from serial_util import find_snap_pads
 import array
 import hmac
 import math
+from struct import pack, unpack
 from hashlib import sha256
 
 #
@@ -44,31 +45,7 @@ class BadSignatureException(Exception):
 def pages_needed_for(data):
     return int(math.ceil(len(data)/float(PAGESIZE)))
 
-# Representations:
-# Plaintext data
-#  (may contain information about signature)
-# Encrypted data
-#  (contains signatures, block numbers)
 
-class Plaintext:
-    def __init__(self,data,sig_good = None):
-        self.data = data
-        assert len(data) <= PAGESIZE * 4
-        self.signed = sig_good != None
-        self.sig_good = self.signed and sig_good
-    def pad_text(self,sp,pad_to=None):
-        if pad_to == None:
-            pad_to = pages_needed_for(self.data) * PAGESIZE
-        if pad_to > len(self.data):
-            self.data += b'\x00' # add a null to text
-        while pad_to > len(self.data):
-            sz = pad_to - len(self.data)
-            pad_bytes = sp.hwrng()
-            self.data += pad_bytes[:sz]
-    def unpad_text(self):
-        null_idx = self.data.find('\x00')
-        if null_idx >= 0:
-            self.data = self.data[:null_idx]
 
 class Page:
     "One 2048-byte page of random data from a pad"
@@ -229,8 +206,10 @@ class SnapPad:
         # TODO: Handle timeouts, other failures
         return pages 
 
-    def encrypt_and_sign(self,data):
+
+    def encrypt_and_sign(self,raw_message):
         "Encrypt and sign plaintext and return an encrypted message"
+        data = self.marshall(raw_message)
         assert len(data) <= PAGESIZE*4
         page_count = pages_needed_for(data)
         pages = self.provision_pages(page_count)
@@ -245,7 +224,7 @@ class SnapPad:
         return msg
 
     def decrypt_and_verify(self,msg):
-        "Decrypt and verify an encrypted message, and return a plaintext object"
+        "Decrypt and verify an encrypted message, and return a decrypted message object"
         assert len(msg.blocks) <= 4
         page_numbers = [x[0] for x in msg.blocks]
         pages = { p.page_idx:p for p in self.retrieve_pages(page_numbers) }
@@ -259,12 +238,32 @@ class SnapPad:
                 # TODO: ruh roh
                 print('Page verification mismatch')
                 pass
-        return Plaintext(decrypted,sig_good)
+        # unmarshall
+        decrypted = self.unmarshall(decrypted)
+        return (decrypted,sig_good)
 
     def hwrng(self):
         'Return 64 bytes of random data from the hardware RNG'
         self.sp.write('#\n')
         return self.sp.read(64)
+
+    def marshall(self,raw_message):
+        '''Marshalls a message prior to encryption. This consists of prepending a 16-bit
+        message size and then padding the message to the next block boundry.'''
+        data = pack('>H',len(raw_message)) + raw_message
+        pad_to = pages_needed_for(data) * PAGESIZE
+        while pad_to > len(data):
+            sz = pad_to - len(data)
+            pad_bytes = self.hwrng()
+            data += pad_bytes[:sz]
+        return data
+
+    def unmarshall(self,marshalled_message):
+        '''Strip the padding and message size from a marshalled message and return the raw
+        message.'''
+        [msg_sz] = unpack('>H',marshalled_message[:2])
+        message = marshalled_message[2:2+msg_sz]
+        return message
 
 def add_pad_arguments(parser):
     'Add parser arguments for finding a snap-pad'
@@ -275,6 +274,7 @@ def add_pad_arguments(parser):
 
 def list_snap_pads():
     return find_snap_pads()
+
 
 def find_our_pad(args):
     'Find the snap-pad specified by the user on the command line'
