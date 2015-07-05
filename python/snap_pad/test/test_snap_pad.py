@@ -121,3 +121,14 @@ class SnapPadTest(unittest.TestCase):
             self.assertEqual(len(marshalled),case[1])
             unmarshalled = self.sp.unmarshall(marshalled)
             self.assertEqual(unmarshalled,msg)
+
+    def testPadding(self):
+        "Ensure that marshalled data is padded with random numbers"
+        msg = self.makeTestMsg(500)
+        m1,m2 = self.sp.marshall(msg), self.sp.marshall(msg)
+        self.assertNotEqual(m1,m2)
+        # check edge case: marshalled data is not padded at size
+        msg = self.makeTestMsg(PAGESIZE-2)
+        m1,m2 = self.sp.marshall(msg), self.sp.marshall(msg)
+        self.assertEqual(m1,m2)
+
