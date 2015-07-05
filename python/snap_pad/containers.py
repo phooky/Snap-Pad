@@ -20,7 +20,6 @@ class AsciiParseError:
 class VersionError:
     pass
 
-
 class EncryptedMessage:
     'An encrypted message.'
     def __init__(self):

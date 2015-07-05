@@ -40,7 +40,11 @@ class SnapPadTimeoutException(Exception):
 
 class BadSignatureException(Exception):
     'Indicates that at least one part of the signature could not be verified'
-    pass
+    def __init__(self,bad_data,page_oks):
+        self.bad_count = len(page_oks) - sum(page_oks)
+        Exception.__init__(self,'Bad signatures found on {0} of {1} pages'.format(self.bad_count,len(page_oks)))
+        self.bad_data = bad_data
+        self.page_oks = page_oks
 
 def pages_needed_for(data):
     return int(math.ceil(len(data)/float(PAGESIZE)))
@@ -229,18 +233,19 @@ class SnapPad:
         page_numbers = [x[0] for x in msg.blocks]
         pages = { p.page_idx:p for p in self.retrieve_pages(page_numbers) }
         decrypted = b''
-        sig_good = True
+        sig_verified = []
         for (page_idx, data, sig) in msg.blocks:
             page = pages[page_idx]
             decrypted = decrypted + page.crypt(data)
-            sig_good = sig_good and page.verify(data, sig)
-            if not sig_good:
-                # TODO: ruh roh
-                print('Page verification mismatch')
-                pass
-        # unmarshall
-        decrypted = self.unmarshall(decrypted)
-        return (decrypted,sig_good)
+            sig_verified.append( page.verify(data, sig) )
+        all_ok = reduce(lambda x,y:x and y, sig_verified)
+        if all_ok:
+            # unmarshall
+            decrypted = self.unmarshall(decrypted)
+            return decrypted
+        else:
+            raise BadSignatureException(decrypted,sig_verified)
+
 
     def hwrng(self):
         'Return 64 bytes of random data from the hardware RNG'

@@ -1,11 +1,19 @@
 import unittest
 import re
 from .test_snap_pad_mock import SnapPadHWMock, MAJOR, MINOR
-from snap_pad import SnapPad, PAGESIZE
+from snap_pad import SnapPad, PAGESIZE, BadSignatureException
 from snap_pad.snap_pad import Page
 import array
 import random
 import math
+
+def corrupt(data):
+    'Flip one bit in the data.'
+    which_idx = random.randint(0,len(data)-1)
+    v = ord(data[which_idx])
+    which_bit = random.randint(0,7)
+    v = v ^ (1<<which_bit)
+    return data[0:which_idx] + chr(v) + data[which_idx+1:]
 
 class SnapPadTest(unittest.TestCase):
     def setUp(self):
@@ -99,14 +107,32 @@ class SnapPadTest(unittest.TestCase):
             blocks = math.floor(float(msgsz-1)/PAGESIZE) + 1
             testmsg = self.makeTestMsg(msgsz)
             enc = self.sp.encrypt_and_sign(testmsg)
-            (dec,sig_good) = self.sp.decrypt_and_verify(enc)
+            dec = self.sp.decrypt_and_verify(enc)
             self.assertEqual( len(dec), msgsz)
-            #self.assertTrue(pt.signed)
-            self.assertTrue(sig_good)
             self.assertEqual(dec,testmsg)
         tdavSize(self,100)
         for testsz in [PAGESIZE-1,PAGESIZE,PAGESIZE+1,PAGESIZE*2+1,PAGESIZE*3+1,PAGESIZE*4-2]:
             tdavSize(self,testsz)
+
+    def testCorruptedSig(self):
+        with self.assertRaises(BadSignatureException) as context:
+            testmsg = self.makeTestMsg(20+PAGESIZE*3)
+            enc = self.sp.encrypt_and_sign(testmsg)
+            which_block = random.randint(0,len(enc.blocks)-1)
+            (a,b,sig) = enc.blocks[which_block]
+            enc.blocks[which_block] = (a,b,corrupt(sig))
+            dec = self.sp.decrypt_and_verify(enc)
+        self.assertEqual(context.exception.bad_count,1)
+
+    def testCorruptedData(self):
+        with self.assertRaises(BadSignatureException) as context:
+            testmsg = self.makeTestMsg(20+PAGESIZE*3)
+            enc = self.sp.encrypt_and_sign(testmsg)
+            for which_block in [0,2]:
+                (pi,dat,sig) = enc.blocks[which_block]
+                enc.blocks[which_block] = (pi,corrupt(dat),sig)
+            dec = self.sp.decrypt_and_verify(enc)
+        self.assertEqual(context.exception.bad_count,2)
 
     def testRandom(self):
         r = self.sp.hwrng()
