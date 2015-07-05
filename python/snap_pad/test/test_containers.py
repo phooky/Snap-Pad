@@ -28,8 +28,8 @@ class EncryptedMessageTest(unittest.TestCase):
                 self.assertNotEqual(self.enc,alt)
 
     def testAscii(self):
-        a = EncryptedMessage.to_ascii(self.enc)
-        e2 = EncryptedMessage.from_ascii(a)
+        a = EncryptedMessage.to_json(self.enc)
+        e2 = EncryptedMessage.from_json(a)
         self.assertEqual(self.enc, e2)
 
     def testBinary(self):
@@ -38,8 +38,8 @@ class EncryptedMessageTest(unittest.TestCase):
         self.assertEqual(e2, self.enc)
 
     def testRound(self):
-        a = EncryptedMessage.to_ascii(self.enc)
-        e2 = EncryptedMessage.from_ascii(a)
+        a = EncryptedMessage.to_json(self.enc)
+        e2 = EncryptedMessage.from_json(a)
         self.assertEqual(self.enc, e2)
         b = EncryptedMessage.to_binary(e2)
         e3 = EncryptedMessage.from_binary(b)

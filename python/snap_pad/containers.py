@@ -34,13 +34,13 @@ class EncryptedMessage:
     def add_block(self, page_idx, data, sig):
         self.blocks.append( (page_idx, data, sig))
 
-    def write_ascii(self, f):
+    def write_json(self, f):
         msg_obj = { 'Version':VERSION, 'Magic':JSON_MAGIC }
         msg_obj['Blocks'] = [{'Page':page_idx, 'Signature':b64encode(sig), 'Data':b64encode(data)} for 
             (page_idx,data,sig) in self.blocks]
         return json.dump(msg_obj,f)
 
-    def read_ascii(self,f):
+    def read_json(self,f):
         msg_obj = json.load(f)
         try:
             assert msg_obj['Magic'] == JSON_MAGIC
@@ -73,9 +73,9 @@ class EncryptedMessage:
             data = f.read(sz)
             self.add_block( page_idx, data, sig )
 
-    def to_ascii(self):
+    def to_json(self):
         s = StringIO()
-        self.write_ascii(s)
+        self.write_json(s)
         rv = s.getvalue()
         s.close()
         return rv
@@ -88,11 +88,11 @@ class EncryptedMessage:
         return rv
 
     @staticmethod
-    def from_ascii(f):
+    def from_json(f):
         if type(f) == str:
             f = StringIO(f)
         e = EncryptedMessage()
-        e.read_ascii(f)
+        e.read_json(f)
         return e
 
     @staticmethod
