@@ -28,6 +28,11 @@ class EncryptedMessageTest(unittest.TestCase):
                 self.assertNotEqual(self.enc,alt)
 
     def testAscii(self):
+        a = EncryptedMessage.to_ascii(self.enc)
+        e2 = EncryptedMessage.from_ascii(a)
+        self.assertEqual(self.enc, e2)
+
+    def testJson(self):
         a = EncryptedMessage.to_json(self.enc)
         e2 = EncryptedMessage.from_json(a)
         self.assertEqual(self.enc, e2)
