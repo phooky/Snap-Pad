@@ -14,12 +14,12 @@ JSON_MAGIC='Snap-Pad OTP Message'
 from snap_pad_config import VERSION, PAGESIZE
 
 ascii_begin_str = '-----BEGIN SNAP-PAD MESSAGE BLOCK-----'
-ascii_end_str = '-----END SNAP-PAD MESSAGE BLOCK------'
+ascii_end_str = '-----END SNAP-PAD MESSAGE BLOCK-----'
 
-class AsciiParseError:
+class AsciiParseError(Exception):
     pass
 
-class VersionError:
+class VersionError(Exception):
     pass
 
 class EncryptedMessage:
@@ -79,7 +79,7 @@ class EncryptedMessage:
         bin_data = self.to_binary()
         f.write(ascii_begin_str+'\n')
         f.write('Version: {0}\n'.format(VERSION))
-        f.write(fill(b64encode(bin_data)))
+        f.write(fill(b64encode(bin_data))+'\n')
         f.write(ascii_end_str+'\n')
 
     def read_ascii(self,f):
@@ -87,10 +87,10 @@ class EncryptedMessage:
         if header != ascii_begin_str:
             raise AsciiParseError('Expected header')
         line = f.readline().strip()
-        ver = re.match('Version: (\w+)',line)
+        ver = re.match(r'Version: ([\w\.]+)',line)
         if ver:
             if ver.group(1) != VERSION:
-                raise AsciiParseError('Unknown version')
+                raise AsciiParseError('Unknown version ({0})'.format(ver.group(1)))
             line = f.readline().strip()
         else:
             # No version information; accept
@@ -101,6 +101,7 @@ class EncryptedMessage:
                 raise AsciiParseError('Unexpected end of data')
             else:
                 b64data += line
+            line = f.readline().strip()
         f = StringIO(b64decode(b64data))
         self.read_binary(f)
 
