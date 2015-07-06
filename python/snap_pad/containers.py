@@ -4,8 +4,7 @@ from textwrap import fill
 from struct import pack, unpack, calcsize
 from cStringIO import StringIO
 import json
-
-
+import re
 
 BIN_HEADER_MAGIC='SP-BLOCK'
 BIN_HEADER_FMT = '<8sHH32s'
@@ -13,6 +12,9 @@ BIN_HEADER_SZ = calcsize(BIN_HEADER_FMT)
 
 JSON_MAGIC='Snap-Pad OTP Message'
 from snap_pad_config import VERSION, PAGESIZE
+
+ascii_begin_str = '-----BEGIN SNAP-PAD MESSAGE BLOCK-----'
+ascii_end_str = '-----END SNAP-PAD MESSAGE BLOCK------'
 
 class AsciiParseError:
     pass
@@ -73,32 +75,68 @@ class EncryptedMessage:
             data = f.read(sz)
             self.add_block( page_idx, data, sig )
 
-    def to_json(self):
+    def write_ascii(self,f):
+        bin_data = self.to_binary()
+        f.write(ascii_begin_str+'\n')
+        f.write('Version: {0}\n'.format(VERSION))
+        f.write(fill(b64encode(bin_data)))
+        f.write(ascii_end_str+'\n')
+
+    def read_ascii(self,f):
+        header = f.readline().strip()
+        if header != ascii_begin_str:
+            raise AsciiParseError('Expected header')
+        line = f.readline().strip()
+        ver = re.match('Version: (\w+)',line)
+        if ver:
+            if ver.group(1) != VERSION:
+                raise AsciiParseError('Unknown version')
+            line = f.readline().strip()
+        else:
+            # No version information; accept
+            pass
+        b64data = ''
+        while line != ascii_end_str:
+            if line == '':
+                raise AsciiParseError('Unexpected end of data')
+            else:
+                b64data += line
+        f = StringIO(b64decode(b64data))
+        self.read_binary(f)
+
+    def _to_helper(self,method):
         s = StringIO()
-        self.write_json(s)
+        method(s)
         rv = s.getvalue()
         s.close()
         return rv
 
+
+    def to_json(self):
+        return self._to_helper(self.write_json)
+
     def to_binary(self):
-        s = StringIO()
-        self.write_binary(s)
-        rv = s.getvalue()
-        s.close()
-        return rv
+        return self._to_helper(self.write_binary)
+
+    def to_ascii(self):
+        return self._to_helper(self.write_ascii)
+
+    @staticmethod
+    def _from_helper(method,f):
+        if type(f) == str:
+            f = StringIO(f)
+        e = EncryptedMessage()
+        method(e,f)
+        return e
 
     @staticmethod
     def from_json(f):
-        if type(f) == str:
-            f = StringIO(f)
-        e = EncryptedMessage()
-        e.read_json(f)
-        return e
+        return EncryptedMessage._from_helper(EncryptedMessage.read_json,f)
 
     @staticmethod
     def from_binary(f):
-        if type(f) == str:
-            f = StringIO(f)
-        e = EncryptedMessage()
-        e.read_binary(f)
-        return e
+        return EncryptedMessage._from_helper(EncryptedMessage.read_binary,f)
+
+    @staticmethod
+    def from_ascii(f):
+        return EncryptedMessage._from_helper(EncryptedMessage.read_ascii,f)
