@@ -301,3 +301,5 @@ def find_our_pad(args):
             return SnapPad(pads[0][0],pads[0][1])
         return None
 
+def main():
+    print "BOING"
