@@ -21,7 +21,30 @@ def encrypt(pad,inf,outf):
     for block in blocks:
         print block.ascii_armor()
 
-if __name__ == '__main__':
+
+# subcommands:
+# * list
+# * diagnostics
+# * random
+# * encode
+# * decode
+# * help
+
+def make_parser():
+    p = argparse.ArgumentParser()
+    sub = p.add_subparsers()
+    subp = sub.add_parser('list')
+    subp = sub.add_parser('random')
+    subp = sub.add_parser('diagnostics')
+    subp = sub.add_parser('encode')
+    subp = sub.add_parser('decode')
+    return p
+
+def main():
+    parser = make_parser()
+    args = parser.parse_args()
+
+def main_old():
     # enumerate pads
     parser = argparse.ArgumentParser()
     parser.add_argument("-v", "--verbosity", action="count",
