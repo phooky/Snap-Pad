@@ -14,6 +14,10 @@
 void hwrng_start();
 bool hwrng_done();
 
+// The length of the RNG bit buffer in 16-bit words.
+#define RNG_BB_LEN 8
+#define RNG_BB_LEN_BYTES (RNG_BB_LEN*2)
+
 // Return a volatile pointer to the top of the RNG bit buffer.
 // It's the caller's responsibility to make sure these bits have
 // been properly populated.

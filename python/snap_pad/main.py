@@ -1,5 +1,6 @@
 #!/usr/bin/python
-from snap_pad import add_pad_arguments, find_our_pad, PAGESIZE
+from snap_pad import add_pad_arguments, list_snap_pads, find_our_pad, PAGESIZE
+
 import snap_pad
 import logging
 import argparse
@@ -29,20 +30,48 @@ def encrypt(pad,inf,outf):
 # * encode
 # * decode
 # * help
+def list_handler(args):
+    pads = list_snap_pads(args)
+    sys.stdout.write('{0} Snap-Pads detected.\n'.format(len(pads)))
+    for (port,sn) in pads:
+        sys.stdout.write('Port: {0} SN: {1}\n'.format(port,sn))
+def random_handler(args):
+    sp = find_our_pad(args)
+    if not sp:
+        return
+    data = sp.hwrng()
+    if args.bin:
+        sys.stdout.write(data)
+    else:
+        from base64 import b64encode
+        sys.stdout.write(b64encode(data))
+        sys.stdout.write('\n')
 
 def make_parser():
     p = argparse.ArgumentParser()
+    add_pad_arguments(p)
     sub = p.add_subparsers()
-    subp = sub.add_parser('list')
-    subp = sub.add_parser('random')
-    subp = sub.add_parser('diagnostics')
-    subp = sub.add_parser('encode')
-    subp = sub.add_parser('decode')
+    p_list = sub.add_parser('list') #, aliases=['l'])
+    p_list.set_defaults(handler=list_handler)
+    p_rand = sub.add_parser('random') #, aliases=['rand','r'])
+    p_rand.add_argument('--bin', action='store_true')
+    p_rand.set_defaults(handler=random_handler)
+    p_diag = sub.add_parser('diagnostics') #', aliases=['diag'])
+    p_enc = sub.add_parser('encode') #, aliases=['enc','e'])
+    # output redirect
+    p_dec = sub.add_parser('decode') #, aliases=['dec','d'])
+    # output redirect
+    for p_sub in [p_enc,p_dec]:
+        p_sub.add_argument('--bin',action='store_const',dest='encoding',const='bin')
+        p_sub.add_argument('--ascii',action='store_const',dest='encoding',const='ascii')
+        p_sub.add_argument('--json',action='store_const',dest='encoding',const='json')
+        p_sub.set_defaults(encoding='ascii')
     return p
 
 def main():
     parser = make_parser()
     args = parser.parse_args()
+    args.handler(args)
 
 def main_old():
     # enumerate pads

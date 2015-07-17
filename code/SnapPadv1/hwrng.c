@@ -23,7 +23,6 @@ void hwrng_init() {
 	ADC10IE = 0x0001;
 }
 
-#define RNG_BB_LEN 8
 #define IDX_TOP (16*RNG_BB_LEN)
 // Shift must be relatively prime to 16 (odd, really)
 #define SHIFT 5
@@ -65,7 +64,7 @@ __interrupt void ADC10_ISR(void)
 	uint16_t s = ADC10MEM0;
 
 	uint16_t v = bits[idx % RNG_BB_LEN];
-	v = v<<SHIFT | v>>(16-SHIFT); // TODO: does modern c++ do rotations properly?
+	v = v<<SHIFT | v>>(16-SHIFT); // Hopefully this optimizes to ROL/ROR
 	v ^= s;
 	bits[idx % RNG_BB_LEN] = v;
 	idx++;

@@ -336,10 +336,15 @@ void scan_used() {
 }
 
 void read_rng() {
-	hwrng_start();
-	while (!hwrng_done());
-	volatile uint16_t* bits = hwrng_bits();
-	cdcSendDataWaitTilDone((BYTE*)bits, 16*4, CDC0_INTFNUM, 100);
+	uint8_t count = 64; // We specify 64 bytes of data returned.
+	while (count > 0) {
+		uint8_t blksz = (RNG_BB_LEN_BYTES <= count)?RNG_BB_LEN_BYTES:count;
+		hwrng_start();
+		while (!hwrng_done());
+		volatile uint16_t* bits = hwrng_bits();
+		cdcSendDataWaitTilDone((BYTE*)bits, blksz, CDC0_INTFNUM, 100);
+		count -= blksz;
+	}
 }
 
 uint32_t parseDec(uint8_t* buf, uint8_t* idx, uint8_t len) {
