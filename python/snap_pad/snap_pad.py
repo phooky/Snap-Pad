@@ -270,40 +270,8 @@ class SnapPad:
         message = marshalled_message[2:2+msg_sz]
         return message
 
-def add_pad_arguments(parser):
-    'Add parser arguments for finding a snap-pad'
-    parser.add_argument('--sn', type=str,
-            help='use the Snap-Pad with the specified serial number')
-    parser.add_argument('--port', type=str,
-            help='use the Snap-Pad attached to the specified port')
-    parser.add_argument('--mock_pad', action='store_true',
-            help='use a mockup Snap-Pad [FOR TESTING ONLY]')
 
 def list_snap_pads(args):
     if args.mock_pad:
         return [('MOCK','MOCK')]
     return find_snap_pads()
-
-
-def find_our_pad(args):
-    'Find the snap-pad specified by the user on the command line'
-    if args.mock_pad:
-        from test.test_snap_pad_mock import SnapPadHWMock
-        return SnapPad(SnapPadHWMock(),'MOCK')
-    pads = list_snap_pads(args)
-    if args.sn:
-        for (port,sn) in pads:
-            if sn == args.sn:
-                return SnapPad(port)
-        logging.error('No Snap-Pad matching serial number {0} found.'.format(args.serial))
-        return None
-    elif args.port:
-        return SnapPad(args.port)
-    else:
-        if len(pads) == 0:
-            logging.error('No Snap-Pads detected; check that your Snap-Pad is plugged in.')
-        elif len(pads) > 1:
-            logging.error('Multiple Snap-Pads detected; use the --sn or --port option to choose one.')
-        else:
-            return SnapPad(pads[0][0],pads[0][1])
-        return None

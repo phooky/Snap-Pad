@@ -1,5 +1,5 @@
 #!/usr/bin/python
-from snap_pad import add_pad_arguments, list_snap_pads, find_our_pad, PAGESIZE
+from snap_pad import SnapPad, list_snap_pads, PAGESIZE
 
 import snap_pad
 import logging
@@ -8,25 +8,70 @@ import sys
 import os
 import hashlib
 import base64
+import os.path
 
-# sn-enc.py encrypts a message with a snap-pad.
-def create_mac():
+class FileExistsError(Exception):
     pass
 
-def encrypt(pad,inf,outf):
-    indata = inf.read((PAGESIZE*4)+1)
-    if len(indata) > PAGESIZE*4:
-        # TODO: too big!
-        pass
-    blocks = pad.encrypt_and_sign(indata)
-    for block in blocks:
-        print block.ascii_armor()
+class MessageTooLargeError(Exception):
+    pass
 
+class NoDataError(Exception):
+    pass
+
+class NoPadError(Exception):
+    pass
+
+def find_our_pad(args):
+    'Find the snap-pad specified by the user on the command line'
+    if args.mock_pad:
+        from test.test_snap_pad_mock import SnapPadHWMock
+        return SnapPad(SnapPadHWMock(),'MOCK')
+    pads = list_snap_pads(args)
+    if args.sn:
+        for (port,sn) in pads:
+            if sn == args.sn:
+                return SnapPad(port)
+        logging.error('No Snap-Pad matching serial number {0} found.'.format(args.serial))
+        return None
+    elif args.port:
+        return SnapPad(args.port)
+    else:
+        if len(pads) == 0:
+            logging.error('No Snap-Pads detected; check that your Snap-Pad is plugged in.')
+            raise NoPadError()
+        elif len(pads) > 1:
+            logging.error('Multiple Snap-Pads detected; use the --sn or --port option to choose one.')
+            raise NoPadError()
+        else:
+            return SnapPad(pads[0][0],pads[0][1])
+        return None
+
+def get_output(args):
+    if args.output == '-':
+        return sys.stdout
+    else:
+        if os.path.exists(args.output):
+            raise FileExistsError(args.output)
+        if args.encoding == 'bin':
+            mode = 'wb'
+        else:
+            mode = 'w'
+        return open(args.output, mode)
+
+def get_input(args):
+    inf = sys.stdin
+    indata = inf.read((PAGESIZE*4)+1)
+    if len(indata) > (PAGESIZE*4 - 2):
+        raise MessageTooLargeError()
+    if len(indata) == 0:
+        raise NoDataError()
+    return indata
 
 # subcommands:
-# * list
-# * diagnostics
-# * random
+# - list
+# - diagnostics
+# - random
 # * encode
 # * decode
 # * help
@@ -35,6 +80,7 @@ def list_handler(args):
     sys.stdout.write('{0} Snap-Pads detected.\n'.format(len(pads)))
     for (port,sn) in pads:
         sys.stdout.write('Port: {0} SN: {1}\n'.format(port,sn))
+
 def random_handler(args):
     sp = find_our_pad(args)
     if not sp:
@@ -47,9 +93,39 @@ def random_handler(args):
         sys.stdout.write(b64encode(data))
         sys.stdout.write('\n')
 
+def diagnostics_handler(args):
+    sp = find_our_pad(args)
+    if not sp:
+        return
+    diag = sp.diagnostics
+    keys = diag.keys()
+    keys.sort()
+    for key in keys:
+        sys.stdout.write('{0}: {1}\n'.format(key,diag[key]))
+
+def encode_handler(args):
+    sp = find_our_pad(args)
+    out = get_output(args)
+    raw_input = get_input(args)
+    msg = sp.encrypt_and_sign(raw_input)
+    if args.encoding == 'bin':
+        msg.write_binary(out)
+    elif args.encoding == 'json':
+        msg.write_json(out)
+    elif args.encoding == 'ascii':
+        msg.write_ascii(out)
+    else:
+        raise Exception('Bad encoding')
+
+
 def make_parser():
     p = argparse.ArgumentParser()
-    add_pad_arguments(p)
+    p.add_argument('--sn', type=str,
+            help='use the Snap-Pad with the specified serial number')
+    p.add_argument('--port', type=str,
+            help='use the Snap-Pad attached to the specified port')
+    p.add_argument('--mock_pad', action='store_true',
+            help='use a mockup Snap-Pad [FOR TESTING ONLY]')
     sub = p.add_subparsers()
     p_list = sub.add_parser('list') #, aliases=['l'])
     p_list.set_defaults(handler=list_handler)
@@ -57,15 +133,17 @@ def make_parser():
     p_rand.add_argument('--bin', action='store_true')
     p_rand.set_defaults(handler=random_handler)
     p_diag = sub.add_parser('diagnostics') #', aliases=['diag'])
+    p_diag.set_defaults(handler=diagnostics_handler)
     p_enc = sub.add_parser('encode') #, aliases=['enc','e'])
-    # output redirect
+    p_enc.set_defaults(handler=encode_handler)
     p_dec = sub.add_parser('decode') #, aliases=['dec','d'])
-    # output redirect
     for p_sub in [p_enc,p_dec]:
         p_sub.add_argument('--bin',action='store_const',dest='encoding',const='bin')
         p_sub.add_argument('--ascii',action='store_const',dest='encoding',const='ascii')
         p_sub.add_argument('--json',action='store_const',dest='encoding',const='json')
         p_sub.set_defaults(encoding='ascii')
+        # output redirect
+        p_sub.add_argument('-o',dest='output',default='-')
     return p
 
 def main():
