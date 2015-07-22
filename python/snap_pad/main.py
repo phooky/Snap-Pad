@@ -1,6 +1,7 @@
 #!/usr/bin/python
-from snap_pad import SnapPad, list_snap_pads, PAGESIZE
+from snap_pad import SnapPad, list_snap_pads, PAGESIZE, EncryptedMessage
 
+from cStringIO import StringIO
 import snap_pad
 import logging
 import argparse
@@ -68,6 +69,29 @@ def get_input(args):
         raise NoDataError()
     return indata
 
+def parse_input(args,data):
+    out = StringIO(data)
+    if args.encoding == 'bin':
+        return EncryptedMessage.from_binary(out)
+    elif args.encoding == 'json':
+        return EncryptedMessage.from_json(out)
+    elif args.encoding == 'ascii':
+        return EncryptedMessage.from_ascii(out)
+    elif args.encoding == 'automatic':
+        try:
+            return EncryptedMessage.from_ascii(out)
+        except:
+            pass
+        out = StringIO(data)
+        try:
+            return EncryptedMessage.from_json(out)
+        except:
+            pass
+        out = StringIO(data)            
+        return EncryptedMessage.from_binary(out)
+    else:
+        raise Exception('Bad encoding {0}'.format(args.encoding))
+
 # subcommands:
 # - list
 # - diagnostics
@@ -112,11 +136,18 @@ def encode_handler(args):
         msg.write_binary(out)
     elif args.encoding == 'json':
         msg.write_json(out)
-    elif args.encoding == 'ascii':
+    elif args.encoding == 'ascii' or args.encoding == 'automatic':
         msg.write_ascii(out)
     else:
         raise Exception('Bad encoding')
 
+def decode_handler(args):
+    sp = find_our_pad(args)
+    out = get_output(args)
+    raw_input = get_input(args)
+    msg = parse_input(args,raw_input)
+    data = sp.decrypt_and_verify(msg)
+    out.write(data)
 
 def make_parser():
     p = argparse.ArgumentParser()
@@ -137,11 +168,12 @@ def make_parser():
     p_enc = sub.add_parser('encode') #, aliases=['enc','e'])
     p_enc.set_defaults(handler=encode_handler)
     p_dec = sub.add_parser('decode') #, aliases=['dec','d'])
+    p_dec.set_defaults(handler=decode_handler)
     for p_sub in [p_enc,p_dec]:
         p_sub.add_argument('--bin',action='store_const',dest='encoding',const='bin')
         p_sub.add_argument('--ascii',action='store_const',dest='encoding',const='ascii')
         p_sub.add_argument('--json',action='store_const',dest='encoding',const='json')
-        p_sub.set_defaults(encoding='ascii')
+        p_sub.set_defaults(encoding='automatic')
         # output redirect
         p_sub.add_argument('-o',dest='output',default='-')
     return p

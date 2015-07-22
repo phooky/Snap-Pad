@@ -141,3 +141,4 @@ class EncryptedMessage:
     @staticmethod
     def from_ascii(f):
         return EncryptedMessage._from_helper(EncryptedMessage.read_ascii,f)
+
