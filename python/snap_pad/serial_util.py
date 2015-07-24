@@ -2,7 +2,7 @@ import serial
 import serial.tools.list_ports
 import sys
 import re
-from snap_pad_vid_pid import vendor_id, product_id
+from snap_pad_config import vendor_id, product_id
 
 linux_port_re = re.compile('VID:PID={0:04x}:{1:04x} SNR=([0-9A-Fa-f]+)'.format(vendor_id,product_id))
 

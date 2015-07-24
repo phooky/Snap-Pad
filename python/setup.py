@@ -11,6 +11,7 @@ setup(
 	author= 'Adam Mayer',
 	author_email = 'phooky@gmail.com',
 	license = 'BSD',
+	url = 'http://snap-pad.info/',
 	classifiers = [
 		'License :: OSI Approved :: BSD License',
 		'Operating System :: POSIX :: Linux',
